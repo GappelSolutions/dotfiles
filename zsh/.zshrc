@@ -35,6 +35,7 @@ alias cvpn="sudo systemctl start openvpn-client@client1"
 alias dcu="docker compose up -d --build"
 alias dcd="docker compose down"
 alias ld='lazydocker'
+alias lg='lazygit'
 alias stowm='stow -v -R -t ~'
 
 echo ""
