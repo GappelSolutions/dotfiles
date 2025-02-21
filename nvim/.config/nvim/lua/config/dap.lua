@@ -6,31 +6,40 @@ require("mason-nvim-dap").setup({
 
 dap.adapters.coreclr = {
 	type = "executable",
-	command = "C:\\Users\\aiche\\netcoredbg\\netcoredbg.exe",
+	command = "/mnt/c/Users/ChristianGappel/netcoredbg/netcoredbg.exe",
 	args = { "--interpreter=vscode" },
 }
 
 dap.configurations.cs = {
 	{
 		type = "coreclr",
-		name = "launch - WebApi",
-		request = "launch",
-		program = "C:/dev/CustomerPortal.WebAPI/Repower.CustomerPortal.WebAPI/bin/Debug/net8.0/Repower.CustomerPortal.WebAPI.dll",
-		cwd = "C:/dev/CustomerPortal.WebAPI/Repower.CustomerPortal.WebAPI",
-		console = "integratedTerminal",
-		env = {
-			ASPNETCORE_ENVIRONMENT = "christiangappel",
-			ASPNETCORE_URLS = "http://localhost:44356",
-		},
-		args = { "--launch-profile", "Christian Gappel" },
-		serverReadyAction = {
-			action = "openExternally",
-			pattern = "Now listening on:\\s+(https?://\\S+)",
-			uriFormat = "%s",
-		},
-		ports = { 44356 },
+		name = "attach - WebApi",
+		request = "attach",
+		processId = require("dap.utils").pick_process,
+		port = 44356,
 	},
 }
+
+dap.adapters.chrome = {
+	type = "executable",
+	command = "node",
+	args = {
+		require("mason-registry").get_package("chrome-debug-adapter"):get_install_path() .. "/out/src/chromeDebug.js",
+	},
+}
+
+dap.configurations.javascript = {
+	{
+		type = "chrome",
+		request = "launch",
+		name = "Launch Chrome",
+		url = "http://localhost:4200",
+		webRoot = "${workspaceFolder}",
+		sourceMaps = true,
+	},
+}
+
+dap.configurations.typescript = dap.configurations.javascript
 
 -- debugging UI
 local dapui = require("dapui")
