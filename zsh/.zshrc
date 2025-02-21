@@ -36,6 +36,7 @@ alias dcu="docker compose up -d --build"
 alias dcd="docker compose down"
 alias ld='lazydocker'
 alias lg='lazygit'
+alias lsql='lazysql'
 alias stowm='stow -v -R -t ~'
 
 echo ""

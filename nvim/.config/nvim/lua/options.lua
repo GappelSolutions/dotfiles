@@ -5,6 +5,7 @@ vim.opt.softtabstop = 4
 vim.opt.clipboard = "unnamedplus"
 vim.opt.backspace = "indent,eol,start"
 vim.opt.ignorecase = true
+vim.opt.smartcase = true
 vim.opt.smartindent = true
 vim.opt.nu = true
 vim.opt.relativenumber = true

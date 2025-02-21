@@ -51,6 +51,8 @@ Map("v", "<A-j>", ":m '>+1<CR>gv=gvzz")
 Map("v", "<A-k>", ":m '<-2<CR>gv=gvzz")
 Map("v", "<C-k>", "<C-u>zz")
 Map("v", "<C-j>", "<C-d>zz")
+Map("v", "<", "<gv")
+Map("v", ">", ">gv")
 
 -- Normal Mode Mappings for Movement
 Map("n", "<C-l>", "$")
