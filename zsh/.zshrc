@@ -65,3 +65,4 @@ source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
 typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
 export P10K_THEME='powerlevel10k/iceberg' # Assuming you have icebergs integrated
 export PATH="$PATH:$HOME/.dotnet/tools"
+setopt nocaseglob
