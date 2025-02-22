@@ -28,17 +28,18 @@ end
 
 -- Function to run build command
 function RunDetachedBuildCommand()
-	local build_command = 'start cmd.exe /c "dotnet build C:/Users/aiche/dev/gappel-cloud/src/GappelCloud/GappelCloud & pause"'
+	local build_command =
+	'start cmd.exe /c "dotnet build C:/Users/aiche/dev/gappel-cloud/src/GappelCloud/GappelCloud & pause"'
 	os.execute(build_command)
 	print("Build started in a new command window")
 end
 
 -- General Editing Mappings
-Map("n", "<C-s>", ":w<CR>")
+Map("n", "<C-s>", ":w<CR><cmd>lua vim.lsp.buf.format({ async = true })<CR>")
 Map("n", "<C-q>", ":q<CR>")
-Map("i", "<C-s>", "<Esc>:w<CR>")
+Map("i", "<C-s>", "<Esc>:w<CR><cmd>lua vim.lsp.buf.format({ async = true })<CR>")
 Map("i", "<C-q>", "<Esc>:q<CR>")
-Map("v", "<C-s>", ":w<CR>")
+Map("v", "<C-s>", ":w<CR><cmd>lua vim.lsp.buf.format({ async = true })<CR>")
 Map("v", "<C-q>", ":q<CR>")
 Map("v", "p", "pgvy")
 
