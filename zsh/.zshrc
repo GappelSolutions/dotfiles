@@ -66,3 +66,12 @@ typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
 export P10K_THEME='powerlevel10k/iceberg' # Assuming you have icebergs integrated
 export PATH="$PATH:$HOME/.dotnet/tools"
 setopt nocaseglob
+
+if [ -n "$NVIM_LISTEN_ADDRESS" ]; then
+    alias nvim=nvr -cc split --remote-wait +'set bufhidden=wipe'
+    export VISUAL="nvr -cc split --remote-wait +'set bufhidden=wipe'"
+    export EDITOR="nvr -cc split --remote-wait +'set bufhidden=wipe'"
+else
+    export VISUAL="nvim"
+    export EDITOR="nvim"
+fi

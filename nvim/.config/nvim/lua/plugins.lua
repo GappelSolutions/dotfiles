@@ -180,7 +180,7 @@ require("lazy").setup({
 		opts = {
 			projects = {
 				"/home/cgpp/dev/*",
-				"/home/cgpp/.config/nvim",
+				"/home/cgpp/dev/dotfiles",
 				"/home/cgpp/dev/gappel-cloud/src/backend/GappelCloud",
 				"/home/cgpp/dev/gappel-cloud/src/frontend",
 			},
