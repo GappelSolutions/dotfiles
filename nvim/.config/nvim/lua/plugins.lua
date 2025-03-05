@@ -89,6 +89,7 @@ require("lazy").setup({
 		"ThePrimeagen/harpoon",
 		dependencies = { "nvim-lua/plenary.nvim" },
 	},
+	{ "echasnovski/mini.ai" },
 
 	-- Search
 	"dyng/ctrlsf.vim",
@@ -174,6 +175,7 @@ require("lazy").setup({
 	},
 
 	-- Others
+	{ 'augmentcode/augment.vim' },
 	"mbbill/undotree",
 	{
 		"coffebar/neovim-project",

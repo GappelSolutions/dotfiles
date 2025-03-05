@@ -24,6 +24,9 @@ vim.opt.updatetime = 50
 vim.opt.colorcolumn = "80"
 vim.opt.whichwrap:append("h,l")
 vim.opt.cursorline = true
+vim.g.augment_workspace_folders = {
+	"/home/cgpp/dev/gappel-cloud",
+}
 
 vim.cmd([[
 augroup Indentation
