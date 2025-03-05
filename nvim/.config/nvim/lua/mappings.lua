@@ -35,11 +35,11 @@ function RunDetachedBuildCommand()
 end
 
 -- General Editing Mappings
-Map("n", "<C-s>", ":w<CR><cmd>lua vim.lsp.buf.format({ async = true })<CR>")
+Map("n", "<C-s>", "<cmd>lua vim.lsp.buf.format({ async = true })<CR>:w<CR>")
 Map("n", "<C-q>", ":q<CR>")
-Map("i", "<C-s>", "<Esc>:w<CR><cmd>lua vim.lsp.buf.format({ async = true })<CR>")
+Map("i", "<C-s>", "<Esc><cmd>lua vim.lsp.buf.format({ async = true })<CR>:w<CR>")
 Map("i", "<C-q>", "<Esc>:q<CR>")
-Map("v", "<C-s>", ":w<CR><cmd>lua vim.lsp.buf.format({ async = true })<CR>")
+Map("v", "<C-s>", "<cmd>lua vim.lsp.buf.format({ async = true })<CR>:w<CR>")
 Map("v", "<C-q>", ":q<CR>")
 Map("v", "p", "pgvy")
 
@@ -61,7 +61,7 @@ Map("n", "<C-h>", "_")
 Map("n", "<C-k>", "<C-u>zz")
 Map("n", "<C-j>", "<C-d>zz")
 Map("n", "<leader>[", "%")
-Map("n", "<leader>a", "ggVG")
+Map("n", "<leader>aa", "ggVG")
 Map("n", "<leader>y", "mzggVGy`zzz")
 Map("n", "<leader>P", "mzggVGp`zzz")
 Map("n", "<leader>D", "ggVGd")
@@ -139,13 +139,20 @@ for i = 1, 9 do
 end
 
 -- Telescope
-Map("n", "<leader>F", ":Telescope find_files<CR>")
-Map("n", "<leader>ff", ":Telescope git_files<CR>")
-Map("n", "<leader>fw", ":Telescope live_grep<CR>")
-Map("n", "<leader>fp", ":Telescope resume<CR>")
+Map("n", "<leader>F", "<cmd>Telescope find_files<CR>")
+Map("n", "<leader>ff", "<cmd>Telescope git_files<CR>")
+Map("n", "<leader>fw", "<cmd>Telescope live_grep<CR>")
+Map("n", "<leader>fp", "<cmd>Telescope resume<CR>")
 
 -- UndoTree
 Map("n", "<leader>u", "<cmd>UndotreeToggle<CR>")
 
 -- NvimTree
-Map("n", "<leader>pf", ":NvimTreeToggle<CR>")
+Map("n", "<leader>pf", "<cmd>NvimTreeToggle<CR>")
+
+-- Augment AI
+Map("n", "<leader>A", "<cmd>Augment chat-toggle<CR>")
+Map("n", "<leader>an", "<cmd>Augment chat-new<CR>")
+Map("n", "<leader>ac", "<cmd>Augment chat<CR>")
+Map("n", "<leader>ad", "<cmd>Augment disable<CR>")
+Map("n", "<leader>ae", "<cmd>Augment enable<CR>")
