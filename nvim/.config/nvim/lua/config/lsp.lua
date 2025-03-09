@@ -63,6 +63,11 @@ lsp.ts_ls.setup({
 	capabilities = capabilities,
 })
 
+lsp.angularls.setup({
+	on_attach = remove_formatter_on_attach,
+	capabilities = capabilities,
+})
+
 lsp.html.setup({
 	on_attach = remove_formatter_on_attach,
 	capabilities = capabilities,
