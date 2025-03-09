@@ -119,6 +119,12 @@ Map("n", "<leader>h", "<cmd>lua vim.lsp.buf.hover()<CR>")
 Map("n", "<leader>e", "<cmd>lua vim.diagnostic.open_float()<CR>")
 Map("n", "<leader>=", "<cmd>lua vim.lsp.buf.format({ async = true })<CR>")
 
+-- Angular Mappings
+local opts = { noremap = true, silent = true }
+local ng = require("ng");
+vim.keymap.set("n", "<leader>pt", ng.goto_template_for_component, opts)
+vim.keymap.set("n", "<leader>pc", ng.goto_component_with_template_file, opts)
+
 -- CtrlSF Mappings
 Map("n", "<leader>S", ':CtrlSF ')
 

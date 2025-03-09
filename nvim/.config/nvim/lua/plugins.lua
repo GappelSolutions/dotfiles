@@ -112,6 +112,7 @@ require("lazy").setup({
 	'MunifTanjim/prettier.nvim',
 	"neovim/nvim-lspconfig",
 	"folke/trouble.nvim",
+	'joeveiga/ng.nvim',
 	{
 		"williamboman/mason-lspconfig.nvim",
 		dependencies = { "williamboman/mason.nvim" },
