@@ -1,4 +1,4 @@
-Personal dotfiles combined with stow
+Personal dotfiles combined with stow (for angular + .net stack)
 
 # stow command
 ```bash
