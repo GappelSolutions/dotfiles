@@ -8,7 +8,6 @@ require("mason-lspconfig").setup({
 		"html",
 		"lua_ls",
 		"tailwindcss",
-		"ts_ls",
 	},
 	automatic_installation = true,
 })
@@ -16,6 +15,7 @@ require("mason-lspconfig").setup({
 local null_ls = require("null-ls")
 local lsp = require("lspconfig")
 local capabilities = require("cmp_nvim_lsp").default_capabilities()
+local util = require("lspconfig/util")
 local border = require("config.borders").border
 
 local remove_formatter_on_attach = function(client, bufnr)
@@ -47,6 +47,11 @@ null_ls.setup({
 	end,
 })
 
+lsp.angularls.setup({
+	on_attach = remove_formatter_on_attach,
+	capabilities = capabilities,
+})
+
 lsp.lua_ls.setup({
 	settings = {
 		Lua = {
@@ -64,16 +69,6 @@ lsp.csharp_ls.setup({
 	config = {
 		filetypes = { "cs" },
 	},
-})
-
-lsp.ts_ls.setup({
-	on_attach = remove_formatter_on_attach,
-	capabilities = capabilities,
-})
-
-lsp.angularls.setup({
-	on_attach = remove_formatter_on_attach,
-	capabilities = capabilities,
 })
 
 lsp.html.setup({
