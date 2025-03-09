@@ -8,6 +8,7 @@ require("mason-lspconfig").setup({
 		"html",
 		"lua_ls",
 		"tailwindcss",
+		"ts_ls",
 	},
 	automatic_installation = true,
 })
@@ -48,6 +49,11 @@ null_ls.setup({
 })
 
 lsp.angularls.setup({
+	on_attach = remove_formatter_on_attach,
+	capabilities = capabilities,
+})
+
+lsp.ts_ls.setup({
 	on_attach = remove_formatter_on_attach,
 	capabilities = capabilities,
 })
