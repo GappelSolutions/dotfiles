@@ -200,6 +200,10 @@ require("lazy").setup({
 		priority = 100,
 	},
 	{
+		"smartpde/telescope-recent-files",
+		dependencies = { "nvim-telescope/telescope.nvim" },
+	},
+	{
 		"kristijanhusak/vim-dadbod-ui",
 		dependencies = {
 			{ "tpope/vim-dadbod",                     lazy = true },
