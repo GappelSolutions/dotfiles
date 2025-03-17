@@ -92,11 +92,11 @@ Map("n", "<leader>gb", ":Gitsigns blame_line<CR>")
 
 -- DAP Mappings
 Map("n", "<leader>b", '<cmd>lua require"dap".toggle_breakpoint()<CR>')
-Map("n", "<F5>", '<cmd>lua require"dap".continue()<CR>')
-Map("n", "<s-F5>", '<cmd>lua require"dap".terminate()<CR>')
-Map("n", "<F10>", '<cmd>lua require"dap".step_over()<CR>')
-Map("n", "<F11>", '<cmd>lua require"dap".step_into()<CR>')
-Map("n", "<s-F11>", '<cmd>lua require"dap".step_out()<CR>')
+Map("n", "<leader>ds", '<cmd>lua require"dap".continue()<CR>')
+Map("n", "<leader>DS", '<cmd>lua require"dap".terminate()<CR>')
+Map("n", "<leader>dw", '<cmd>lua require"dap".step_over()<CR>')
+Map("n", "<leader>de", '<cmd>lua require"dap".step_into()<CR>')
+Map("n", "<leader>dq", '<cmd>lua require"dap".step_out()<CR>')
 Map("n", "repl", '<cmd>lua require"dap.repl".toggle()<CR>')
 Map("n", "<leader>dh", '<Cmd>lua require"dapui".eval()<CR>')
 Map("n", "<leader>dg", '<cmd>lua require"dapui".toggle()<CR>')
@@ -121,12 +121,12 @@ Map("n", "<leader>=", "<cmd>lua vim.lsp.buf.format({ async = true })<CR>")
 
 -- Angular Mappings
 local opts = { noremap = true, silent = true }
-local ng = require("ng");
+local ng = require("ng")
 vim.keymap.set("n", "<leader>pt", ng.goto_template_for_component, opts)
 vim.keymap.set("n", "<leader>pc", ng.goto_component_with_template_file, opts)
 
 -- CtrlSF Mappings
-Map("n", "<leader>S", ':CtrlSF ')
+Map("n", "<leader>S", ":CtrlSF ")
 
 -- Key binding for build command
 Map("n", "<F6>", [[:lua RunDetachedBuildCommand()<CR>]])
@@ -149,6 +149,7 @@ Map("n", "<leader>F", "<cmd>Telescope find_files<CR>")
 Map("n", "<leader>ff", "<cmd>Telescope git_files<CR>")
 Map("n", "<leader>fw", "<cmd>Telescope live_grep<CR>")
 Map("n", "<leader>fp", "<cmd>Telescope resume<CR>")
+Map("n", "<leader><leader>", "<cmd>lua require('telescope').extensions.recent_files.pick()<CR>")
 
 -- UndoTree
 Map("n", "<leader>u", "<cmd>UndotreeToggle<CR>")
