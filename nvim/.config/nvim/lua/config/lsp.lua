@@ -1,10 +1,18 @@
+local mason_lspconfig = require("mason-lspconfig")
+local lspconfig = require("lspconfig")
+local null_ls = require("null-ls")
+local capabilities = require("cmp_nvim_lsp").default_capabilities()
+local util = require("lspconfig/util")
+local border = require("config.borders").border
+
 require("mason").setup()
 
-require("mason-lspconfig").setup({
+mason_lspconfig.setup({
 	ensure_installed = {
 		"angularls",
 		"csharp_ls",
 		"cssls",
+		"eslint",
 		"html",
 		"lua_ls",
 		"tailwindcss",
@@ -13,14 +21,13 @@ require("mason-lspconfig").setup({
 	automatic_installation = true,
 })
 
-local null_ls = require("null-ls")
-local lsp = require("lspconfig")
-local capabilities = require("cmp_nvim_lsp").default_capabilities()
-local util = require("lspconfig/util")
-local border = require("config.borders").border
+local on_attach = function(client, bufnr)
+	if client.name ~= "null-ls" then
+		client.server_capabilities.documentFormattingProvider = false
+		client.server_capabilities.documentRangeFormattingProvider = false
+	end
 
-local remove_formatter_on_attach = function(client, bufnr)
-	client.server_capabilities.documentFormattingProvider = false
+	require("workspace-diagnostics").populate_workspace_diagnostics(client, bufnr)
 end
 
 null_ls.setup({
@@ -28,37 +35,47 @@ null_ls.setup({
 	sources = {
 		null_ls.builtins.formatting.stylua,
 		null_ls.builtins.formatting.csharpier.with({
-			cwd = function()
-				return vim.fn.getcwd()
+			cwd = function(params)
+				return util.root_pattern(".git", ".csharpierrc", ".editorconfig")(params.bufname) or vim.fn.getcwd()
 			end,
 		}),
 		null_ls.builtins.formatting.prettierd.with({
-			cwd = function()
-				return vim.fn.getcwd()
+			cwd = function(params)
+				return util.root_pattern(".git", ".prettierrc", "package.json")(params.bufname) or vim.fn.getcwd()
 			end,
-		}),
-		null_ls.builtins.diagnostics.eslint.with({
-			cwd = function()
-				return vim.fn.getcwd()
-			end,
+			filetypes = {
+				"javascript",
+				"javascriptreact",
+				"typescript",
+				"typescriptreact",
+				"vue",
+				"css",
+				"scss",
+				"less",
+				"html",
+				"json",
+				"yaml",
+				"markdown",
+				"graphql",
+				"php",
+				"angular",
+			},
 		}),
 	},
-	on_attach = function(client, bufnr)
-		require("workspace-diagnostics").populate_workspace_diagnostics(client, bufnr)
-	end,
+	on_attach = on_attach,
 })
 
-lsp.angularls.setup({
-	on_attach = remove_formatter_on_attach,
+lspconfig.angularls.setup({
+	on_attach = on_attach,
 	capabilities = capabilities,
 })
 
-lsp.ts_ls.setup({
-	on_attach = remove_formatter_on_attach,
+lspconfig.ts_ls.setup({
+	on_attach = on_attach,
 	capabilities = capabilities,
 })
 
-lsp.lua_ls.setup({
+lspconfig.lua_ls.setup({
 	settings = {
 		Lua = {
 			diagnostics = {
@@ -66,27 +83,30 @@ lsp.lua_ls.setup({
 			},
 		},
 	},
+	on_attach = on_attach,
 	capabilities = capabilities,
 })
 
-lsp.csharp_ls.setup({
-	on_attach = remove_formatter_on_attach,
-	capabilities = capabilities,
-	config = {
-		filetypes = { "cs" },
-	},
-})
-
-lsp.html.setup({
-	on_attach = remove_formatter_on_attach,
+lspconfig.csharp_ls.setup({
+	on_attach = on_attach,
 	capabilities = capabilities,
 })
 
-lsp.tailwindcss.setup({
-	capabilities = capabilities
+lspconfig.html.setup({
+	on_attach = on_attach,
+	capabilities = capabilities,
 })
 
--- Override the default LSP floating window handler
+lspconfig.tailwindcss.setup({
+	on_attach = on_attach,
+	capabilities = capabilities,
+})
+
+lspconfig.eslint.setup({
+	on_attach = on_attach,
+	capabilities = capabilities,
+})
+
 local orig_util_open_floating_preview = vim.lsp.util.open_floating_preview
 function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)
 	opts = opts or {}
@@ -101,9 +121,30 @@ vim.diagnostic.config({
 	},
 })
 
-local symbols = { Error = "󰅙", Info = "󰋼", Hint = "󰌵", Warn = "" }
+vim.diagnostic.config({
+	signs = {
+		active = true,
+		text = {
+			[vim.diagnostic.severity.ERROR] = "󰅙",
+			[vim.diagnostic.severity.WARN] = "",
+			[vim.diagnostic.severity.INFO] = "󰋼",
+			[vim.diagnostic.severity.HINT] = "󰌵",
+		},
+	},
+})
 
-for name, icon in pairs(symbols) do
-	local hl = "DiagnosticSign" .. name
-	vim.fn.sign_define(hl, { text = icon, numhl = hl, texthl = hl })
-end
+vim.api.nvim_create_autocmd("BufWritePre", {
+	group = vim.api.nvim_create_augroup("LspFormatting", { clear = true }),
+	callback = function(args)
+		local clients = vim.lsp.get_active_clients({ bufnr = args.buf, name = "null-ls" })
+		if #clients > 0 then
+			vim.lsp.buf.format({
+				async = false,
+				bufnr = args.buf,
+				filter = function(client)
+					return client.name == "null-ls"
+				end,
+			})
+		end
+	end,
+})

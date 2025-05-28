@@ -1,14 +1,13 @@
 local dap = require("dap")
 
-require("mason-nvim-dap").setup({
-	ensure_installed = { "coreclr", "node2", "js", "chrome" },
-})
-
-dap.adapters.coreclr = {
-	type = "executable",
-	command = "/mnt/c/Users/ChristianGappel/netcoredbg/netcoredbg.exe",
-	args = { "--interpreter=vscode" },
-}
+require("mason-nvim-dap").setup()
+--
+-- dap.adapters.coreclr = {
+-- 	type = "executable",
+-- 	command = "/Users/cgpp/dev/netcoredbg/netcoredbg",
+-- 	args = { "--interpreter=vscode" },
+-- }
+require("netcoredbg-macOS-arm64").setup(dap)
 
 dap.configurations.cs = {
 	{
@@ -19,25 +18,25 @@ dap.configurations.cs = {
 		port = 44356,
 	},
 }
-
-dap.adapters.chrome = {
-	type = "executable",
-	command = "node",
-	args = {
-		require("mason-registry").get_package("chrome-debug-adapter"):get_install_path() .. "/out/src/chromeDebug.js",
-	},
-}
-
-dap.configurations.javascript = {
-	{
-		type = "chrome",
-		request = "launch",
-		name = "Launch Chrome",
-		url = "http://localhost:4200",
-		webRoot = "${workspaceFolder}",
-		sourceMaps = true,
-	},
-}
+--
+-- dap.adapters.chrome = {
+-- 	type = "executable",
+-- 	command = "node",
+-- 	args = {
+-- 		require("mason-registry").get_package("chrome-debug-adapter"):get_install_path() .. "/out/src/chromeDebug.js",
+-- 	},
+-- }
+--
+-- dap.configurations.javascript = {
+-- 	{
+-- 		type = "chrome",
+-- 		request = "launch",
+-- 		name = "Launch Chrome",
+-- 		url = "http://localhost:4200",
+-- 		webRoot = "${workspaceFolder}",
+-- 		sourceMaps = true,
+-- 	},
+-- }
 
 dap.configurations.typescript = dap.configurations.javascript
 
@@ -60,9 +59,9 @@ dapui.setup({
 	layouts = {
 		{
 			elements = {
-				{ id = "stacks", size = 0.25 },
+				{ id = "stacks",      size = 0.25 },
 				{ id = "breakpoints", size = 0.25 },
-				{ id = "scopes", size = 0.5 },
+				{ id = "scopes",      size = 0.5 },
 			},
 			size = RightScreenSpace,
 			position = "right",

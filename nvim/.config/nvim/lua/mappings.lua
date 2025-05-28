@@ -29,17 +29,17 @@ end
 -- Function to run build command
 function RunDetachedBuildCommand()
 	local build_command =
-	'start cmd.exe /c "dotnet build C:/Users/aiche/dev/gappel-cloud/src/GappelCloud/GappelCloud & pause"'
+		'start cmd.exe /c "dotnet build C:/Users/aiche/dev/gappel-cloud/src/GappelCloud/GappelCloud & pause"'
 	os.execute(build_command)
 	print("Build started in a new command window")
 end
 
 -- General Editing Mappings
-Map("n", "<C-s>", "<cmd>lua vim.lsp.buf.format({ async = true })<CR>:w<CR>")
+Map("n", "<C-s>", "<cmd>:w<CR>")
+Map("i", "<C-s>", "<Esc><cmd>:w<CR>")
+Map("v", "<C-s>", "<cmd>:w<CR>")
 Map("n", "<C-q>", ":q<CR>")
-Map("i", "<C-s>", "<Esc><cmd>lua vim.lsp.buf.format({ async = true })<CR>:w<CR>")
 Map("i", "<C-q>", "<Esc>:q<CR>")
-Map("v", "<C-s>", "<cmd>lua vim.lsp.buf.format({ async = true })<CR>:w<CR>")
 Map("v", "<C-q>", ":q<CR>")
 Map("v", "p", "pgvy")
 
@@ -81,8 +81,6 @@ Map("n", "<S-l>", ":execute 'normal! 80zl'<CR>", { desc = "Scroll right half pag
 Map("n", "<A-j>", ":m .+1<CR>==zz")
 Map("n", "<A-k>", ":m .-2<CR>==zz")
 Map("n", "<C-m>", "<C-w>_")
-Map("n", "<A-h>", "<C-o>")
-Map("n", "<A-l>", "<C-i>")
 
 -- Git
 Map("n", "<leader>G", "<cmd>lua DeleteLockFileAndOpenLazyGit()<CR>")
@@ -111,7 +109,8 @@ Map(
 	"<cmd>Trouble diagnostics toggle focus filter={buf=0,severity=vim.diagnostic.severity.ERROR}<cr>"
 )
 Map("n", "<leader>pr", "<cmd>Trouble lsp_references toggle focus<cr>")
-Map("n", "<leader>pd", "<cmd>lua vim.lsp.buf.definition()<CR>")
+Map("n", "<leader>PR", "<cmd>Telescope lsp_references<cr>")
+Map("n", "<leader>pd", "<cmd>Telescope lsp_definitions<CR>")
 Map("n", "<leader>pi", "<cmd>lua vim.lsp.buf.implementation()<CR>")
 Map("n", "<leader>pa", "<cmd>lua vim.lsp.buf.code_action()<CR>")
 Map("n", "<leader>r", "<cmd>lua vim.lsp.buf.rename()<CR>")
@@ -157,9 +156,9 @@ Map("n", "<leader>u", "<cmd>UndotreeToggle<CR>")
 -- NvimTree
 Map("n", "<leader>pf", "<cmd>NvimTreeToggle<CR>")
 
--- Augment AI
-Map("n", "<leader>A", "<cmd>Augment chat-toggle<CR>")
-Map("n", "<leader>an", "<cmd>Augment chat-new<CR>")
-Map("n", "<leader>ac", "<cmd>Augment chat<CR>")
-Map("n", "<leader>ad", "<cmd>Augment disable<CR>")
-Map("n", "<leader>ae", "<cmd>Augment enable<CR>")
+-- -- Augment AI
+-- Map("n", "<leader>A", "<cmd>Augment chat-toggle<CR>")
+-- Map("n", "<leader>an", "<cmd>Augment chat-new<CR>")
+-- Map("n", "<leader>ac", "<cmd>Augment chat<CR>")
+-- Map("n", "<leader>ad", "<cmd>Augment disable<CR>")
+-- Map("n", "<leader>ae", "<cmd>Augment enable<CR>")

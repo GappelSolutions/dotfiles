@@ -34,7 +34,7 @@ require("lazy").setup({
 		config = function()
 			require("mini.animate").setup({
 				cursor = {
-					timing = require("mini.animate").gen_timing.linear({ duration = 50, unit = "total" }),
+					timing = require("mini.animate").gen_timing.linear({ duration = 200, unit = "total" }),
 				},
 				scroll = {
 					enable = false,
@@ -72,7 +72,7 @@ require("lazy").setup({
 		event = "VeryLazy",
 		config = function()
 			require("nvim-surround").setup()
-		end
+		end,
 	},
 
 	-- Files
@@ -109,10 +109,10 @@ require("lazy").setup({
 
 	-- LSP
 	"artemave/workspace-diagnostics.nvim",
-	'MunifTanjim/prettier.nvim',
+	"MunifTanjim/prettier.nvim",
 	"neovim/nvim-lspconfig",
 	"folke/trouble.nvim",
-	'joeveiga/ng.nvim',
+	"joeveiga/ng.nvim",
 	{
 		"williamboman/mason-lspconfig.nvim",
 		dependencies = { "williamboman/mason.nvim" },
@@ -138,7 +138,7 @@ require("lazy").setup({
 		},
 	},
 	{
-		"jose-elias-alvarez/null-ls.nvim",
+		"nvimtools/none-ls.nvim",
 		dependencies = { "nvim-lua/plenary.nvim" },
 	},
 
@@ -151,6 +151,10 @@ require("lazy").setup({
 	{
 		"jay-babu/mason-nvim-dap.nvim",
 		lazy = true,
+	},
+	{
+		"Cliffback/netcoredbg-macOS-arm64.nvim",
+		dependencies = { "mfussenegger/nvim-dap" },
 	},
 
 	-- Git
@@ -176,16 +180,14 @@ require("lazy").setup({
 	},
 
 	-- Others
-	{ 'augmentcode/augment.vim' },
 	"mbbill/undotree",
 	{
 		"coffebar/neovim-project",
 		opts = {
 			projects = {
-				"/home/cgpp/dev/*",
-				"/home/cgpp/dev/dotfiles",
-				"/home/cgpp/dev/gappel-cloud/src/backend/GappelCloud",
-				"/home/cgpp/dev/gappel-cloud/src/frontend",
+				"/Users/cgpp/dev/*",
+				"/Users/cgpp/dev/gappel-cloud/src/backend/GappelCloud",
+				"/Users/cgpp/dev/gappel-cloud/src/frontend",
 			},
 			picker = {
 				type = "telescope",
