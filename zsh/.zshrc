@@ -1,4 +1,4 @@
-if [[ ":$FPATH:" != *":/home/cgpp/.zsh/completions:"* ]]; then export FPATH="/home/cgpp/.zsh/completions:$FPATH"; fi
+if [[ ":$FPATH:" != *":/Users/cgpp/.zsh/completions:"* ]]; then export FPATH="/Users/cgpp/.zsh/completions:$FPATH"; fi
 if [ "$TMUX" = "" ]; then 
   tmux attach || tmux new-session
  fi
@@ -13,12 +13,8 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
 fi
 
 # Load plugins for enhanced shell functionality
-plugins=(zsh-syntax-highlighting zsh-autosuggestions)
-
-# Initialize the plugins using Oh-My-Zsh or similar
-for plugin in "${plugins[@]}"; do
-  source "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/${plugin}/${plugin}.zsh"
-done
+source "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+source "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions.zsh/zsh-autosuggestions.zsh"
 
 # Aliases for common commands
 alias ls="ls --color"
@@ -32,18 +28,23 @@ alias lta='eza -a --tree --level=1 --icons'
 alias y='yazi'
 alias ssh-cloud="ssh cgpp@192.168.178.33"
 alias cvpn="sudo systemctl start openvpn-client@client1"
-alias dcu="docker compose up -d --build"
-alias dcd="docker compose down"
+alias dcu="docker-compose up -d --build"
+alias dcd="docker-compose down"
 alias ld='lazydocker'
 alias lg='lazygit'
 alias lsql='lazysql'
 alias stowm='stow -v -R -t ~'
+alias dnbo='dotnet watch run --project="Evulution.BackOffice.Webapi"'
+alias dneb='dotnet watch run --project="Repower.CustomerPortal.Webapi" --launch-profile="eb"'
+alias ai=' docker model run ai/smollm2'
+alias db='rainfrog --driver postgresql --username cgpp --password ASDQWEasdqweASDQWE123 --host localhost --port 5430 --database gappel-cloud'
+alias dotnet-csharpier='dotnet csharpier'
 
+clear
 echo ""
 neofetch
-echo -e "\e[1;36m\n• • • • • • • • • • • • • • • • • • • • ✦ • • • • • • • • • • • • • • • • • • • •\n\n\e[0m"
-echo -e "\e[1;36m$(echo 'Gappel' | figlet -f Fraktur -d /home/cgpp/figlet-fonts -w 100)\e[0m"
-echo ""
+echo -e "\e[1;32m• • • • • • • • • • • • • • • • • • • • ✦ • • • • • • • • • • • • • • • • • • • •\n\e[0m"
+echo -e "\e[1;33m$(echo 'Gappel' | figlet -f Fraktur -d /Users/cgpp/figlet-fonts -w 100)\e[0m"
 
 # Setup history file and options
 HISTFILE=~/.zsh_history
@@ -58,7 +59,8 @@ eval "$(zoxide init zsh)"
 source <(ng completion script)
 
 # Setup Powerlevel10k theme
-source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
+source /opt/homebrew/share/powerlevel10k/powerlevel10k.zsh-theme
+
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 # Enable instant prompt for Powerlevel10k
@@ -75,3 +77,17 @@ else
     export VISUAL="nvim"
     export EDITOR="nvim"
 fi
+
+if [ -f ~/.fzf.zsh ]; then
+    source ~/.fzf.zsh
+fi
+export PATH="/Users/cgpp/.local/share/bob/nvim-bin:$PATH"
+export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
+
+# pnpm
+export PNPM_HOME="/Users/cgpp/Library/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end

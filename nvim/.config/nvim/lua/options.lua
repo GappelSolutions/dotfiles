@@ -1,7 +1,13 @@
+-- screen
 RightScreenSpace = 58
-vim.opt.shiftwidth = 4
-vim.opt.tabstop = 4
-vim.opt.softtabstop = 4
+
+-- indentation & tabs → spaces
+vim.opt.expandtab = true -- use spaces instead of tabs
+vim.opt.shiftwidth = 4   -- width for autoindent
+vim.opt.tabstop = 4      -- width of a hard tabstop
+vim.opt.softtabstop = 4  -- fine-tune editing of tabs
+
+-- general
 vim.opt.clipboard = "unnamedplus"
 vim.opt.backspace = "indent,eol,start"
 vim.opt.ignorecase = true
@@ -12,7 +18,7 @@ vim.opt.relativenumber = true
 vim.opt.wrap = true
 vim.opt.swapfile = false
 vim.opt.backup = false
-vim.opt.undodir = "/home/cgpp/.undotree/"
+vim.opt.undodir = "/Users/cgpp/.undotree/"
 vim.opt.undofile = true
 vim.g.undotree_WindowLayout = 3
 vim.g.undotree_SetFocusWhenToggle = 1
@@ -24,17 +30,23 @@ vim.opt.updatetime = 50
 vim.opt.colorcolumn = "80"
 vim.opt.whichwrap:append("h,l")
 vim.opt.cursorline = true
+
+-- workspace folders
 vim.g.augment_workspace_folders = {
-	"/home/cgpp/dev/gappel-cloud",
+	"/Users/cgpp/dev/gappel-cloud",
+	"/Users/cgpp/dev/CustomerPortal-Angular",
+	"/Users/cgpp/dev/CustomerPortal-WebApi",
+	"/Users/cgpp/dev/BackOffice-Frontend",
+	"/Users/cgpp/dev/BackOffice-Backend",
 }
 
+-- per-file overrides
 vim.cmd([[
 augroup Indentation
   autocmd!
-  autocmd FileType javascript setlocal shiftwidth=2 tabstop=2 softtabstop=2
-  autocmd FileType typescript setlocal shiftwidth=2 tabstop=2 softtabstop=2
-  autocmd FileType html setlocal shiftwidth=2 tabstop=2 softtabstop=2
-  autocmd FileType csharp setlocal shiftwidth=4 tabstop=4 softtabstop=4
-  autocmd FileType json setlocal shiftwidth=4 tabstop=4 softtabstop=4
+  " use 2-space indents in JS/TS/HTML
+  autocmd FileType javascript,typescript,html setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
+  " use 4-space in C#, JSON, etc.
+  autocmd FileType csharp,json setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
 augroup END
 ]])
