@@ -1,0 +1,68 @@
+layout {
+    cwd "~/dev"
+
+    default_tab_template {
+        pane size=1 borderless=true {
+            plugin location="zellij:tab-bar"
+        }
+        children
+        pane size=1 borderless=true {
+            plugin location="zellij:status-bar"
+        }
+    }
+
+    tab name="front-nvim" cwd="CustomerPortal.Angular" {
+        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim" {
+            cwd "~/dev/CustomerPortal.Angular"
+        }
+    }
+
+    tab name="front-tools" cwd="CustomerPortal.Angular" {
+        pane split_direction="vertical" {
+            pane size="58%" split_direction="horizontal" {
+                pane command="yazi" {
+                    args "~/dev/CustomerPortal.Angular"
+                }
+
+                pane 
+            }
+
+            pane size="42%" split_direction="horizontal" {
+                pane focus=true command="pnpm" {
+                    args "start"
+                }
+
+                pane command="pnpm" start_suspended=true {
+                    args "i"
+                }
+            }
+        }
+    }
+
+    tab name="back-nvim" cwd="CustomerPortal.WebAPI" {
+        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim" 
+    }
+
+    tab name="back-tools" cwd="CustomerPortal.WebAPI" {
+        pane split_direction="vertical" {
+            pane size="58%" split_direction="horizontal" {
+                pane command="yazi" {
+                    args "~/dev/CustomerPortal.WebAPI"
+                }
+
+                pane 
+            }
+
+            pane size="42%" split_direction="horizontal" {
+                pane focus=true command="./run.sh" 
+                pane command="./run.sh" 
+            }
+        }
+    }
+
+    tab
+    tab
+}
+
+scrollback_editor "/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+default_mode "locked"

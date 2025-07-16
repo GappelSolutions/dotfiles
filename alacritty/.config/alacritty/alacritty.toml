@@ -58,7 +58,14 @@ multiplier = 1
 
 [window]
 opacity = 0.8
+option_as_alt = "Both"
 
 [window.padding]
 x = 4
 y = 4
+
+[terminal]
+
+[terminal.shell]
+program = "zellij"
+args = ["-l", "welcome"]

@@ -3,9 +3,9 @@ RightScreenSpace = 58
 
 -- indentation & tabs → spaces
 vim.opt.expandtab = true -- use spaces instead of tabs
-vim.opt.shiftwidth = 4   -- width for autoindent
-vim.opt.tabstop = 4      -- width of a hard tabstop
-vim.opt.softtabstop = 4  -- fine-tune editing of tabs
+vim.opt.shiftwidth = 4 -- width for autoindent
+vim.opt.tabstop = 4 -- width of a hard tabstop
+vim.opt.softtabstop = 4 -- fine-tune editing of tabs
 
 -- general
 vim.opt.clipboard = "unnamedplus"
@@ -30,6 +30,7 @@ vim.opt.updatetime = 50
 vim.opt.colorcolumn = "80"
 vim.opt.whichwrap:append("h,l")
 vim.opt.cursorline = true
+vim.o.termguicolors = true
 
 -- workspace folders
 vim.g.augment_workspace_folders = {

@@ -63,7 +63,7 @@ Map("n", "<C-j>", "<C-d>zz")
 Map("n", "<leader>[", "%")
 Map("n", "<leader>aa", "ggVG")
 Map("n", "<leader>y", "mzggVGy`zzz")
-Map("n", "<leader>P", "mzggVGp`zzz")
+Map("n", "<leader>P", "mzggVGpgvy`zzz")
 Map("n", "<leader>D", "ggVGd")
 Map("n", "<leader>/", '/<C-r>"<CR>')
 Map("n", "<leader>t", "J")
@@ -81,6 +81,7 @@ Map("n", "<S-l>", ":execute 'normal! 80zl'<CR>", { desc = "Scroll right half pag
 Map("n", "<A-j>", ":m .+1<CR>==zz")
 Map("n", "<A-k>", ":m .-2<CR>==zz")
 Map("n", "<C-m>", "<C-w>_")
+Map("n", "<leader>w", "<cmd>set wrap!<CR>")
 
 -- Git
 Map("n", "<leader>G", "<cmd>lua DeleteLockFileAndOpenLazyGit()<CR>")
@@ -111,6 +112,7 @@ Map(
 Map("n", "<leader>pr", "<cmd>Trouble lsp_references toggle focus<cr>")
 Map("n", "<leader>PR", "<cmd>Telescope lsp_references<cr>")
 Map("n", "<leader>pd", "<cmd>Telescope lsp_definitions<CR>")
+Map("n", "<leader>PD", "<cmd>lua vim.lsp.buf.definition()<CR>")
 Map("n", "<leader>pi", "<cmd>lua vim.lsp.buf.implementation()<CR>")
 Map("n", "<leader>pa", "<cmd>lua vim.lsp.buf.code_action()<CR>")
 Map("n", "<leader>r", "<cmd>lua vim.lsp.buf.rename()<CR>")
@@ -125,7 +127,7 @@ vim.keymap.set("n", "<leader>pt", ng.goto_template_for_component, opts)
 vim.keymap.set("n", "<leader>pc", ng.goto_component_with_template_file, opts)
 
 -- CtrlSF Mappings
-Map("n", "<leader>S", ":CtrlSF ")
+Map("n", "<leader>S", "<cmd>GrugFar<CR>")
 
 -- Key binding for build command
 Map("n", "<F6>", [[:lua RunDetachedBuildCommand()<CR>]])
@@ -162,3 +164,18 @@ Map("n", "<leader>pf", "<cmd>NvimTreeToggle<CR>")
 -- Map("n", "<leader>ac", "<cmd>Augment chat<CR>")
 -- Map("n", "<leader>ad", "<cmd>Augment disable<CR>")
 -- Map("n", "<leader>ae", "<cmd>Augment enable<CR>")
+
+-- Avante
+-- Map("n", "<leader>AC", "<cmd>AvanteChat<CR>")
+-- Map("n", "<leader>AA", "<cmd>AvanteFocus<CR>")
+-- Map("n", "<leader>AS", "<cmd>AvanteStop<CR>")
+
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = "razor",
+	callback = function()
+		vim.api.nvim_buf_set_keymap(0, "n", "<S-k>", "kzz", { noremap = true, silent = true })
+	end,
+})
+
+-- Twighlight
+Map("n", "<leader>T", "<cmd>Twilight<CR>")

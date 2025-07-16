@@ -1,7 +1,7 @@
 if [[ ":$FPATH:" != *":/Users/cgpp/.zsh/completions:"* ]]; then export FPATH="/Users/cgpp/.zsh/completions:$FPATH"; fi
-if [ "$TMUX" = "" ]; then 
-  tmux attach || tmux new-session
- fi
+# if [ "$TMUX" = "" ]; then 
+#   tmux attach || tmux new-session
+#  fi
 
 # Enable command auto-completion and history features
 autoload -Uz compinit
@@ -25,7 +25,6 @@ alias lt='eza --tree --level=1 --icons'
 alias lsa='eza -a --icons'
 alias lla='eza -al --icons'
 alias lta='eza -a --tree --level=1 --icons'
-alias y='yazi'
 alias ssh-cloud="ssh cgpp@192.168.178.33"
 alias cvpn="sudo systemctl start openvpn-client@client1"
 alias dcu="docker-compose up -d --build"
@@ -39,12 +38,15 @@ alias dneb='dotnet watch run --project="Repower.CustomerPortal.Webapi" --launch-
 alias ai=' docker model run ai/smollm2'
 alias db='rainfrog --driver postgresql --username cgpp --password ASDQWEasdqweASDQWE123 --host localhost --port 5430 --database gappel-cloud'
 alias dotnet-csharpier='dotnet csharpier'
+alias sz='source ~/.zshrc'
+alias zr='zellij run -i --'
 
 clear
 echo ""
 neofetch
-echo -e "\e[1;32m• • • • • • • • • • • • • • • • • • • • ✦ • • • • • • • • • • • • • • • • • • • •\n\e[0m"
-echo -e "\e[1;33m$(echo 'Gappel' | figlet -f Fraktur -d /Users/cgpp/figlet-fonts -w 100)\e[0m"
+echo -e "\e[1;34m• • • • • • • • • • • • • • • • • • ✦ • • • • • • • • • • • • • • • • • •\n\e[0m"
+echo -e "\e[1;35m$(echo 'EVULution' | figlet -f rounded -d /Users/cgpp/figlet-fonts -w 100)\e[0m\n"
+echo -e "\e[1;34m• • • • • • • • • • • • • • • • • • ✦ • • • • • • • • • • • • • • • • • •\n\n\e[0m"
 
 # Setup history file and options
 HISTFILE=~/.zsh_history
@@ -91,3 +93,12 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 # pnpm end
+
+function yy() {
+	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
+	yazi "$@" --cwd-file="$tmp"
+	if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+		cd -- "$cwd"
+	fi
+	rm -f -- "$tmp"
+}

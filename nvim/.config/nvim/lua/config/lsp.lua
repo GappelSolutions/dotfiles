@@ -5,13 +5,17 @@ local capabilities = require("cmp_nvim_lsp").default_capabilities()
 local util = require("lspconfig/util")
 local border = require("config.borders").border
 
-require("mason").setup()
+require("colorizer").setup()
+require("mason").setup({
+	registries = {
+		"github:mason-org/mason-registry",
+		"github:Crashdummyy/mason-registry",
+	},
+})
 
 mason_lspconfig.setup({
 	ensure_installed = {
 		"angularls",
-		"csharp_ls",
-		"cssls",
 		"eslint",
 		"html",
 		"lua_ls",
@@ -41,7 +45,8 @@ null_ls.setup({
 		}),
 		null_ls.builtins.formatting.prettierd.with({
 			cwd = function(params)
-				return util.root_pattern(".git", ".prettierrc", "package.json")(params.bufname) or vim.fn.getcwd()
+				return util.root_pattern(".git", ".prettierrc", "package.json", ".editorconfig")(params.bufname)
+					or vim.fn.getcwd()
 			end,
 			filetypes = {
 				"javascript",
@@ -58,7 +63,9 @@ null_ls.setup({
 				"markdown",
 				"graphql",
 				"php",
-				"angular",
+				"htmlangular",
+				"razor",
+				"cshtml",
 			},
 		}),
 	},
@@ -68,6 +75,7 @@ null_ls.setup({
 lspconfig.angularls.setup({
 	on_attach = on_attach,
 	capabilities = capabilities,
+	root_dir = util.root_pattern("angular.json", "nx.json", ".git"),
 })
 
 lspconfig.ts_ls.setup({
@@ -87,11 +95,11 @@ lspconfig.lua_ls.setup({
 	capabilities = capabilities,
 })
 
-lspconfig.csharp_ls.setup({
-	on_attach = on_attach,
-	capabilities = capabilities,
-})
-
+-- lspconfig.csharp_ls.setup({
+-- 	on_attach = on_attach,
+-- 	capabilities = capabilities,
+-- })
+--
 lspconfig.html.setup({
 	on_attach = on_attach,
 	capabilities = capabilities,
@@ -99,6 +107,7 @@ lspconfig.html.setup({
 
 lspconfig.tailwindcss.setup({
 	on_attach = on_attach,
+
 	capabilities = capabilities,
 })
 
@@ -106,6 +115,9 @@ lspconfig.eslint.setup({
 	on_attach = on_attach,
 	capabilities = capabilities,
 })
+
+lspconfig.roslyn.setup()
+lspconfig.rzls.setup()
 
 local orig_util_open_floating_preview = vim.lsp.util.open_floating_preview
 function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)
