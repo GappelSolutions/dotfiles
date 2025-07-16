@@ -1,5 +1,5 @@
 require("nvim-treesitter.configs").setup({
-	ensure_installed = { "lua", "javascript", "html", "typescript", "tsx", "css", "c_sharp", "dockerfile" },
+	ensure_installed = { "lua", "javascript", "html", "typescript", "tsx", "css", "c_sharp", "dockerfile", "razor" },
 
 	highlight = {
 		enable = true,
@@ -14,4 +14,4 @@ require("treesitter-context").setup({
 	multiline_threshold = 2,
 })
 
-require('nvim-ts-autotag').setup()
+require("nvim-ts-autotag").setup()

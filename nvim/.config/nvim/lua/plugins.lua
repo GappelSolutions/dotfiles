@@ -14,10 +14,22 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
 	-- Cosmetics
+	"norcalli/nvim-colorizer.lua",
 	"nvim-treesitter/nvim-treesitter-context",
 	"nvim-telescope/telescope-ui-select.nvim",
 	"rcarriga/nvim-notify",
 	"cocopon/iceberg.vim",
+	{
+		"folke/twilight.nvim",
+		opts = {
+			-- your configuration comes here
+			-- or leave it empty to use the default settings
+			-- refer to the configuration section below
+		},
+	},
+	{
+		"mluders/comfy-line-numbers.nvim",
+	},
 	{
 		"eoh-bse/minintro.nvim",
 		opts = { color = "#8f84b0" },
@@ -44,6 +56,11 @@ require("lazy").setup({
 	},
 
 	-- Text
+	{
+		"MeanderingProgrammer/render-markdown.nvim",
+		dependencies = { "nvim-treesitter/nvim-treesitter", "echasnovski/mini.icons" }, -- if you use standalone mini plugins
+		opts = {},
+	},
 	{
 		"ggandor/leap.nvim",
 		config = function()
@@ -92,7 +109,12 @@ require("lazy").setup({
 	{ "echasnovski/mini.ai" },
 
 	-- Search
-	"dyng/ctrlsf.vim",
+	{
+		"MagicDuck/grug-far.nvim",
+		config = function()
+			require("grug-far").setup({})
+		end,
+	},
 	"mg979/vim-visual-multi",
 	{
 		"nvim-telescope/telescope.nvim",
@@ -100,12 +122,29 @@ require("lazy").setup({
 	},
 
 	-- Completion
-	"hrsh7th/nvim-cmp",
 	"hrsh7th/cmp-nvim-lsp",
 	"hrsh7th/cmp-buffer",
 	"hrsh7th/cmp-path",
 	"hrsh7th/cmp-cmdline",
 	"rcarriga/cmp-dap",
+	{
+		"hrsh7th/nvim-cmp",
+		dependencies = {
+			"tailwind-tools",
+			"onsails/lspkind-nvim",
+			-- ...
+		},
+		opts = function()
+			return {
+				-- ...
+				formatting = {
+					format = require("lspkind").cmp_format({
+						before = require("tailwind-tools.cmp").lspkind_format,
+					}),
+				},
+			}
+		end,
+	},
 
 	-- LSP
 	"artemave/workspace-diagnostics.nvim",
@@ -113,6 +152,77 @@ require("lazy").setup({
 	"neovim/nvim-lspconfig",
 	"folke/trouble.nvim",
 	"joeveiga/ng.nvim",
+	{
+		"luckasRanarison/tailwind-tools.nvim",
+		name = "tailwind-tools",
+		build = ":UpdateRemotePlugins",
+		dependencies = {
+			"nvim-treesitter/nvim-treesitter",
+			"nvim-telescope/telescope.nvim",
+			"neovim/nvim-lspconfig",
+		},
+		opts = {},
+	},
+	{
+		"seblyng/roslyn.nvim",
+		ft = { "cs", "razor" },
+		dependencies = {
+			{
+				"tris203/rzls.nvim",
+				config = true,
+			},
+		},
+		config = function()
+			local rzls_path = vim.fn.expand("$MASON/packages/rzls/libexec")
+			local dotnet_ls_path = vim.fn.expand("$MASON/packages/dotnet-language-server/libexec")
+			local cmd = {
+				"dotnet",
+				vim.fs.joinpath(dotnet_ls_path, "DotnetLanguageServer.dll"),
+				"--stdio",
+				"--logLevel=Information",
+				"--extensionLogDirectory=" .. vim.fs.dirname(vim.lsp.get_log_path()),
+				"--razorSourceGenerator=" .. vim.fs.joinpath(rzls_path, "Microsoft.CodeAnalysis.Razor.Compiler.dll"),
+				"--razorDesignTimePath="
+					.. vim.fs.joinpath(rzls_path, "Targets", "Microsoft.NET.Sdk.Razor.DesignTime.targets"),
+				"--extension",
+				vim.fs.joinpath(rzls_path, "RazorExtension", "Microsoft.VisualStudioCode.RazorExtension.dll"),
+			}
+
+			require("roslyn").setup({
+				cmd = cmd,
+				config = {
+					handlers = require("rzls.roslyn_handlers"),
+					settings = {
+						["csharp|inlay_hints"] = {
+							csharp_enable_inlay_hints_for_implicit_object_creation = true,
+							csharp_enable_inlay_hints_for_implicit_variable_types = true,
+							csharp_enable_inlay_hints_for_lambda_parameter_types = true,
+							csharp_enable_inlay_hints_for_types = true,
+							dotnet_enable_inlay_hints_for_indexer_parameters = true,
+							dotnet_enable_inlay_hints_for_literal_parameters = true,
+							dotnet_enable_inlay_hints_for_object_creation_parameters = true,
+							dotnet_enable_inlay_hints_for_other_parameters = true,
+							dotnet_enable_inlay_hints_for_parameters = true,
+							dotnet_suppress_inlay_hints_for_parameters_that_differ_only_by_suffix = true,
+							dotnet_suppress_inlay_hints_for_parameters_that_match_argument_name = true,
+							dotnet_suppress_inlay_hints_for_parameters_that_match_method_intent = true,
+						},
+						["csharp|code_lens"] = {
+							dotnet_enable_references_code_lens = true,
+						},
+					},
+				},
+			})
+		end,
+		init = function()
+			vim.filetype.add({
+				extension = {
+					razor = "razor",
+					cshtml = "razor",
+				},
+			})
+		end,
+	},
 	{
 		"williamboman/mason-lspconfig.nvim",
 		dependencies = { "williamboman/mason.nvim" },
@@ -181,6 +291,7 @@ require("lazy").setup({
 
 	-- Others
 	"mbbill/undotree",
+	-- "github/copilot.vim",
 	{
 		"coffebar/neovim-project",
 		opts = {
@@ -208,7 +319,7 @@ require("lazy").setup({
 	{
 		"kristijanhusak/vim-dadbod-ui",
 		dependencies = {
-			{ "tpope/vim-dadbod",                     lazy = true },
+			{ "tpope/vim-dadbod", lazy = true },
 			{ "kristijanhusak/vim-dadbod-completion", ft = { "sql", "mysql", "plsql" }, lazy = true },
 		},
 		cmd = {
@@ -223,4 +334,20 @@ require("lazy").setup({
 			vim.g.db_ui_winwidth = RightScreenSpace
 		end,
 	},
+	-- {
+	-- 	"yetone/avante.nvim",
+	-- 	dependencies = {
+	-- 		"nvim-tree/nvim-web-devicons",
+	-- 		"stevearc/dressing.nvim",
+	-- 		"nvim-lua/plenary.nvim",
+	-- 		"MunifTanjim/nui.nvim",
+	-- 		{
+	-- 			"MeanderingProgrammer/render-markdown.nvim",
+	-- 			opts = { file_types = { "markdown", "Avante" } },
+	-- 			ft = { "markdown", "Avante" },
+	-- 		},
+	-- 	},
+	-- 	build = "make",
+	-- 	opts = { provider = "copilot" },
+	-- },
 })
