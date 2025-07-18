@@ -9,9 +9,7 @@ layout {
     }
 
     tab name="front-nvim" cwd="CustomerPortal.Angular" {
-        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim" {
-            cwd "~/dev/CustomerPortal.Angular"
-        }
+        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
     }
 
     tab name="front-tools" cwd="CustomerPortal.Angular" {

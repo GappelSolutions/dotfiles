@@ -1,4 +1,6 @@
-if [[ ":$FPATH:" != *":/Users/cgpp/.zsh/completions:"* ]]; then export FPATH="/Users/cgpp/.zsh/completions:$FPATH"; fi
+if [[ ":$FPATH:" != *":/Users/cgpp/.zsh/completions:"* ]]; then
+  export FPATH="/Users/cgpp/.zsh/completions:$FPATH"
+fi
 
 autoload -Uz compinit
 compinit
@@ -34,12 +36,19 @@ alias dotnet-csharpier='dotnet csharpier'
 alias sz='source ~/.zshrc'
 alias zr='zellij run -i --'
 
-clear
-echo ""
-neofetch
-echo -e "\e[1;34m• • • • • • • • • • • • • • • • • • ✦ • • • • • • • • • • • • • • • • • •\n\e[0m"
-echo -e "\e[1;35m$(echo 'EVULution' | figlet -f rounded -d /Users/cgpp/figlet-fonts -w 100)\e[0m\n"
-echo -e "\e[1;34m• • • • • • • • • • • • • • • • • • ✦ • • • • • • • • • • • • • • • • • •\n\n\e[0m"
+if [[ "$COLUMNS" -lt 75 ]]; then
+  clear
+  echo ""
+  nerdfetch
+  echo -e "\n\e[1;35m$(echo 'EVULution' | figlet -f slscript -d /Users/cgpp/figlet-fonts -w 100)\e[0m"
+else
+  clear
+  echo ""
+  neofetch
+  echo -e "\e[1;34m• • • • • • • • • • • • • • • • • • ✦ • • • • • • • • • • • • • • • • • •\n\e[0m"
+  echo -e "\e[1;35m$(echo 'EVULution' | figlet -f rounded -d /Users/cgpp/figlet-fonts -w 100)\e[0m\n"
+  echo -e "\e[1;34m• • • • • • • • • • • • • • • • • • ✦ • • • • • • • • • • • • • • • • • •\n\n\e[0m"
+fi
 
 HISTFILE=~/.zsh_history
 HISTSIZE=10000
@@ -81,7 +90,7 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 
-function yy() {
+function y() {
   local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
   yazi "$@" --cwd-file="$tmp"
   if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then

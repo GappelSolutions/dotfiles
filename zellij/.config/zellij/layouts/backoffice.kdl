@@ -1,0 +1,65 @@
+layout {
+    cwd "~/dev"
+
+    default_tab_template {
+        children
+        pane size=1 borderless=true {
+            plugin location="compact-bar"
+        }
+    }
+
+    tab name="front-nvim" cwd="BackOffice.Frontend" {
+        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim" 
+    }
+
+    tab name="front-tools" cwd="BackOffice.Frontend" {
+        pane split_direction="vertical" {
+            pane size="58%" split_direction="horizontal" {
+                pane command="yazi" {
+                    args "~/dev/BackOffice.Frontend"
+                }
+
+                pane 
+            }
+
+            pane size="42%" split_direction="horizontal" {
+                pane focus=true command="pnpm" {
+                    args "start"
+                }
+
+                pane command="pnpm" start_suspended=true {
+                    args "i"
+                }
+            }
+        }
+    }
+
+    tab name="back-nvim" cwd="BackOffice.Backend" {
+        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim" 
+    }
+
+    tab name="back-tools" cwd="BackOffice.Backend" {
+        pane split_direction="vertical" {
+            pane size="58%" split_direction="horizontal" {
+                pane command="yazi" {
+                    args "~/dev/BackOffice.Backend"
+                }
+
+                pane 
+            }
+
+            pane size="42%" split_direction="horizontal" {
+                pane focus=true command="/usr/local/share/dotnet/dotnet"  {
+                    args "watch" "run" "--project=Evulution.BackOffice.Webapi"
+                }
+                pane
+            }
+        }
+    }
+
+    tab
+    tab
+}
+
+scrollback_editor "/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+default_mode "locked"
