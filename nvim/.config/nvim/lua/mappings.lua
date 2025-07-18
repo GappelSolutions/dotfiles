@@ -44,8 +44,6 @@ Map("v", "<C-q>", ":q<CR>")
 Map("v", "p", "pgvy")
 
 -- Visual Mode Mappings for Movement
-Map("v", "<C-h>", "_")
-Map("v", "<C-l>", "$")
 Map("v", "J", "jzz")
 Map("v", "K", "kzz")
 Map("v", "<A-j>", ":m '>+1<CR>gv=gvzz")
@@ -56,10 +54,6 @@ Map("v", "<", "<gv")
 Map("v", ">", ">gv")
 
 -- Normal Mode Mappings for Movement
-Map("n", "<C-l>", "$")
-Map("n", "<C-h>", "_")
-Map("n", "<C-k>", "<C-u>zz")
-Map("n", "<C-j>", "<C-d>zz")
 Map("n", "<leader>[", "%")
 Map("n", "<leader>aa", "ggVG")
 Map("n", "<leader>y", "mzggVGy`zzz")

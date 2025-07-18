@@ -1,22 +1,15 @@
 if [[ ":$FPATH:" != *":/Users/cgpp/.zsh/completions:"* ]]; then export FPATH="/Users/cgpp/.zsh/completions:$FPATH"; fi
-# if [ "$TMUX" = "" ]; then 
-#   tmux attach || tmux new-session
-#  fi
 
-# Enable command auto-completion and history features
 autoload -Uz compinit
 compinit
 
-# Set up instant prompt if the cache file exists
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-# Load plugins for enhanced shell functionality
 source "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 source "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions.zsh/zsh-autosuggestions.zsh"
 
-# Aliases for common commands
 alias ls="ls --color"
 alias micro="~/micro"
 alias ls='eza --icons'
@@ -48,57 +41,51 @@ echo -e "\e[1;34m• • • • • • • • • • • • • • • •
 echo -e "\e[1;35m$(echo 'EVULution' | figlet -f rounded -d /Users/cgpp/figlet-fonts -w 100)\e[0m\n"
 echo -e "\e[1;34m• • • • • • • • • • • • • • • • • • ✦ • • • • • • • • • • • • • • • • • •\n\n\e[0m"
 
-# Setup history file and options
 HISTFILE=~/.zsh_history
 HISTSIZE=10000
 SAVEHIST=10000
 setopt appendhistory
 
-# Initialize Zoxide for directory jumping
 eval "$(zoxide init zsh)"
 
-# Initialize ng completion script
 source <(ng completion script)
 
-# Setup Powerlevel10k theme
 source /opt/homebrew/share/powerlevel10k/powerlevel10k.zsh-theme
 
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-# Enable instant prompt for Powerlevel10k
 typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
-export P10K_THEME='powerlevel10k/iceberg' # Assuming you have icebergs integrated
+export P10K_THEME='powerlevel10k/iceberg'
 export PATH="$PATH:$HOME/.dotnet/tools"
 setopt nocaseglob
 
 if [ -n "$NVIM_LISTEN_ADDRESS" ]; then
-    alias nvim=nvr -cc split --remote-wait +'set bufhidden=wipe'
-    export VISUAL="nvr -cc split --remote-wait +'set bufhidden=wipe'"
-    export EDITOR="nvr -cc split --remote-wait +'set bufhidden=wipe'"
+  alias nvim=nvr -cc split --remote-wait +'set bufhidden=wipe'
+  export VISUAL="nvr -cc split --remote-wait +'set bufhidden=wipe'"
+  export EDITOR="nvr -cc split --remote-wait +'set bufhidden=wipe'"
 else
-    export VISUAL="nvim"
-    export EDITOR="nvim"
+  export VISUAL="nvim"
+  export EDITOR="nvim"
 fi
 
 if [ -f ~/.fzf.zsh ]; then
-    source ~/.fzf.zsh
+  source ~/.fzf.zsh
 fi
 export PATH="/Users/cgpp/.local/share/bob/nvim-bin:$PATH"
 export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
-
-# pnpm
+export DOTNET_ROOT=/usr/local/share/dotnet
+export PATH="$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools"
 export PNPM_HOME="/Users/cgpp/Library/pnpm"
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
-# pnpm end
 
 function yy() {
-	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
-	yazi "$@" --cwd-file="$tmp"
-	if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-		cd -- "$cwd"
-	fi
-	rm -f -- "$tmp"
+  local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
+  yazi "$@" --cwd-file="$tmp"
+  if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+    cd -- "$cwd"
+  fi
+  rm -f -- "$tmp"
 }

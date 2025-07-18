@@ -1,6 +1,6 @@
 require("notify").setup({
 	background_colour = "#000000",
-	max_width = RightScreenSpace,
+	max_width = 40,
 	stages = "fade",
 	timeout = 3000,
 })
