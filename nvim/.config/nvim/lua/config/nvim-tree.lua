@@ -8,7 +8,7 @@ end
 require("nvim-tree").setup({
 	update_focused_file = { enable = true },
 	view = {
-		width = RightScreenSpace,
+		width = 40,
 		side = "right",
 		float = {
 			enable = false,

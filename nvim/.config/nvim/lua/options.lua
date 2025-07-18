@@ -1,6 +1,3 @@
--- screen
-RightScreenSpace = 58
-
 -- indentation & tabs → spaces
 vim.opt.expandtab = true -- use spaces instead of tabs
 vim.opt.shiftwidth = 4 -- width for autoindent
