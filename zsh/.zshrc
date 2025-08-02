@@ -87,6 +87,7 @@ case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
+export PATH="/usr/local/share/dotnet:$PATH"
 
 function y() {
   local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"

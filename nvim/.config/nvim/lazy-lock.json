@@ -6,8 +6,6 @@
   "cmp-nvim-lsp": { "branch": "main", "commit": "a8912b88ce488f411177fc8aed358b04dc246d7b" },
   "cmp-path": { "branch": "main", "commit": "c6635aae33a50d6010bf1aa756ac2398a2d54c32" },
   "comfy-line-numbers.nvim": { "branch": "main", "commit": "eb1c966e22fbabe3a3214c78bda9793ccf9d2a5d" },
-  "ctrlsf.vim": { "branch": "master", "commit": "50186c529c881b7844bcd66c7b8e9826eb8990a4" },
-  "flit.nvim": { "branch": "main", "commit": "1ef72de6a02458d31b10039372c8a15ab8989e0d" },
   "gitsigns.nvim": { "branch": "main", "commit": "8b729e489f1475615dc6c9737da917b3bc163605" },
   "grug-far.nvim": { "branch": "main", "commit": "b3f9412b1ed76f14cfc68e1ee899873544330c80" },
   "harpoon": { "branch": "master", "commit": "1bc17e3e42ea3c46b33c0bbad6a880792692a1b3" },
@@ -20,7 +18,6 @@
   "mason-lspconfig.nvim": { "branch": "main", "commit": "d3ada78a941ff09d21dd9b4c2ec36f0cf44a4ccb" },
   "mason-nvim-dap.nvim": { "branch": "main", "commit": "4c2cdc69d69fe00c15ae8648f7e954d99e5de3ea" },
   "mason.nvim": { "branch": "main", "commit": "8024d64e1330b86044fed4c8494ef3dcd483a67c" },
-  "mini.ai": { "branch": "main", "commit": "7f1fe86277f0e977642cf8fe15f004229f61e61a" },
   "mini.animate": { "branch": "main", "commit": "9b518c39c0e25b7b5e4e61db3f1407f7b4889f4e" },
   "mini.icons": { "branch": "main", "commit": "397ed3807e96b59709ef3292f0a3e253d5c1dc0a" },
   "minintro.nvim": { "branch": "master", "commit": "a4cc6e9e3f0368fa35e3fa95b4aed840ab978a51" },
@@ -58,9 +55,6 @@
   "trouble.nvim": { "branch": "main", "commit": "85bedb7eb7fa331a2ccbecb9202d8abba64d37b3" },
   "twilight.nvim": { "branch": "main", "commit": "1584c0b0a979b71fd86b18d302ba84e9aba85b1b" },
   "undotree": { "branch": "master", "commit": "b951b87b46c34356d44aa71886aecf9dd7f5788a" },
-  "vim-dadbod": { "branch": "master", "commit": "e95afed23712f969f83b4857a24cf9d59114c2e6" },
-  "vim-dadbod-completion": { "branch": "master", "commit": "a8dac0b3cf6132c80dc9b18bef36d4cf7a9e1fe6" },
-  "vim-dadbod-ui": { "branch": "master", "commit": "460432301a5cb280ea265ddfa15c9f3dcd1d26b7" },
   "vim-visual-multi": { "branch": "master", "commit": "a6975e7c1ee157615bbc80fc25e4392f71c344d4" },
   "workspace-diagnostics.nvim": { "branch": "main", "commit": "60f9175b2501ae3f8b1aba9719c0df8827610c8e" }
 }

@@ -5,7 +5,7 @@ if not vim.loop.fs_stat(lazypath) then
 		"clone",
 		"--filter=blob:none",
 		"https://github.com/folke/lazy.nvim.git",
-		"--branch=stable", -- latest stable release
+		"--branch=stable",
 		lazypath,
 	})
 end
@@ -14,18 +14,14 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
 	-- Cosmetics
+	"cocopon/iceberg.vim",
 	"norcalli/nvim-colorizer.lua",
 	"nvim-treesitter/nvim-treesitter-context",
 	"nvim-telescope/telescope-ui-select.nvim",
 	"rcarriga/nvim-notify",
-	"cocopon/iceberg.vim",
 	{
 		"folke/twilight.nvim",
-		opts = {
-			-- your configuration comes here
-			-- or leave it empty to use the default settings
-			-- refer to the configuration section below
-		},
+		opts = {},
 	},
 	{
 		"mluders/comfy-line-numbers.nvim",
@@ -58,7 +54,7 @@ require("lazy").setup({
 	-- Text
 	{
 		"MeanderingProgrammer/render-markdown.nvim",
-		dependencies = { "nvim-treesitter/nvim-treesitter", "echasnovski/mini.icons" }, -- if you use standalone mini plugins
+		dependencies = { "nvim-treesitter/nvim-treesitter", "echasnovski/mini.icons" },
 		opts = {},
 	},
 	{
@@ -68,16 +64,13 @@ require("lazy").setup({
 		end,
 	},
 	{
-		"ggandor/flit.nvim",
-		dependencies = { "ggandor/leap.nvim" },
-		config = function()
-			require("flit").setup()
-		end,
-	},
-	{
 		"windwp/nvim-autopairs",
 		event = "InsertEnter",
 		config = true,
+	},
+	{
+		"windwp/nvim-ts-autotag",
+		dependencies = "nvim-treesitter/nvim-treesitter",
 	},
 	{
 		"numToStr/Comment.nvim",
@@ -93,6 +86,7 @@ require("lazy").setup({
 	},
 
 	-- Files
+	"mg979/vim-visual-multi",
 	{
 		"nvim-tree/nvim-tree.lua",
 		dependencies = { "nvim-tree/nvim-web-devicons" },
@@ -106,19 +100,21 @@ require("lazy").setup({
 		"ThePrimeagen/harpoon",
 		dependencies = { "nvim-lua/plenary.nvim" },
 	},
-	{ "echasnovski/mini.ai" },
-
-	-- Search
 	{
 		"MagicDuck/grug-far.nvim",
 		config = function()
-			require("grug-far").setup({})
+			require("grug-far").setup({
+				openTargetWindow = { preferredLocation = "right" },
+			})
 		end,
 	},
-	"mg979/vim-visual-multi",
 	{
 		"nvim-telescope/telescope.nvim",
 		dependencies = { "nvim-lua/plenary.nvim" },
+	},
+	{
+		"smartpde/telescope-recent-files",
+		dependencies = { "nvim-telescope/telescope.nvim" },
 	},
 
 	-- Completion
@@ -132,11 +128,9 @@ require("lazy").setup({
 		dependencies = {
 			"tailwind-tools",
 			"onsails/lspkind-nvim",
-			-- ...
 		},
 		opts = function()
 			return {
-				-- ...
 				formatting = {
 					format = require("lspkind").cmp_format({
 						before = require("tailwind-tools.cmp").lspkind_format,
@@ -236,10 +230,6 @@ require("lazy").setup({
 		build = ":TSUpdate",
 	},
 	{
-		"windwp/nvim-ts-autotag",
-		dependencies = "nvim-treesitter/nvim-treesitter",
-	},
-	{
 		"mfussenegger/nvim-dap",
 		lazy = true,
 		dependencies = {
@@ -291,7 +281,6 @@ require("lazy").setup({
 
 	-- Others
 	"mbbill/undotree",
-	-- "github/copilot.vim",
 	{
 		"coffebar/neovim-project",
 		opts = {
@@ -312,41 +301,4 @@ require("lazy").setup({
 		lazy = false,
 		priority = 100,
 	},
-	{
-		"smartpde/telescope-recent-files",
-		dependencies = { "nvim-telescope/telescope.nvim" },
-	},
-	{
-		"kristijanhusak/vim-dadbod-ui",
-		dependencies = {
-			{ "tpope/vim-dadbod", lazy = true },
-			{ "kristijanhusak/vim-dadbod-completion", ft = { "sql", "mysql", "plsql" }, lazy = true },
-		},
-		cmd = {
-			"DBUI",
-			"DBUIToggle",
-			"DBUIAddConnection",
-			"DBUIFindBuffer",
-		},
-		init = function()
-			vim.g.db_ui_use_nerd_fonts = 1
-			vim.g.db_ui_win_position = "right"
-		end,
-	},
-	-- {
-	-- 	"yetone/avante.nvim",
-	-- 	dependencies = {
-	-- 		"nvim-tree/nvim-web-devicons",
-	-- 		"stevearc/dressing.nvim",
-	-- 		"nvim-lua/plenary.nvim",
-	-- 		"MunifTanjim/nui.nvim",
-	-- 		{
-	-- 			"MeanderingProgrammer/render-markdown.nvim",
-	-- 			opts = { file_types = { "markdown", "Avante" } },
-	-- 			ft = { "markdown", "Avante" },
-	-- 		},
-	-- 	},
-	-- 	build = "make",
-	-- 	opts = { provider = "copilot" },
-	-- },
 })
