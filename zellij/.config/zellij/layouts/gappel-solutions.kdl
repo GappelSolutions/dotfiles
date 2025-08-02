@@ -11,7 +11,12 @@ layout {
     tab name="frontend" cwd="src/frontend" {
         pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
     }
+
     tab name="backend" cwd="src/backend/GappelCloud" {
+        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim" 
+    }
+
+    tab name="cloud" cwd="" {
         pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim" 
     }
 
@@ -19,7 +24,7 @@ layout {
         pane split_direction="vertical" {
             pane size="70%" split_direction="horizontal" {
                 pane command="yazi" {
-                    args "~/dev/CustomerPortal.WebAPI"
+                    args "~/dev/gappel-cloud"
                 }
 
                 pane focus=true command="lazydocker"

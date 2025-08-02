@@ -26,14 +26,6 @@ function DeleteLockFileAndOpenLazyGit()
 	vim.cmd("LazyGit")
 end
 
--- Function to run build command
-function RunDetachedBuildCommand()
-	local build_command =
-		'start cmd.exe /c "dotnet build C:/Users/aiche/dev/gappel-cloud/src/GappelCloud/GappelCloud & pause"'
-	os.execute(build_command)
-	print("Build started in a new command window")
-end
-
 -- General Editing Mappings
 Map("n", "<C-s>", "<cmd>:w<CR>")
 Map("i", "<C-s>", "<Esc><cmd>:w<CR>")
@@ -41,20 +33,16 @@ Map("v", "<C-s>", "<cmd>:w<CR>")
 Map("n", "<C-q>", ":q<CR>")
 Map("i", "<C-q>", "<Esc>:q<CR>")
 Map("v", "<C-q>", ":q<CR>")
+
 Map("v", "p", "pgvy")
 
 -- Visual Mode Mappings for Movement
 Map("v", "J", "jzz")
 Map("v", "K", "kzz")
-Map("v", "<A-j>", ":m '>+1<CR>gv=gvzz")
-Map("v", "<A-k>", ":m '<-2<CR>gv=gvzz")
-Map("v", "<C-k>", "<C-u>zz")
-Map("v", "<C-j>", "<C-d>zz")
 Map("v", "<", "<gv")
 Map("v", ">", ">gv")
 
 -- Normal Mode Mappings for Movement
-Map("n", "<leader>[", "%")
 Map("n", "<leader>aa", "ggVG")
 Map("n", "<leader>y", "mzggVGy`zzz")
 Map("n", "<leader>P", "mzggVGpgvy`zzz")
@@ -72,9 +60,6 @@ Map("n", "n", "o<Esc>")
 Map("n", "N", "O<Esc>")
 Map("n", "<S-h>", ":execute 'normal! 80zh'<CR>", { desc = "Scroll left half page" })
 Map("n", "<S-l>", ":execute 'normal! 80zl'<CR>", { desc = "Scroll right half page" })
-Map("n", "<A-j>", ":m .+1<CR>==zz")
-Map("n", "<A-k>", ":m .-2<CR>==zz")
-Map("n", "<C-m>", "<C-w>_")
 Map("n", "<leader>w", "<cmd>set wrap!<CR>")
 
 -- Git
@@ -123,9 +108,6 @@ vim.keymap.set("n", "<leader>pc", ng.goto_component_with_template_file, opts)
 -- CtrlSF Mappings
 Map("n", "<leader>S", "<cmd>GrugFar<CR>")
 
--- Key binding for build command
-Map("n", "<F6>", [[:lua RunDetachedBuildCommand()<CR>]])
-
 -- Harpoon
 Map(
 	"n",
@@ -151,18 +133,6 @@ Map("n", "<leader>u", "<cmd>UndotreeToggle<CR>")
 
 -- NvimTree
 Map("n", "<leader>pf", "<cmd>NvimTreeToggle<CR>")
-
--- -- Augment AI
--- Map("n", "<leader>A", "<cmd>Augment chat-toggle<CR>")
--- Map("n", "<leader>an", "<cmd>Augment chat-new<CR>")
--- Map("n", "<leader>ac", "<cmd>Augment chat<CR>")
--- Map("n", "<leader>ad", "<cmd>Augment disable<CR>")
--- Map("n", "<leader>ae", "<cmd>Augment enable<CR>")
-
--- Avante
--- Map("n", "<leader>AC", "<cmd>AvanteChat<CR>")
--- Map("n", "<leader>AA", "<cmd>AvanteFocus<CR>")
--- Map("n", "<leader>AS", "<cmd>AvanteStop<CR>")
 
 vim.api.nvim_create_autocmd("FileType", {
 	pattern = "razor",

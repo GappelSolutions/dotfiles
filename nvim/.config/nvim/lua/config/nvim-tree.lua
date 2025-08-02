@@ -4,7 +4,6 @@ local function my_on_attach(bufnr)
 	vim.keymap.del("n", "<C-k>", { buffer = bufnr })
 end
 
--- NvimTree configuration
 require("nvim-tree").setup({
 	update_focused_file = { enable = true },
 	view = {

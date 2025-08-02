@@ -1,8 +1,10 @@
--- indentation & tabs → spaces
-vim.opt.expandtab = true -- use spaces instead of tabs
-vim.opt.shiftwidth = 4 -- width for autoindent
-vim.opt.tabstop = 4 -- width of a hard tabstop
-vim.opt.softtabstop = 4 -- fine-tune editing of tabs
+vim.opt.shell = "/bin/zsh"
+vim.opt.shellcmdflag = "-lc"
+
+vim.opt.expandtab = true
+vim.opt.shiftwidth = 4
+vim.opt.tabstop = 4
+vim.opt.softtabstop = 4
 
 -- general
 vim.opt.clipboard = "unnamedplus"
@@ -29,22 +31,10 @@ vim.opt.whichwrap:append("h,l")
 vim.opt.cursorline = true
 vim.o.termguicolors = true
 
--- workspace folders
-vim.g.augment_workspace_folders = {
-	"/Users/cgpp/dev/gappel-cloud",
-	"/Users/cgpp/dev/CustomerPortal-Angular",
-	"/Users/cgpp/dev/CustomerPortal-WebApi",
-	"/Users/cgpp/dev/BackOffice-Frontend",
-	"/Users/cgpp/dev/BackOffice-Backend",
-}
-
--- per-file overrides
 vim.cmd([[
 augroup Indentation
   autocmd!
-  " use 2-space indents in JS/TS/HTML
   autocmd FileType javascript,typescript,html setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
-  " use 4-space in C#, JSON, etc.
   autocmd FileType csharp,json setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
 augroup END
 ]])
