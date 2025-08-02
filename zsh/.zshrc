@@ -25,8 +25,6 @@ alias cvpn="sudo systemctl start openvpn-client@client1"
 alias dcu="docker-compose up -d --build"
 alias dcd="docker-compose down"
 alias ld='lazydocker'
-alias lg='lazygit'
-alias lsql='lazysql'
 alias stowm='stow -v -R -t ~'
 alias dnbo='dotnet watch run --project="Evulution.BackOffice.Webapi"'
 alias dneb='dotnet watch run --project="Repower.CustomerPortal.Webapi" --launch-profile="eb"'
@@ -35,6 +33,8 @@ alias db='rainfrog --driver postgresql --username cgpp --password ASDQWEasdqweAS
 alias dotnet-csharpier='dotnet csharpier'
 alias sz='source ~/.zshrc'
 alias zr='zellij run -i --'
+alias vi='nvim'
+alias vim='nvim --listen /tmp/nvim-server.pipe'
 
 if [[ "$COLUMNS" -lt 75 ]]; then
   clear
@@ -99,3 +99,16 @@ function y() {
   fi
   rm -f -- "$tmp"
 }
+
+mkdir -p ~/bin
+export PATH=~/bin:$PATH
+
+if [ ! -f ~/bin/vim ]; then
+  echo '#!/bin/bash' > ~/bin/vim
+  echo 'if [ -n "$NVIM_LISTEN_ADDRESS" ]; then' >> ~/bin/vim
+  echo '  /usr/bin/vim "$@"' >> ~/bin/vim
+  echo 'else' >> ~/bin/vim
+  echo '  /Users/cgpp/.local/share/bob/nvim-bin/nvim "$@"' >> ~/bin/vim
+  echo 'fi' >> ~/bin/vim
+  chmod +x ~/bin/vim
+fi

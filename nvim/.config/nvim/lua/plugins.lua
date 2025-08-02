@@ -259,6 +259,7 @@ require("lazy").setup({
 
 	-- Git
 	"lewis6991/gitsigns.nvim",
+	"sindrets/diffview.nvim",
 	{
 		"nvim-lualine/lualine.nvim",
 		dependencies = { "kyazdani42/nvim-web-devicons" },
@@ -274,9 +275,6 @@ require("lazy").setup({
 			"LazyGitFilterCurrentFile",
 		},
 		dependencies = { "nvim-lua/plenary.nvim" },
-		keys = {
-			{ "<leader>G", DeleteLockFileAndOpenLazyGit, desc = "Open lazy git" },
-		},
 	},
 
 	-- Others

@@ -35,6 +35,8 @@ text = "#c6c8d1"
 
 [env]
 TERM = "xterm-256color"
+EDITOR = "/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+VISUAL = "/Users/cgpp/.local/share/bob/nvim-bin/nvim"
 
 [font]
 size = 16.0
@@ -67,5 +69,5 @@ y = 4
 [terminal]
 
 [terminal.shell]
-program = "zellij"
-args = ["-l", "welcome"]
+program = "zsh"
+args = ["-l", "-c", "zellij -l welcome"]
