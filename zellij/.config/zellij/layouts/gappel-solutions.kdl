@@ -16,10 +16,6 @@ layout {
         pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim" 
     }
 
-    tab name="cloud" cwd="" {
-        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim" 
-    }
-
     tab name="tools" {
         pane split_direction="vertical" {
             pane size="70%" split_direction="horizontal" {
@@ -35,6 +31,11 @@ layout {
                 pane
             }
         }
+    }
+
+
+    tab name="cloud" cwd="" {
+        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim" 
     }
 
     tab
