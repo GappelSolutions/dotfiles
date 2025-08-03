@@ -35,6 +35,28 @@ lsp.csharp_ls.setup({
 	},
 })
 
+lsp.rust_analyzer.setup({
+	on_attach = remove_formatter_on_attach,
+	capabilities = capabilities,
+	-- For rust-analyzer to provide full functionality like inlay hints and checks
+	-- you might need to enable specific settings.
+	-- Example (uncomment if needed):
+	-- settings = {
+	--   ["rust-analyzer"] = {
+	--     checkOnSave = {
+	--       command = "clippy",
+	--     },
+	--     inlayHints = {
+	--       typeHints = true,
+	--       parameterHints = true,
+	--       closureCaptureHints = true,
+	--       lifetimeElisionHints = "always",
+	--       discriminantHints = "field",
+	--     },
+	--   },
+	-- },
+})
+
 lsp.html.setup({
 	on_attach = remove_formatter_on_attach,
 	capabilities = capabilities,

@@ -7,6 +7,7 @@ require("mason-lspconfig").setup({
 		"cssls",
 		"html",
 		"lua_ls",
+		"rust_analyzer",
 		"tailwindcss",
 		"ts_ls",
 	},
