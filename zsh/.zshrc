@@ -1,17 +1,20 @@
+# --- Completions ---
 if [[ ":$FPATH:" != *":/Users/cgpp/.zsh/completions:"* ]]; then
   export FPATH="/Users/cgpp/.zsh/completions:$FPATH"
 fi
-
 autoload -Uz compinit
 compinit
 
+# --- Instant Prompt (Powerlevel10k) ---
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
+# --- Plugins ---
 source "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 source "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions.zsh/zsh-autosuggestions.zsh"
 
+# --- Aliases ---
 alias ls="ls --color"
 alias micro="~/micro"
 alias ls='eza --icons'
@@ -28,14 +31,21 @@ alias ld='lazydocker'
 alias stowm='stow -v -R -t ~'
 alias dnbo='dotnet watch run --project="Evulution.BackOffice.Webapi"'
 alias dneb='dotnet watch run --project="Repower.CustomerPortal.Webapi" --launch-profile="eb"'
-alias ai=' docker model run ai/smollm2'
+alias ai='docker model run ai/smollm2'
 alias db='rainfrog --driver postgresql --username cgpp --password ASDQWEasdqweASDQWE123 --host localhost --port 5430 --database gappel-cloud'
 alias dotnet-csharpier='dotnet csharpier'
 alias sz='source ~/.zshrc'
 alias zr='zellij run -i --'
 alias vi='nvim'
 alias vim='nvim --listen /tmp/nvim-server.pipe'
+alias sc="~/bin/macos-screensaver"
 
+# --- Python (Homebrew) ---
+export PATH="/opt/homebrew/opt/python@3.13/bin:$PATH"
+alias py="python3"
+alias pip="pip3"
+
+# --- Fancy terminal banners ---
 if [[ "$COLUMNS" -lt 75 ]]; then
   clear
   echo ""
@@ -50,26 +60,24 @@ else
   echo -e "\e[1;34m• • • • • • • • • • • • • • • • • • ✦ • • • • • • • • • • • • • • • • • •\n\n\e[0m"
 fi
 
+# --- History ---
 HISTFILE=~/.zsh_history
 HISTSIZE=10000
 SAVEHIST=10000
 setopt appendhistory
 
+# --- Tools ---
 eval "$(zoxide init zsh)"
-
 source <(ng completion script)
-
 source /opt/homebrew/share/powerlevel10k/powerlevel10k.zsh-theme
-
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-
 typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
 export P10K_THEME='powerlevel10k/iceberg'
-export PATH="$PATH:$HOME/.dotnet/tools"
 setopt nocaseglob
 
+# --- Editor ---
 if [ -n "$NVIM_LISTEN_ADDRESS" ]; then
-  alias nvim=nvr -cc split --remote-wait +'set bufhidden=wipe'
+  alias nvim="nvr -cc split --remote-wait +'set bufhidden=wipe'"
   export VISUAL="nvr -cc split --remote-wait +'set bufhidden=wipe'"
   export EDITOR="nvr -cc split --remote-wait +'set bufhidden=wipe'"
 else
@@ -77,9 +85,12 @@ else
   export EDITOR="nvim"
 fi
 
+# --- FZF ---
 if [ -f ~/.fzf.zsh ]; then
   source ~/.fzf.zsh
 fi
+
+# --- Paths ---
 export PATH="/Users/cgpp/.local/share/bob/nvim-bin:$PATH"
 export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
 export DOTNET_ROOT=/usr/local/share/dotnet
@@ -90,7 +101,10 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 export PATH="/usr/local/share/dotnet:$PATH"
+mkdir -p ~/bin
+export PATH=~/bin:$PATH
 
+# --- Yazi integration ---
 function y() {
   local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
   yazi "$@" --cwd-file="$tmp"
@@ -100,9 +114,7 @@ function y() {
   rm -f -- "$tmp"
 }
 
-mkdir -p ~/bin
-export PATH=~/bin:$PATH
-
+# --- Vim wrapper ---
 if [ ! -f ~/bin/vim ]; then
   echo '#!/bin/bash' > ~/bin/vim
   echo 'if [ -n "$NVIM_LISTEN_ADDRESS" ]; then' >> ~/bin/vim

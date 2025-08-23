@@ -279,6 +279,7 @@ require("lazy").setup({
 
 	-- Others
 	"mbbill/undotree",
+	"github/copilot.vim",
 	{
 		"coffebar/neovim-project",
 		opts = {
@@ -298,5 +299,13 @@ require("lazy").setup({
 		},
 		lazy = false,
 		priority = 100,
+	},
+	{
+		"olimorris/codecompanion.nvim",
+		opts = {},
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+			"nvim-treesitter/nvim-treesitter",
+		},
 	},
 })

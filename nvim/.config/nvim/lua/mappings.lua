@@ -146,3 +146,11 @@ vim.api.nvim_create_autocmd("FileType", {
 
 -- Twighlight
 Map("n", "<leader>T", "<cmd>Twilight<cr>")
+
+-- CodeCompanion Mappings
+Map("n", "<leader>aa", "<cmd>CodeCompanionActions<cr>")
+Map("n", "<leader>A", "<cmd>CodeCompanionChat Toggle<cr>")
+Map("v", "ga", "<cmd>CodeCompanionChat Add<cr>")
+
+-- Expand 'cc' into 'CodeCompanion' in the command line
+vim.cmd([[cab cc CodeCompanion]])

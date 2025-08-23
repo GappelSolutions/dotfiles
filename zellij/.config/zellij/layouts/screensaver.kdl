@@ -16,7 +16,7 @@ layout {
         pane split_direction="vertical" {
             pane size="58%" split_direction="horizontal" {
                 pane command="yazi" {
-                    args "~/dev/RustProject"
+                    args "~/dev/macos-screensaver/"
                 }
 
                 pane cwd="~/dev/macos-screensaver/"
@@ -25,6 +25,10 @@ layout {
             pane size="42%" split_direction="horizontal" {
                 pane focus=true command="cargo" start_suspended=true {
                     args "run"
+               }
+
+                pane command="cargo" start_suspended=true {
+                    args "check"
                 }
 
                 pane command="cargo" start_suspended=true {
