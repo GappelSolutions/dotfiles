@@ -131,5 +131,4 @@ require("lualine").setup({
 		lualine_c = { "filename" },
 		lualine_x = { "location" },
 	},
-	extensions = { "nvim-tree", "fugitive" },
 })
