@@ -15,7 +15,6 @@ dap.configurations.cs = {
 		name = "attach - WebApi",
 		request = "attach",
 		processId = require("dap.utils").pick_process,
-		port = 44356,
 	},
 }
 --

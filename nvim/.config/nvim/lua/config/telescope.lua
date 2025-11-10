@@ -1,6 +1,7 @@
 local border_chars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" }
 
 local actions = require("telescope.actions")
+
 require("telescope").setup({
 	defaults = {
 		borderchars = border_chars,
@@ -10,13 +11,11 @@ require("telescope").setup({
 				["<C-j>"] = actions.preview_scrolling_down,
 			},
 		},
-		path_display = {
-			shorten = {
-				len = 3,
-				exclude = { 1, -1 },
-			},
-			truncate = true,
-		},
+		path_display = function(opts, path)
+			local tail = require("telescope.utils").path_tail(path)
+			local dir = path:sub(1, -(#tail + 2))
+			return string.format("%s (%s)", tail, dir)
+		end,
 		layout_config = {
 			horizontal = {
 				width = 0.95,
@@ -26,5 +25,6 @@ require("telescope").setup({
 		},
 	},
 })
+
 require("telescope").load_extension("ui-select")
 require("telescope").load_extension("recent_files")
