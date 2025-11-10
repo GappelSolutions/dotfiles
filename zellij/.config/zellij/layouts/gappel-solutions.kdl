@@ -8,34 +8,63 @@ layout {
         }
     }
 
-    tab name="frontend" cwd="src/frontend" {
+    tab name="front-nvim" cwd="src/frontend" {
+        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+    }
+    //
+    // tab name="front-tools" cwd="src/frontend" {
+    //     pane split_direction="vertical" {
+    //         pane size="58%" split_direction="horizontal" {
+    //             pane command="yazi" {
+    //                 args "~/dev/gappel-cloud/src/frontend"
+    //             }
+    //
+    //             pane 
+    //         }
+    //
+    //         pane size="42%" split_direction="horizontal" {
+    //             pane focus=true start_suspended=true command="pnpm" {
+    //                 args "start:local"
+    //             }
+    //
+    //             pane command="pnpm" start_suspended=true {
+    //                 args "install"
+    //             }
+    //         }
+    //     }
+    // }
+
+    tab name="back-nvim" cwd="src/backend/GappelCloud" {
         pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
     }
 
-    tab name="backend" cwd="src/backend/GappelCloud" {
-        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim" 
-    }
-
-    tab name="tools" {
+    tab name="back-tools" cwd="src/backend/GappelCloud" {
         pane split_direction="vertical" {
-            pane size="70%" split_direction="horizontal" {
-                pane command="yazi" {
-                    args "~/dev/gappel-cloud"
+            pane size="60%" split_direction="horizontal" {
+                pane size="50%" command="yazi" {
+                    args "~/dev/gappel-cloud/src/backend/GappelCloud"
                 }
 
-                pane focus=true command="lazydocker"
+                pane size="50%" command="lazydocker"
             }
 
-            pane size="30%" split_direction="horizontal" {
-                pane 
-                pane
+            pane size="40%" split_direction="horizontal" {
+                pane size="50%" focus=true start_suspended=true command="dotnet" {
+                    args "run"
+                }
+                pane size="50%"
             }
         }
     }
 
+    tab name="repo-nvim" cwd="~/dev/gappel-cloud" {
+        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+    }
 
-    tab name="cloud" cwd="" {
-        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim" 
+    tab name="ssh" cwd="~/dev/gappel-cloud" {
+        pane borderless=true command="ssh" {
+            args "cgpp@192.168.178.33"
+        }
     }
 
     tab

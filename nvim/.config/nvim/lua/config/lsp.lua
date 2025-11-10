@@ -27,14 +27,6 @@ lsp.lua_ls.setup({
 	capabilities = capabilities,
 })
 
-lsp.csharp_ls.setup({
-	on_attach = remove_formatter_on_attach,
-	capabilities = capabilities,
-	config = {
-		filetypes = { "cs" },
-	},
-})
-
 lsp.rust_analyzer.setup({
 	on_attach = remove_formatter_on_attach,
 	capabilities = capabilities,
@@ -62,6 +54,28 @@ lsp.html.setup({
 	capabilities = capabilities,
 })
 
+lsp.cssls.setup({
+	on_attach = remove_formatter_on_attach,
+	capabilities = capabilities,
+	settings = {
+		css = {
+			lint = {
+				unknownAtRules = "ignore",
+			},
+		},
+		scss = {
+			lint = {
+				unknownAtRules = "ignore",
+			},
+		},
+		less = {
+			lint = {
+				unknownAtRules = "ignore",
+			},
+		},
+	},
+})
+
 lsp.tailwindcss.setup({
 	capabilities = capabilities,
 })
@@ -73,3 +87,12 @@ function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)
 	opts.border = opts.border or border
 	return orig_util_open_floating_preview(contents, syntax, opts, ...)
 end
+
+require("neotest").setup({
+	adapters = {
+		require("neotest-vitest")({
+			vitestCommand = "pnpm vitest",
+			vitestConfigFile = "./vitest.config.ts",
+		}),
+	},
+})

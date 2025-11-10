@@ -38,17 +38,8 @@ require("lazy").setup({
 		dependencies = { "MunifTanjim/nui.nvim" },
 	},
 	{
-		"echasnovski/mini.animate",
-		config = function()
-			require("mini.animate").setup({
-				cursor = {
-					timing = require("mini.animate").gen_timing.linear({ duration = 200, unit = "total" }),
-				},
-				scroll = {
-					enable = false,
-				},
-			})
-		end,
+		"sphamba/smear-cursor.nvim",
+		opts = {},
 	},
 
 	-- Text
@@ -147,6 +138,17 @@ require("lazy").setup({
 	"folke/trouble.nvim",
 	"joeveiga/ng.nvim",
 	{
+		"nvim-neotest/neotest",
+		dependencies = {
+			"marilari88/neotest-vitest",
+		},
+		opts = {
+			adapters = {
+				["neotest-vitest"] = {},
+			},
+		},
+	},
+	{
 		"luckasRanarison/tailwind-tools.nvim",
 		name = "tailwind-tools",
 		build = ":UpdateRemotePlugins",
@@ -218,6 +220,13 @@ require("lazy").setup({
 		end,
 	},
 	{
+		"GustavEikaas/easy-dotnet.nvim",
+		dependencies = { "nvim-lua/plenary.nvim", "nvim-telescope/telescope.nvim" },
+		config = function()
+			require("easy-dotnet").setup()
+		end,
+	},
+	{
 		"williamboman/mason-lspconfig.nvim",
 		dependencies = { "williamboman/mason.nvim" },
 	},
@@ -285,7 +294,7 @@ require("lazy").setup({
 		opts = {
 			projects = {
 				"/Users/cgpp/dev/*",
-				"/Users/cgpp/dev/gappel-cloud/src/backend/GappelCloud",
+				"/Users/cgpp/dev/gappel-cloud/src/backend/GappelCloud.Api",
 				"/Users/cgpp/dev/gappel-cloud/src/frontend",
 			},
 			picker = {
@@ -301,11 +310,23 @@ require("lazy").setup({
 		priority = 100,
 	},
 	{
+		"ravitemer/mcphub.nvim",
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+		},
+		build = "npm install -g mcp-hub@latest",
+		config = function()
+			require("mcphub").setup()
+		end,
+	},
+	{
 		"olimorris/codecompanion.nvim",
 		opts = {},
 		dependencies = {
 			"nvim-lua/plenary.nvim",
 			"nvim-treesitter/nvim-treesitter",
+			"ravitemer/mcphub.nvim",
+			"ravitemer/codecompanion-history.nvim",
 		},
 	},
 })

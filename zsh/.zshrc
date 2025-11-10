@@ -24,6 +24,7 @@ alias lsa='eza -a --icons'
 alias lla='eza -al --icons'
 alias lta='eza -a --tree --level=1 --icons'
 alias ssh-cloud="ssh cgpp@192.168.178.33"
+alias ftp-cloud="sftp cgpp@192.168.178.33"
 alias cvpn="sudo systemctl start openvpn-client@client1"
 alias dcu="docker-compose up -d --build"
 alias dcd="docker-compose down"
@@ -39,6 +40,7 @@ alias zr='zellij run -i --'
 alias vi='nvim'
 alias vim='nvim --listen /tmp/nvim-server.pipe'
 alias sc="~/bin/macos-screensaver"
+alias lg="lazygit"
 
 # --- Python (Homebrew) ---
 export PATH="/opt/homebrew/opt/python@3.13/bin:$PATH"
@@ -95,6 +97,7 @@ export PATH="/Users/cgpp/.local/share/bob/nvim-bin:$PATH"
 export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
 export DOTNET_ROOT=/usr/local/share/dotnet
 export PATH="$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools"
+export PATH="$PATH:$HOME/.dotnet/tools"
 export PNPM_HOME="/Users/cgpp/Library/pnpm"
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
@@ -124,3 +127,6 @@ if [ ! -f ~/bin/vim ]; then
   echo 'fi' >> ~/bin/vim
   chmod +x ~/bin/vim
 fi
+
+# Created by `pipx` on 2025-11-02 11:08:50
+export PATH="$PATH:/Users/cgpp/.local/bin"

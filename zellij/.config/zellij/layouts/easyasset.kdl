@@ -1,0 +1,67 @@
+layout {
+    cwd "~/dev"
+
+    default_tab_template {
+        children
+        pane size=1 borderless=true {
+            plugin location="compact-bar"
+        }
+    }
+
+    tab name="front-nvim" cwd="ea-angular-frontend" {
+        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+    }
+
+    tab name="front-tools" cwd="ea-angular-frontend" {
+        pane split_direction="vertical" {
+            pane size="58%" split_direction="horizontal" {
+                pane command="yazi" {
+                    args "~/dev/ea-angular-frontend"
+                }
+
+                pane 
+            }
+
+            pane size="42%" split_direction="horizontal" {
+                pane focus=true command="pnpm" start_suspended=true {
+                    args "start"
+                }
+
+                pane command="pnpm" start_suspended=true {
+                    args "i"
+                }
+            }
+        }
+    }
+
+    tab name="back-nvim" cwd="ea-dot-net-authentication" {
+        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim" 
+    }
+
+    tab name="back-tools" cwd="ea-dot-net-authentication" {
+        pane split_direction="vertical" {
+            pane size="58%" split_direction="horizontal" {
+                pane command="yazi" {
+                    args "~/dev/ea-dot-net-authentication"
+                }
+
+                pane 
+            }
+
+            pane size="42%" split_direction="horizontal" {
+                pane focus=true start_suspended=true cwd="Evulution.EasyAsset.WebAPI" command="/usr/local/share/dotnet/dotnet" {
+                    args "run"
+                }
+                pane start_suspended=true command="/usr/local/share/dotnet/dotnet" {
+                    args "build"
+                }
+            }
+        }
+    }
+
+    tab
+    tab
+}
+
+scrollback_editor "/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+default_mode "locked"

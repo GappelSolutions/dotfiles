@@ -39,7 +39,7 @@ Map("n", "<leader>y", "mzggVGy`zzz")
 Map("n", "<leader>P", "mzggVGpgvy`zzz")
 Map("n", "<leader>D", "ggVGd")
 Map("n", "<leader>/", '/<C-r>"<cr>')
-Map("n", "<leader>t", "J")
+Map("n", "<c-t>", "J")
 Map("n", "<leader>o", "<cmd>NeovimProjectDiscover<cr>")
 Map("n", "<leader>db", "<cmd>DBUIToggle<cr>")
 Map("n", ";", "nzz")
@@ -145,12 +145,23 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 -- Twighlight
-Map("n", "<leader>T", "<cmd>Twilight<cr>")
+Map("n", "<leader>tt", "<cmd>Twilight<cr>")
 
 -- CodeCompanion Mappings
 Map("n", "<leader>aa", "<cmd>CodeCompanionActions<cr>")
 Map("n", "<leader>A", "<cmd>CodeCompanionChat Toggle<cr>")
 Map("v", "ga", "<cmd>CodeCompanionChat Add<cr>")
+Map("n", "<leader>ah", "<cmd>CodeCompanionHistory<cr>")
 
 -- Expand 'cc' into 'CodeCompanion' in the command line
 vim.cmd([[cab cc CodeCompanion]])
+
+-- Neotest Mappings
+Map("n", "<leader>tr", "<cmd>lua require('neotest').run.run()<cr>")
+Map("n", "<leader>tf", "<cmd>lua require('neotest').run.run(vim.fn.expand('%'))<cr>")
+Map("n", "<leader>ts", "<cmd>lua require('neotest').summary.toggle()<cr>")
+Map("n", "<leader>th", "<cmd>lua require('neotest').output.open({ enter = true })<cr>")
+Map("n", "<leader>to", "<cmd>lua require('neotest').output_panel.toggle()<cr>")
+Map("n", "<leader>tn", "<cmd>lua require('neotest').jump.next({ status = 'failed' })<cr>")
+Map("n", "<leader>tp", "<cmd>lua require('neotest').jump.prev({ status = 'failed' })<cr>")
+Map("n", "<leader>ta", "<cmd>lua require('neotest').run.run(vim.loop.cwd())<cr>")
