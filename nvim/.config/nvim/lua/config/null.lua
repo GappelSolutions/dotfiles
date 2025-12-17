@@ -17,11 +17,20 @@ null_ls.setup({
 	sources = {
 		null_ls.builtins.formatting.stylua,
 		null_ls.builtins.formatting.csharpier.with({
+			command = vim.fn.stdpath("data") .. "/mason/packages/csharpier/csharpier",
+			args = { "format", "--write-stdout" },
+			to_stdin = true,
+		}),
+		null_ls.builtins.formatting.prettierd.with({
 			cwd = function()
 				return vim.fn.getcwd()
 			end,
 		}),
-		null_ls.builtins.formatting.prettierd.with({
+		null_ls.builtins.formatting.prettier.with({
+			filetypes = { "yaml", "yml" },
+			args = function()
+				return { "--no-bracket-spacing", "--parser", "yaml" }
+			end,
 			cwd = function()
 				return vim.fn.getcwd()
 			end,

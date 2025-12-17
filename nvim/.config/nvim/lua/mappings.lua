@@ -101,6 +101,7 @@ Map("n", "<leader>r", "<cmd>lua vim.lsp.buf.rename()<cr>")
 Map("n", "<leader>h", "<cmd>lua vim.lsp.buf.hover()<cr>")
 Map("n", "<leader>e", "<cmd>lua vim.diagnostic.open_float()<cr>")
 Map("n", "<leader>=", "<cmd>lua vim.lsp.buf.format({ async = true })<cr>")
+Map("n", "<leader>af", "<cmd>ToggleAutoFormat<cr>", { desc = "Toggle autoformat on save" })
 
 -- Angular Mappings
 local opts = { noremap = true, silent = true }
@@ -165,3 +166,6 @@ Map("n", "<leader>to", "<cmd>lua require('neotest').output_panel.toggle()<cr>")
 Map("n", "<leader>tn", "<cmd>lua require('neotest').jump.next({ status = 'failed' })<cr>")
 Map("n", "<leader>tp", "<cmd>lua require('neotest').jump.prev({ status = 'failed' })<cr>")
 Map("n", "<leader>ta", "<cmd>lua require('neotest').run.run(vim.loop.cwd())<cr>")
+
+-- Typst
+Map("n", "<leader>cp", "<cmd>!typst compile %:r.typ %:r.pdf<cr>")

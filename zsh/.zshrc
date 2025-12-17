@@ -41,6 +41,7 @@ alias vi='nvim'
 alias vim='nvim --listen /tmp/nvim-server.pipe'
 alias sc="~/bin/macos-screensaver"
 alias lg="lazygit"
+alias wt="/Applications/work-tuimer-macos-aarch64"
 
 # --- Python (Homebrew) ---
 export PATH="/opt/homebrew/opt/python@3.13/bin:$PATH"
