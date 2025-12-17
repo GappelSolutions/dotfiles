@@ -34,15 +34,15 @@ layout {
     //     }
     // }
 
-    tab name="back-nvim" cwd="src/backend/GappelCloud" {
+    tab name="back-nvim" cwd="src/backend/GappelCloud.Api" {
         pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
     }
 
-    tab name="back-tools" cwd="src/backend/GappelCloud" {
+    tab name="back-tools" cwd="src/backend/GappelCloud.Api" {
         pane split_direction="vertical" {
             pane size="60%" split_direction="horizontal" {
                 pane size="50%" command="yazi" {
-                    args "~/dev/gappel-cloud/src/backend/GappelCloud"
+                    args "~/dev/gappel-cloud/src/backend/GappelCloud.Api"
                 }
 
                 pane size="50%" command="lazydocker"
