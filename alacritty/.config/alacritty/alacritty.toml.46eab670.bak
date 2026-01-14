@@ -1,0 +1,73 @@
+[bell]
+duration = 0
+
+[colors.bright]
+black = "#6b7089"
+blue = "#91acd1"
+cyan = "#95c4ce"
+green = "#c0ca8e"
+magenta = "#ada0d3"
+red = "#e98989"
+white = "#d2d4de"
+yellow = "#e9b189"
+
+[colors.cursor]
+cursor = "#d2d4de"
+text = "#000000"
+
+[colors.normal]
+black = "#161821"
+blue = "#84a0c6"
+cyan = "#89b8c2"
+green = "#b4be82"
+magenta = "#a093c7"
+red = "#e27878"
+white = "#c6c8d1"
+yellow = "#e2a478"
+
+[colors.primary]
+background = "#000000"
+foreground = "#c6c8d1"
+
+[colors.selection]
+background = "#1e2132"
+text = "#c6c8d1"
+
+[env]
+TERM = "xterm-256color"
+EDITOR = "/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+VISUAL = "/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+
+[font]
+size = 16.0
+
+[font.bold]
+style = "auto"
+
+[font.bold_italic]
+style = "auto"
+
+[font.italic]
+style = "auto"
+
+[font.normal]
+family = "FiraCode Nerd Font"
+style = "Medium"
+
+[scrolling]
+history = 2000
+multiplier = 1
+
+[window]
+opacity = 0.8
+option_as_alt = "Both"
+
+[window.padding]
+x = 4
+y = 4
+
+[terminal]
+
+[terminal.shell]
+program = "zsh"
+args = ["-l", "-c", "zellij -l welcome"]

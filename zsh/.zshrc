@@ -30,7 +30,7 @@ alias dcu="docker-compose up -d --build"
 alias dcd="docker-compose down"
 alias ld='lazydocker'
 alias stowm='stow -v -R -t ~'
-alias ai='docker model run ai/smollm2'
+alias ai='claude --dangerously-skip-permissions'
 alias db='rainfrog --driver postgresql --username cgpp --password ASDQWEasdqweASDQWE123 --host localhost --port 5430 --database gappel-cloud'
 alias dotnet-csharpier='dotnet csharpier'
 alias sz='source ~/.zshrc'
@@ -40,6 +40,10 @@ alias vim='nvim --listen /tmp/nvim-server.pipe'
 alias sc="~/bin/macos-screensaver"
 alias lg="lazygit"
 alias wt="/Applications/work-tuimer-macos-aarch64"
+
+# --- Claude Code notifications toggle ---
+alias notifs-on='cp ~/.claude/settings-notifs-on.json ~/.claude/settings.json'
+alias notifs-off='cp ~/.claude/settings-notifs-off.json ~/.claude/settings.json'
 
 # --- Python (Homebrew) ---
 export PATH="/opt/homebrew/opt/python@3.13/bin:$PATH"
@@ -129,3 +133,7 @@ fi
 
 # Created by `pipx` on 2025-11-02 11:08:50
 export PATH="$PATH:/Users/cgpp/.local/bin"
+
+# opencode
+export PATH=/Users/cgpp/.opencode/bin:$PATH
+export PATH=~/.local/bin:$PATH
