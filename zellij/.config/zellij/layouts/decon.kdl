@@ -1,0 +1,62 @@
+layout {
+    cwd "~/dev/decon/"
+
+    default_tab_template {
+        children
+        pane size=1 borderless=true {
+            plugin location="compact-bar"
+        }
+    }
+
+    tab name="agent" {
+        pane split_direction="vertical" {
+            pane split_direction="horizontal" {
+                pane borderless=true command="claude" {
+                    args "--dangerously-skip-permissions"
+                }
+                pane borderless=true command="claude" {
+                    args "--dangerously-skip-permissions"
+                }
+            }
+            pane split_direction="horizontal" {
+                pane borderless=true command="claude" {
+                    args "--dangerously-skip-permissions"
+                }
+                pane borderless=true command="claude" {
+                    args "--dangerously-skip-permissions"
+                }
+            }
+        }
+    }
+
+    tab name="tools" cwd="app" {
+        pane split_direction="vertical" {
+            pane size="40%" split_direction="horizontal" {
+                pane size="50%" focus=true start_suspended=true command="/opt/homebrew/share/flutter/bin/flutter" {
+                    args "run"
+                }
+                pane size="50%" start_suspended=true command="/opt/homebrew/share/flutter/bin/flutter" {
+                    args "test" "--watch"
+                }
+            }
+
+            pane size="60%" split_direction="horizontal" {
+                pane size="50%" command="yazi" {
+                    args "~/dev/decon"
+                }
+
+                pane size="50%"
+            }
+        }
+    }
+
+    tab name="nvim" cwd="app" {
+        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+    }
+
+    tab
+    tab
+}
+
+scrollback_editor "/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+default_mode "locked"

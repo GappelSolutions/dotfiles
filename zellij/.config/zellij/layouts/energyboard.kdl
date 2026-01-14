@@ -12,8 +12,14 @@ layout {
         pane borderless=true command="/Applications/work-tuimer-macos-aarch64"
     }
 
+    tab name="agent" {
+        pane borderless=true command="claude" {
+            args "--dangerously-skip-permissions"
+        }
+    }
+
     tab name="front-nvim" cwd="CustomerPortal.Angular" {
-        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim" 
     }
 
     tab name="front-tools" cwd="CustomerPortal.Angular" {

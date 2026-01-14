@@ -8,6 +8,12 @@ layout {
         }
     }
 
+    tab name="agent" {
+        pane borderless=true command="claude" {
+            args "--dangerously-skip-permissions"
+        }
+    }
+
     tab name="rust-nvim" {
         pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
     }

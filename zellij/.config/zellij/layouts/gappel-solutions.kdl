@@ -8,6 +8,27 @@ layout {
         }
     }
 
+    tab name="agent" {
+        pane split_direction="vertical" {
+            pane split_direction="horizontal" {
+                pane borderless=true command="claude" {
+                    args "--dangerously-skip-permissions"
+                }
+                pane borderless=true command="claude" {
+                    args "--dangerously-skip-permissions"
+                }
+            }
+            pane split_direction="horizontal" {
+                pane borderless=true command="claude" {
+                    args "--dangerously-skip-permissions"
+                }
+                pane borderless=true command="claude" {
+                    args "--dangerously-skip-permissions"
+                }
+            }
+        }
+    }
+
     tab name="front-nvim" cwd="src/frontend" {
         pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
     }
