@@ -1,3 +1,7 @@
+# Dotfiles & Stow
+
+The `~/.claude` directory is symlinked from `~/dev/dotfiles/claude/.claude` via GNU Stow. When editing Claude configuration files (CLAUDE.md, commands, settings), **always edit the dotfiles version** at `~/dev/dotfiles/claude/.claude/` - changes will automatically apply to `~/.claude` via the symlink.
+
 # Test Credentials
 
 For testing the customer portal locally (works for all tenants):
