@@ -13,8 +13,23 @@ layout {
     }
 
     tab name="agent" {
-        pane borderless=true command="claude" {
-            args "--dangerously-skip-permissions"
+        pane split_direction="vertical" {
+            pane split_direction="horizontal" {
+                pane command="claude" {
+                    args "--dangerously-skip-permissions"
+                }
+                pane command="claude" {
+                    args "--dangerously-skip-permissions"
+                }
+            }
+            pane split_direction="horizontal" {
+                pane command="claude" {
+                    args "--dangerously-skip-permissions"
+                }
+                pane command="claude" {
+                    args "--dangerously-skip-permissions"
+                }
+            }
         }
     }
 
