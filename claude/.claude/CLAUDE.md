@@ -1,3 +1,7 @@
+# Dotfiles & Stow
+
+The `~/.claude` directory is symlinked from `~/dev/dotfiles/claude/.claude` via GNU Stow. When editing Claude configuration files (CLAUDE.md, commands, settings), **always edit the dotfiles version** at `~/dev/dotfiles/claude/.claude/` - changes will automatically apply to `~/.claude` via the symlink.
+
 # AI Agent Browser Access
 
 You have access to `agent-browser`, a headless browser CLI that lets you interact with web pages and get visual feedback.

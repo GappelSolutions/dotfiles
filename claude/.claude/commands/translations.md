@@ -11,3 +11,5 @@ Output ONLY a valid JSON object mapping NEW keys to German translations. No expl
 Format: {"key1": "German translation 1", "key2": "German translation 2"}
 
 If no new translations, output: {}
+
+After generating the JSON, copy it to the clipboard using `pbcopy` (macOS).
