@@ -1,0 +1,35 @@
+{
+  "statusLine": {
+    "type": "command",
+    "command": "/Users/cgpp/.claude/statusline-command.sh"
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "DIR=$(jq -r '.cwd' | xargs basename) && osascript -e \"display notification \\\"Finished in $DIR\\\" with title \\\"Claude Code\\\" sound name \\\"Ping\\\"\""
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "DIR=$(jq -r '.cwd' | xargs basename) && osascript -e \"display notification \\\"Waiting for feedback in $DIR\\\" with title \\\"Claude Code\\\" sound name \\\"Ping\\\"\""
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "typescript-lsp@claude-plugins-official": true,
+    "csharp-lsp@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true
+  }
+}

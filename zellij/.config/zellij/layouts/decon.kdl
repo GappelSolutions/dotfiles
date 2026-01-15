@@ -11,18 +11,18 @@ layout {
     tab name="agent" {
         pane split_direction="vertical" {
             pane split_direction="horizontal" {
-                pane borderless=true command="claude" {
+                pane command="claude" {
                     args "--dangerously-skip-permissions"
                 }
-                pane borderless=true command="claude" {
+                pane command="claude" {
                     args "--dangerously-skip-permissions"
                 }
             }
             pane split_direction="horizontal" {
-                pane borderless=true command="claude" {
+                pane command="claude" {
                     args "--dangerously-skip-permissions"
                 }
-                pane borderless=true command="claude" {
+                pane command="claude" {
                     args "--dangerously-skip-permissions"
                 }
             }
