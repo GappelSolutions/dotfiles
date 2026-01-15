@@ -3,7 +3,7 @@
 For testing the customer portal locally (works for all tenants):
 - **URL**: http://localhost:4200
 - **Email**: christian.gappel@evulution.com
-- **Password**: ASDQWEasdqweASDQWE123
+- **Password**: 
 
 # AI Agent Browser Access
 
