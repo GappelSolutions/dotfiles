@@ -8,7 +8,7 @@ layout {
         }
     }
 
-    tab name="agent" {
+    tab name="1-agent" {
         pane split_direction="vertical" {
             pane split_direction="horizontal" {
                 pane borderless=true command="claude" {
@@ -29,37 +29,30 @@ layout {
         }
     }
 
-    tab name="front-nvim" cwd="src/frontend" {
-        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
-    }
-    //
-    // tab name="front-tools" cwd="src/frontend" {
-    //     pane split_direction="vertical" {
-    //         pane size="58%" split_direction="horizontal" {
-    //             pane command="yazi" {
-    //                 args "~/dev/gappel-cloud/src/frontend"
-    //             }
-    //
-    //             pane 
-    //         }
-    //
-    //         pane size="42%" split_direction="horizontal" {
-    //             pane focus=true start_suspended=true command="pnpm" {
-    //                 args "start:local"
-    //             }
-    //
-    //             pane command="pnpm" start_suspended=true {
-    //                 args "install"
-    //             }
-    //         }
-    //     }
-    // }
-
-    tab name="back-nvim" cwd="src/backend/GappelCloud.Api" {
+    tab name="2-front-nvim" cwd="src/frontend" {
         pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
     }
 
-    tab name="back-tools" cwd="src/backend/GappelCloud.Api" {
+    tab name="3-back-nvim" cwd="src/backend/GappelCloud.Api" {
+        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+    }
+
+    tab name="4" { pane; }
+    tab name="5" { pane; }
+    tab name="6" { pane; }
+    tab name="7" { pane; }
+
+    tab name="8-ssh" cwd="~/dev/gappel-cloud" {
+        pane borderless=true command="ssh" {
+            args "cgpp@192.168.178.33"
+        }
+    }
+
+    tab name="9-repo-nvim" cwd="~/dev/gappel-cloud" {
+        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+    }
+
+    tab name="0-back-tools" cwd="src/backend/GappelCloud.Api" {
         pane split_direction="vertical" {
             pane size="60%" split_direction="horizontal" {
                 pane size="50%" command="yazi" {
@@ -77,19 +70,6 @@ layout {
             }
         }
     }
-
-    tab name="repo-nvim" cwd="~/dev/gappel-cloud" {
-        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
-    }
-
-    tab name="ssh" cwd="~/dev/gappel-cloud" {
-        pane borderless=true command="ssh" {
-            args "cgpp@192.168.178.33"
-        }
-    }
-
-    tab
-    tab
 }
 
 scrollback_editor "/Users/cgpp/.local/share/bob/nvim-bin/nvim"
