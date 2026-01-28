@@ -8,43 +8,39 @@ layout {
         }
     }
 
-    tab name="time"  {
-        pane borderless=true command="/Applications/work-tuimer-macos-aarch64"
-    }
-
-    tab name="agent" {
+    tab name="1-agent" {
         pane split_direction="vertical" {
             pane split_direction="horizontal" {
-                pane command="claude" {
-                    args "--dangerously-skip-permissions"
+                pane cwd="CustomerPortal.Angular" command="claude" {
+                    args "--dangerously-skip-permissions" "--add-dir" "../CustomerPortal.WebAPI" "--add-dir" "../ANGULAR-STACK" "--add-dir" "../Repower.Lib.Shared"
                 }
-                pane command="claude" {
-                    args "--dangerously-skip-permissions"
+                pane cwd="CustomerPortal.Angular" command="claude" {
+                    args "--dangerously-skip-permissions" "--add-dir" "../CustomerPortal.WebAPI" "--add-dir" "../ANGULAR-STACK" "--add-dir" "../Repower.Lib.Shared"
                 }
             }
             pane split_direction="horizontal" {
-                pane command="claude" {
-                    args "--dangerously-skip-permissions"
+                pane cwd="CustomerPortal.Angular" command="claude" {
+                    args "--dangerously-skip-permissions" "--add-dir" "../CustomerPortal.WebAPI" "--add-dir" "../ANGULAR-STACK" "--add-dir" "../Repower.Lib.Shared"
                 }
-                pane command="claude" {
-                    args "--dangerously-skip-permissions"
+                pane cwd="CustomerPortal.Angular" command="claude" {
+                    args "--dangerously-skip-permissions" "--add-dir" "../CustomerPortal.WebAPI" "--add-dir" "../ANGULAR-STACK" "--add-dir" "../Repower.Lib.Shared"
                 }
             }
         }
     }
 
-    tab name="front-nvim" cwd="CustomerPortal.Angular" {
-        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim" 
+    tab name="2-front-nvim" cwd="CustomerPortal.Angular" {
+        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
     }
 
-    tab name="front-tools" cwd="CustomerPortal.Angular" {
+    tab name="3-front-tools" cwd="CustomerPortal.Angular" {
         pane split_direction="vertical" {
             pane size="58%" split_direction="horizontal" {
                 pane command="yazi" {
                     args "~/dev/CustomerPortal.Angular"
                 }
 
-                pane 
+                pane
             }
 
             pane size="42%" split_direction="horizontal" {
@@ -59,29 +55,36 @@ layout {
         }
     }
 
-    tab name="back-nvim" cwd="CustomerPortal.WebAPI" {
-        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim" 
-    }
+    tab name="4" { pane; }
+    tab name="5" { pane; }
 
-    tab name="back-tools" cwd="CustomerPortal.WebAPI" {
+    tab name="6-time"  {
+        pane borderless=true command="/Applications/work-tuimer-macos-aarch64"
+    }
+    tab name="7" { pane; }
+
+    tab name="8" { pane; }
+
+    tab name="9-back-tools" cwd="CustomerPortal.WebAPI" {
         pane split_direction="vertical" {
             pane size="58%" split_direction="horizontal" {
                 pane command="yazi" {
                     args "~/dev/CustomerPortal.WebAPI"
                 }
 
-                pane 
+                pane
             }
 
             pane size="42%" split_direction="horizontal" {
-                pane focus=true command="./run.sh" 
-                pane command="./run.sh" 
+                pane focus=true command="./run.sh"
+                pane command="./run.sh"
             }
         }
     }
 
-    tab
-    tab
+    tab name="0-back-nvim" cwd="CustomerPortal.WebAPI" {
+        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+    }
 }
 
 scrollback_editor "/Users/cgpp/.local/share/bob/nvim-bin/nvim"

@@ -8,28 +8,39 @@ layout {
         }
     }
 
-    tab name="time"  {
-        pane borderless=true command="/Applications/work-tuimer-macos-aarch64"
-    }
-
-    tab name="agent" {
-        pane borderless=true command="claude" {
-            args "--dangerously-skip-permissions"
+    tab name="1-agent" {
+        pane split_direction="vertical" {
+            pane split_direction="horizontal" {
+                pane command="claude" cwd="BackOffice.Frontend" {
+                    args "--dangerously-skip-permissions" "--add-dir" "../BackOffice.Backend"
+                }
+                pane command="claude" cwd="BackOffice.Frontend" {
+                    args "--dangerously-skip-permissions" "--add-dir" "../BackOffice.Backend"
+                }
+            }
+            pane split_direction="horizontal" {
+                pane command="claude" cwd="BackOffice.Frontend" {
+                    args "--dangerously-skip-permissions" "--add-dir" "../BackOffice.Backend"
+                }
+                pane command="claude" cwd="BackOffice.Frontend" {
+                    args "--dangerously-skip-permissions" "--add-dir" "../BackOffice.Backend"
+                }
+            }
         }
     }
 
-    tab name="front-nvim" cwd="BackOffice.Frontend" {
-        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim" 
+    tab name="2-front-nvim" cwd="BackOffice.Frontend" {
+        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
     }
 
-    tab name="front-tools" cwd="BackOffice.Frontend" {
+    tab name="3-front-tools" cwd="BackOffice.Frontend" {
         pane split_direction="vertical" {
             pane size="58%" split_direction="horizontal" {
                 pane command="yazi" {
                     args "~/dev/BackOffice.Frontend"
                 }
 
-                pane 
+                pane
             }
 
             pane size="42%" split_direction="horizontal" {
@@ -44,18 +55,24 @@ layout {
         }
     }
 
-    tab name="back-nvim" cwd="BackOffice.Backend" {
-        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim" 
-    }
+    tab name="4" { pane; }
+    tab name="5" { pane; }
 
-    tab name="back-tools" cwd="BackOffice.Backend" {
+    tab name="6-time"  {
+        pane borderless=true command="/Applications/work-tuimer-macos-aarch64"
+    }
+    tab name="7" { pane; }
+
+    tab name="8" { pane; }
+
+    tab name="9-back-tools" cwd="BackOffice.Backend" {
         pane split_direction="vertical" {
             pane size="58%" split_direction="horizontal" {
                 pane command="yazi" {
                     args "~/dev/BackOffice.Backend"
                 }
 
-                pane 
+                pane
             }
 
             pane size="42%" split_direction="horizontal" {
@@ -67,8 +84,9 @@ layout {
         }
     }
 
-    tab
-    tab
+    tab name="0-back-nvim" cwd="BackOffice.Backend" {
+        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+    }
 }
 
 scrollback_editor "/Users/cgpp/.local/share/bob/nvim-bin/nvim"
