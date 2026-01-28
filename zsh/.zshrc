@@ -1,22 +1,93 @@
-# --- Completions ---
-if [[ ":$FPATH:" != *":/Users/cgpp/.zsh/completions:"* ]]; then
-  export FPATH="/Users/cgpp/.zsh/completions:$FPATH"
-fi
-autoload -Uz compinit
-compinit
+# --- History ---
+HISTFILE=~/.zsh_history
+HISTSIZE=10000
+SAVEHIST=10000
+setopt SHARE_HISTORY HIST_IGNORE_DUPS HIST_IGNORE_SPACE appendhistory
 
-# --- Instant Prompt (Powerlevel10k) ---
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
+# --- Completion ---
+fpath=(~/.zsh/completions $fpath)
+autoload -Uz compinit && compinit
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*:descriptions' format '%F{yellow}── %d ──%f'
+zstyle ':completion:*:warnings' format '%F{red}No matches%f'
 
-# --- Plugins ---
-source "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
-source "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions.zsh/zsh-autosuggestions.zsh"
+# --- Colors ---
+export LS_COLORS="di=34:ln=35:so=32:pi=33:ex=31:bd=34;46:cd=34;43:su=30;41:sg=30;46:tw=30;42:ow=30;43"
+export CLICOLOR=1
+
+# --- Plugins (Homebrew) ---
+source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#666666"
+bindkey '^f' autosuggest-accept
+
+# Syntax highlighting colors
+ZSH_HIGHLIGHT_STYLES[command]='fg=green,bold'
+ZSH_HIGHLIGHT_STYLES[builtin]='fg=green,bold'
+ZSH_HIGHLIGHT_STYLES[alias]='fg=cyan,bold'
+ZSH_HIGHLIGHT_STYLES[function]='fg=cyan,bold'
+ZSH_HIGHLIGHT_STYLES[path]='fg=blue,underline'
+ZSH_HIGHLIGHT_STYLES[globbing]='fg=magenta'
+ZSH_HIGHLIGHT_STYLES[single-quoted-argument]='fg=yellow'
+ZSH_HIGHLIGHT_STYLES[double-quoted-argument]='fg=yellow'
+
+# --- Prompt ---
+autoload -Uz vcs_info
+zstyle ':vcs_info:git:*' formats '%b'
+zstyle ':vcs_info:git:*' actionformats '%b|%a'
+
+precmd() {
+  vcs_info
+  if [[ -n "${vcs_info_msg_0_}" ]]; then
+    if [[ -n $(git status --porcelain 2>/dev/null) ]]; then
+      _git_info=" %F{yellow} ${vcs_info_msg_0_}%f %F{red}●%f"
+    else
+      _git_info=" %F{green} ${vcs_info_msg_0_}%f"
+    fi
+  else
+    _git_info=""
+  fi
+}
+
+# Transient prompt - collapse to minimal on Enter
+_transient_accept_line() {
+  local cmd="$BUFFER"
+
+  # Clear the 3-line prompt, go to column 1, print minimal prompt
+  print -n "\e[2A\e[J\r\e[35m❯\e[0m $cmd"
+
+  # Accept and execute
+  zle accept-line
+}
+zle -N _transient_accept_line
+bindkey '^M' _transient_accept_line
+
+setopt PROMPT_SUBST
+PROMPT=$'\n %F{white}\ue711%f  %F{blue}%~%f${_git_info}\n %F{magenta}❯%f '
+
+# --- Tools ---
+eval "$(zoxide init zsh)"
+source <(ng completion script) 2>/dev/null || true
+setopt nocaseglob
+
+# --- FZF ---
+[[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
+
+# --- Editor ---
+if [[ -n "$NVIM_LISTEN_ADDRESS" ]]; then
+  alias nvim="nvr -cc split --remote-wait +'set bufhidden=wipe'"
+  export VISUAL="nvr -cc split --remote-wait +'set bufhidden=wipe'"
+  export EDITOR="nvr -cc split --remote-wait +'set bufhidden=wipe'"
+else
+  export VISUAL="nvim"
+  export EDITOR="nvim"
+fi
 
 # --- Aliases ---
-alias ls="ls --color"
-alias micro="~/micro"
 alias ls='eza --icons'
 alias ll='eza -l --icons'
 alias lt='eza --tree --level=1 --icons'
@@ -42,62 +113,13 @@ alias vim='nvim --listen /tmp/nvim-server.pipe'
 alias sc="~/bin/macos-screensaver"
 alias lg="lazygit"
 alias wt="/Applications/work-tuimer-macos-aarch64"
-
-# --- Claude Code notifications toggle ---
 alias notifs-on='cp ~/.claude/settings-notifs-on.json ~/.claude/settings.json'
 alias notifs-off='cp ~/.claude/settings-notifs-off.json ~/.claude/settings.json'
-
-# --- Python (Homebrew) ---
-export PATH="/opt/homebrew/opt/python@3.13/bin:$PATH"
 alias py="python3"
 alias pip="pip3"
 
-# --- Fancy terminal banners ---
-if [[ "$COLUMNS" -lt 75 ]]; then
-  clear
-  echo ""
-  nerdfetch
-  echo -e "\n\e[1;35m$(echo 'EVULution' | figlet -f slscript -d /Users/cgpp/figlet-fonts -w 100)\e[0m"
-else
-  clear
-  echo ""
-  neofetch
-  echo -e "\e[1;34m• • • • • • • • • • • • • • • • • • ✦ • • • • • • • • • • • • • • • • • •\n\e[0m"
-  echo -e "\e[1;35m$(echo 'EVULution' | figlet -f rounded -d /Users/cgpp/figlet-fonts -w 100)\e[0m\n"
-  echo -e "\e[1;34m• • • • • • • • • • • • • • • • • • ✦ • • • • • • • • • • • • • • • • • •\n\n\e[0m"
-fi
-
-# --- History ---
-HISTFILE=~/.zsh_history
-HISTSIZE=10000
-SAVEHIST=10000
-setopt appendhistory
-
-# --- Tools ---
-eval "$(zoxide init zsh)"
-source <(ng completion script)
-source /opt/homebrew/share/powerlevel10k/powerlevel10k.zsh-theme
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
-export P10K_THEME='powerlevel10k/iceberg'
-setopt nocaseglob
-
-# --- Editor ---
-if [ -n "$NVIM_LISTEN_ADDRESS" ]; then
-  alias nvim="nvr -cc split --remote-wait +'set bufhidden=wipe'"
-  export VISUAL="nvr -cc split --remote-wait +'set bufhidden=wipe'"
-  export EDITOR="nvr -cc split --remote-wait +'set bufhidden=wipe'"
-else
-  export VISUAL="nvim"
-  export EDITOR="nvim"
-fi
-
-# --- FZF ---
-if [ -f ~/.fzf.zsh ]; then
-  source ~/.fzf.zsh
-fi
-
 # --- Paths ---
+export PATH="/opt/homebrew/opt/python@3.13/bin:$PATH"
 export PATH="/Users/cgpp/.local/share/bob/nvim-bin:$PATH"
 export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
 export DOTNET_ROOT=/usr/local/share/dotnet
@@ -111,6 +133,9 @@ esac
 export PATH="/usr/local/share/dotnet:$PATH"
 mkdir -p ~/bin
 export PATH=~/bin:$PATH
+export PATH="$PATH:/Users/cgpp/.local/bin"
+export PATH=/Users/cgpp/.opencode/bin:$PATH
+export PATH=~/.local/bin:$PATH
 
 # --- Yazi integration ---
 function y() {
@@ -123,19 +148,29 @@ function y() {
 }
 
 # --- Vim wrapper ---
-if [ ! -f ~/bin/vim ]; then
-  echo '#!/bin/bash' > ~/bin/vim
-  echo 'if [ -n "$NVIM_LISTEN_ADDRESS" ]; then' >> ~/bin/vim
-  echo '  /usr/bin/vim "$@"' >> ~/bin/vim
-  echo 'else' >> ~/bin/vim
-  echo '  /Users/cgpp/.local/share/bob/nvim-bin/nvim "$@"' >> ~/bin/vim
-  echo 'fi' >> ~/bin/vim
+if [[ ! -f ~/bin/vim ]]; then
+  cat > ~/bin/vim << 'EOF'
+#!/bin/bash
+if [ -n "$NVIM_LISTEN_ADDRESS" ]; then
+  /usr/bin/vim "$@"
+else
+  /Users/cgpp/.local/share/bob/nvim-bin/nvim "$@"
+fi
+EOF
   chmod +x ~/bin/vim
 fi
 
-# Created by `pipx` on 2025-11-02 11:08:50
-export PATH="$PATH:/Users/cgpp/.local/bin"
-
-# opencode
-export PATH=/Users/cgpp/.opencode/bin:$PATH
-export PATH=~/.local/bin:$PATH
+# --- Splash screen ---
+if [[ "$COLUMNS" -lt 75 ]]; then
+  clear
+  echo ""
+  nerdfetch
+  echo -e "\n\e[1;35m$(echo 'EVULution' | figlet -f slscript -d /Users/cgpp/figlet-fonts -w 100)\e[0m"
+else
+  clear
+  echo ""
+  neofetch
+  echo -e "\e[1;34m• • • • • • • • • • • • • • • • • • ✦ • • • • • • • • • • • • • • • • • •\n\e[0m"
+  echo -e "\e[1;35m$(echo 'EVULution' | figlet -f rounded -d /Users/cgpp/figlet-fonts -w 100)\e[0m\n"
+  echo -e "\e[1;34m• • • • • • • • • • • • • • • • • • ✦ • • • • • • • • • • • • • • • • • •\e[0m"
+fi
