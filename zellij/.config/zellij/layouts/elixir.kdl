@@ -1,0 +1,76 @@
+// Elixir Learning Layout
+// Tab 1: Claude agent
+// Tab 2: nvim for exercises
+// Tab 3: docs (left) + CLI tracker (right)
+
+layout {
+    default_tab_template {
+        pane size=1 borderless=true {
+            plugin location="zellij:tab-bar"
+        }
+        children
+        pane size=2 borderless=true {
+            plugin location="zellij:status-bar"
+        }
+    }
+
+    cwd "/Users/cgpp/dev/elixir-mastery"
+
+    // Tab 1: Agent
+    tab name="1-agent" focus=true {
+        pane command="claude" {
+            args "--resume"
+        }
+    }
+
+    // Tab 2: Exercise Code
+    tab name="2-code" {
+        pane command="nvim" {
+            args "exercises/01-elixir-core/01-pattern-matching.ex"
+        }
+    }
+
+    // Tab 3: Docs + CLI
+    tab name="3-learn" {
+        pane split_direction="vertical" {
+            // Left: Docs
+            pane size="60%" command="nvim" {
+                args "01-elixir-core/01-pattern-matching.md"
+            }
+            // Right: Learning CLI
+            pane size="40%" command="bash" {
+                args "-c" "./scripts/elx"
+            }
+        }
+    }
+
+    // Tab 4: Tests/REPL
+    tab name="4-repl" {
+        pane command="iex"
+    }
+
+    // Utility tabs
+    tab name="5" {
+        pane
+    }
+
+    tab name="6-time" {
+        pane
+    }
+
+    tab name="7" {
+        pane
+    }
+
+    tab name="8" {
+        pane
+    }
+
+    tab name="9-yazi" {
+        pane command="yazi"
+    }
+
+    tab name="0-git" {
+        pane command="lazygit"
+    }
+}
