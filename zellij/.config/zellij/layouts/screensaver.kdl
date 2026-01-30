@@ -8,17 +8,17 @@ layout {
         }
     }
 
-    tab name="agent" {
+    tab name="1-agent" {
         pane borderless=true command="claude" {
             args "--dangerously-skip-permissions"
         }
     }
 
-    tab name="rust-nvim" {
+    tab name="2-rust-nvim" {
         pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
     }
 
-    tab name="rust-tools" {
+    tab name="3-rust-tools" {
         pane split_direction="vertical" {
             pane size="58%" split_direction="horizontal" {
                 pane command="yazi" {
@@ -44,8 +44,13 @@ layout {
         }
     }
 
-    tab
-    tab
+    tab name="4" { pane; }
+    tab name="5" { pane; }
+    tab name="6" { pane; }
+    tab name="7" { pane; }
+    tab name="8" { pane; }
+    tab name="9" { pane; }
+    tab name="0" { pane; }
 }
 
 scrollback_editor "/Users/cgpp/.local/share/bob/nvim-bin/nvim"

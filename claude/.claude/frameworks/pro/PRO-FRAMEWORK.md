@@ -41,19 +41,26 @@ IDEA → [1. PRD] → [2. PRD Refine] → [3. UX Brainstorm] → [4. UX Refine] 
 
 1. **Read this document first** when starting a new app project
 2. **Execute phases in order** - don't skip ahead
-3. **Create artifacts in `project-documentation/`** folder within the project
+3. **Create artifacts in feature-specific folders** (see structure below)
 4. **Wait for user approval** before moving to next phase
 5. **Reference previous artifacts** in each phase
+6. **Maintain the index file** to track all planned features
 
 ### Folder Structure
 
 ```
 your-project/
 ├── project-documentation/
-│   ├── prd.md                    # Phase 1-2 output
-│   ├── ux-approaches.md          # Phase 3 output
-│   ├── ux-spec.md                # Phase 4 output
-│   └── tech-stack.md             # Phase 5 output
+│   ├── index.md                  # Index of all planned features
+│   └── features/
+│       ├── user-auth/
+│       │   ├── prd.md            # Phase 1-2 output
+│       │   ├── ux-approaches.md  # Phase 3 output
+│       │   ├── ux-spec.md        # Phase 4 output
+│       │   └── tech-stack.md     # Phase 5 output
+│       └── dashboard/
+│           ├── prd.md
+│           └── ...
 ├── docs/                         # Phase 6 output (epics & stories)
 │   ├── README.md
 │   ├── features/
@@ -66,6 +73,26 @@ your-project/
 ├── src/                          # Implementation
 └── ...
 ```
+
+### Feature Folder Naming
+
+Each feature gets its own folder with a kebab-case name (max 40 chars):
+- `user-auth`, `dashboard-charts`, `global-documents`
+
+### Index File (`project-documentation/index.md`)
+
+Tracks all planned features with status:
+
+```markdown
+# Project Documentation Index
+
+| Feature | Status | Folder |
+|---------|--------|--------|
+| Dashboard Analytics | In Development | [link](features/dashboard/) |
+| User Authentication | Implemented | [link](features/user-auth/) |
+```
+
+**Status progression**: `PRD Draft` → `PRD Complete` → `UX Complete` → `In Development` → `Implemented`
 
 ---
 
@@ -506,13 +533,22 @@ For each unresolved gap:
 │  BUILD            → Implement with tests                │
 │                                                          │
 ├─────────────────────────────────────────────────────────┤
+│  FILE ORGANIZATION:                                      │
+│  • project-documentation/index.md     (feature index)   │
+│  • project-documentation/features/                      │
+│      └── {feature-slug}/              (per feature)    │
+│          ├── prd.md                                     │
+│          ├── ux-approaches.md                           │
+│          ├── ux-spec.md                                 │
+│          └── tech-stack.md                              │
+├─────────────────────────────────────────────────────────┤
 │  KEY RULES:                                              │
 │  • MVP only - no future features                        │
 │  • Wait for approval between phases                     │
 │  • Max 3 features in PRD                                │
 │  • Max 3 UX approaches                                  │
-│  • Prefer built-in solutions                            │
-│  • No duplication across epics/stories                  │
+│  • One feature per folder                               │
+│  • Update index.md with each feature                    │
 └─────────────────────────────────────────────────────────┘
 ```
 

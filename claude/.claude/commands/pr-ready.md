@@ -71,6 +71,31 @@ Review all changed code for:
 4. **Proper Error Handling** - No swallowed errors, appropriate error messages.
 5. **No Magic Numbers/Strings** - Use constants or enums.
 
+### Step 5.5: Check for Unused Code (Manual Review)
+
+**CAUTION**: Detecting unused code in Angular/TypeScript requires careful analysis since:
+- Template bindings make static analysis unreliable
+- Services may be injected dynamically
+- Exported members may be used by other modules
+
+For each changed file, manually check for:
+
+1. **Unused imports** - Imports at the top that aren't referenced in the file
+2. **Unused private methods** - Private methods not called anywhere in the class
+3. **Unused variables/signals** - Declared but never read
+4. **Unused parameters** - Function parameters that are never used (prefix with `_` if intentionally unused)
+5. **Dead code** - Code after return statements, unreachable branches
+
+```bash
+# TypeScript/Angular - check for unused exports (be careful, may have false positives):
+npx ts-prune --error 2>/dev/null | head -20
+
+# Or use ESLint with unused rules:
+npx eslint --rule '@typescript-eslint/no-unused-vars: error' <changed-files> 2>/dev/null
+```
+
+**Important**: Be conservative - don't remove code that might be used in templates, tests, or other modules. When in doubt, leave it and flag for review.
+
 ### Step 6: Security Review
 
 Check for security vulnerabilities:

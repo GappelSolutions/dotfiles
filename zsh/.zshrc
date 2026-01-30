@@ -40,16 +40,23 @@ autoload -Uz vcs_info
 zstyle ':vcs_info:git:*' formats '%b'
 zstyle ':vcs_info:git:*' actionformats '%b|%a'
 
+# Bubble characters (Nerd Font powerline)
+_bubble_left=$'\ue0b6'
+_bubble_right=$'\ue0b4'
+_git_icon=$'\uf418'
+_apple_icon=$'\ue711'
+_dirty_icon='●'
+
 precmd() {
   vcs_info
   if [[ -n "${vcs_info_msg_0_}" ]]; then
     if [[ -n $(git status --porcelain 2>/dev/null) ]]; then
-      _git_info=" %F{yellow} ${vcs_info_msg_0_}%f %F{red}●%f"
+      _git_info="%K{yellow}%F{blue}${_bubble_right}%f%F{black}  ${_git_icon} ${vcs_info_msg_0_} ${_dirty_icon} %f%k%F{yellow}${_bubble_right}%f"
     else
-      _git_info=" %F{green} ${vcs_info_msg_0_}%f"
+      _git_info="%K{green}%F{blue}${_bubble_right}%f%F{black}  ${_git_icon} ${vcs_info_msg_0_} %f%k%F{green}${_bubble_right}%f"
     fi
   else
-    _git_info=""
+    _git_info="%F{blue}${_bubble_right}%f"
   fi
 }
 
@@ -58,7 +65,7 @@ _transient_accept_line() {
   local cmd="$BUFFER"
 
   # Clear the 3-line prompt, go to column 1, print minimal prompt
-  print -n "\e[2A\e[J\r\e[35m❯\e[0m $cmd"
+  print -n "\e[2A\e[J\r\e[35m\u276f\e[0m $cmd"
 
   # Accept and execute
   zle accept-line
@@ -67,7 +74,7 @@ zle -N _transient_accept_line
 bindkey '^M' _transient_accept_line
 
 setopt PROMPT_SUBST
-PROMPT=$'\n %F{white}\ue711%f  %F{blue}%~%f${_git_info}\n %F{magenta}❯%f '
+PROMPT=$'\n %F{green}${_bubble_left}%f%K{green}%F{black} ${_apple_icon} %f%K{blue}%F{green}${_bubble_right}%f%F{black}  %~ %f%k${_git_info}\n %F{magenta}╰─❯%f '
 
 # --- Tools ---
 eval "$(zoxide init zsh)"
@@ -161,16 +168,7 @@ EOF
 fi
 
 # --- Splash screen ---
-if [[ "$COLUMNS" -lt 75 ]]; then
-  clear
-  echo ""
-  nerdfetch
-  echo -e "\n\e[1;35m$(echo 'EVULution' | figlet -f slscript -d /Users/cgpp/figlet-fonts -w 100)\e[0m"
-else
-  clear
-  echo ""
-  neofetch
-  echo -e "\e[1;34m• • • • • • • • • • • • • • • • • • ✦ • • • • • • • • • • • • • • • • • •\n\e[0m"
-  echo -e "\e[1;35m$(echo 'EVULution' | figlet -f rounded -d /Users/cgpp/figlet-fonts -w 100)\e[0m\n"
-  echo -e "\e[1;34m• • • • • • • • • • • • • • • • • • ✦ • • • • • • • • • • • • • • • • • •\e[0m"
-fi
+clear
+echo ""
+nerdfetch
+echo "\n"
