@@ -74,7 +74,7 @@ zle -N _transient_accept_line
 bindkey '^M' _transient_accept_line
 
 setopt PROMPT_SUBST
-PROMPT=$'\n %F{green}${_bubble_left}%f%K{green}%F{black} ${_apple_icon} %f%K{blue}%F{green}${_bubble_right}%f%F{black}  %~ %f%k${_git_info}\n %F{magenta}╰─❯%f '
+PROMPT=$'\n %F{cyan}${_bubble_left}%K{magenta} %K{red}%F{black}${_apple_icon}%K{yellow} %K{blue}%F{green}${_bubble_right}%f%F{blue}%K{blue}%F{black}  %~ %f%k${_git_info}\n %F{magenta}╰─❯%f '
 
 # --- Tools ---
 eval "$(zoxide init zsh)"
