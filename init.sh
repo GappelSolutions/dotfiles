@@ -97,7 +97,8 @@ FORMULAE=(
     neovim-remote
 
     # Terminal & Shell
-    powerlevel10k
+    zsh-autosuggestions
+    zsh-syntax-highlighting
     zoxide
     fzf
     eza
@@ -158,11 +159,7 @@ FORMULAE=(
     socat
     rclone
 
-    # Fun
-    neofetch
-    nerdfetch
-    figlet
-    pfetch
+    # Utilities
     nowplaying-cli
 )
 
@@ -246,32 +243,7 @@ for cask in "${CASKS[@]}"; do
 done
 
 # =============================================================================
-# 6. Oh-My-Zsh + Plugins
-# =============================================================================
-print_header "Oh-My-Zsh"
-
-if [[ -d "$HOME/.oh-my-zsh" ]]; then
-    print_success "Oh-My-Zsh already installed"
-else
-    print_step "Installing Oh-My-Zsh..."
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-fi
-
-# Plugins
-ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
-
-if [[ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]]; then
-    print_step "Installing zsh-syntax-highlighting..."
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting"
-fi
-
-if [[ ! -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions.zsh" ]]; then
-    print_step "Installing zsh-autosuggestions..."
-    git clone https://github.com/zsh-users/zsh-autosuggestions "$ZSH_CUSTOM/plugins/zsh-autosuggestions.zsh"
-fi
-
-# =============================================================================
-# 7. Stow Dotfiles
+# 6. Stow Dotfiles
 # =============================================================================
 print_header "Stowing Dotfiles"
 
@@ -300,7 +272,7 @@ for pkg in "${STOW_PACKAGES[@]}"; do
 done
 
 # =============================================================================
-# 8. Neovim (via bob)
+# 7. Neovim (via bob)
 # =============================================================================
 print_header "Neovim"
 
@@ -313,7 +285,7 @@ else
 fi
 
 # =============================================================================
-# 9. Rust
+# 8. Rust
 # =============================================================================
 print_header "Rust"
 
@@ -332,7 +304,7 @@ if command -v cargo &>/dev/null; then
 fi
 
 # =============================================================================
-# 10. Node.js Global Packages
+# 9. Node.js Global Packages
 # =============================================================================
 print_header "Node.js Global Packages"
 
@@ -355,7 +327,7 @@ for pkg in "${NPM_PACKAGES[@]}"; do
 done
 
 # =============================================================================
-# 11. .NET Global Tools
+# 10. .NET Global Tools
 # =============================================================================
 print_header ".NET Global Tools"
 
@@ -380,7 +352,7 @@ else
 fi
 
 # =============================================================================
-# 12. Python (pipx)
+# 11. Python (pipx)
 # =============================================================================
 print_header "Python Tools (pipx)"
 
@@ -407,7 +379,7 @@ else
 fi
 
 # =============================================================================
-# 13. Claude Code
+# 12. Claude Code
 # =============================================================================
 print_header "Claude Code"
 
@@ -419,7 +391,7 @@ else
 fi
 
 # =============================================================================
-# 14. Flutter Setup
+# 13. Flutter Setup
 # =============================================================================
 print_header "Flutter"
 
@@ -434,7 +406,7 @@ else
 fi
 
 # =============================================================================
-# 15. FZF Key Bindings
+# 14. FZF Key Bindings
 # =============================================================================
 print_header "FZF Setup"
 
@@ -444,29 +416,23 @@ if [[ -f "$(brew --prefix)/opt/fzf/install" ]]; then
 fi
 
 # =============================================================================
-# 16. Create directories
+# 15. Create directories & Shell Completions
 # =============================================================================
-print_header "Directory Setup"
+print_header "Directory Setup & Completions"
 
 print_step "Creating common directories..."
 mkdir -p ~/dev
 mkdir -p ~/bin
 mkdir -p ~/.zsh/completions
 
-# =============================================================================
-# 17. Figlet Fonts (optional)
-# =============================================================================
-print_header "Figlet Fonts"
-
-if [[ ! -d "$HOME/figlet-fonts" ]]; then
-    print_step "Cloning figlet-fonts..."
-    git clone https://github.com/xero/figlet-fonts.git "$HOME/figlet-fonts" || print_warning "Failed to clone figlet-fonts"
-else
-    print_success "Figlet fonts already installed"
+# Generate pnpm completions
+if command -v pnpm &>/dev/null; then
+    print_step "Generating pnpm completions..."
+    pnpm completion zsh > ~/.zsh/completions/_pnpm 2>/dev/null || true
 fi
 
 # =============================================================================
-# 18. macOS Defaults
+# 16. macOS Defaults
 # =============================================================================
 print_header "macOS Defaults"
 
