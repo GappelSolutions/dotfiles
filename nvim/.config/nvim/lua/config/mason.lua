@@ -5,6 +5,7 @@ require("mason-lspconfig").setup({
 		"tinymist",
 		"angularls",
 		"cssls",
+		"elixirls",
 		"html",
 		"lua_ls",
 		"rust_analyzer",
