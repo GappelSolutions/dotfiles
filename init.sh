@@ -144,6 +144,7 @@ FORMULAE=(
     libpq
 
     # Languages & Build
+    elixir
     luarocks
     pipx
     cocoapods

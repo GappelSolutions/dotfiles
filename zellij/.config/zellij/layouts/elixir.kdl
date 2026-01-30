@@ -1,76 +1,64 @@
-// Elixir Learning Layout
-// Tab 1: Claude agent
-// Tab 2: nvim for exercises
-// Tab 3: docs (left) + CLI tracker (right)
-
 layout {
+    cwd "~/dev/elixir-mastery"
+
     default_tab_template {
-        pane size=1 borderless=true {
-            plugin location="zellij:tab-bar"
-        }
         children
-        pane size=2 borderless=true {
-            plugin location="zellij:status-bar"
+        pane size=1 borderless=true {
+            plugin location="compact-bar"
         }
     }
 
-    cwd "/Users/cgpp/dev/elixir-mastery"
-
-    // Tab 1: Agent
     tab name="1-agent" focus=true {
-        pane command="claude" {
-            args "--resume"
+        pane split_direction="vertical" {
+            pane split_direction="horizontal" {
+                pane command="claude" {
+                    args "--dangerously-skip-permissions"
+                }
+                pane command="claude" {
+                    args "--dangerously-skip-permissions"
+                }
+            }
+            pane split_direction="horizontal" {
+                pane command="claude" {
+                    args "--dangerously-skip-permissions" "--resume"
+                }
+                pane command="claude" {
+                    args "--dangerously-skip-permissions"
+                }
+            }
         }
     }
 
-    // Tab 2: Exercise Code
     tab name="2-code" {
-        pane command="nvim" {
+        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim" {
             args "exercises/01-elixir-core/01-pattern-matching.ex"
         }
     }
 
-    // Tab 3: Docs + CLI
     tab name="3-learn" {
         pane split_direction="vertical" {
-            // Left: Docs
-            pane size="60%" command="nvim" {
+            pane size="60%" command="/Users/cgpp/.local/share/bob/nvim-bin/nvim" {
                 args "01-elixir-core/01-pattern-matching.md"
             }
-            // Right: Learning CLI
             pane size="40%" command="bash" {
                 args "-c" "./scripts/elx"
             }
         }
     }
 
-    // Tab 4: Tests/REPL
     tab name="4-repl" {
-        pane command="iex"
+        pane command="bash" {
+            args "-lc" "iex"
+        }
     }
 
-    // Utility tabs
-    tab name="5" {
-        pane
-    }
-
-    tab name="6-time" {
-        pane
-    }
-
-    tab name="7" {
-        pane
-    }
-
-    tab name="8" {
-        pane
-    }
-
-    tab name="9-yazi" {
-        pane command="yazi"
-    }
-
-    tab name="0-git" {
-        pane command="lazygit"
-    }
+    tab name="5" { pane; }
+    tab name="6" { pane; }
+    tab name="7" { pane; }
+    tab name="8" { pane; }
+    tab name="9" { pane; }
+    tab name="0" { pane; }
 }
+
+scrollback_editor "/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+default_mode "locked"

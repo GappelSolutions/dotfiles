@@ -80,6 +80,17 @@ lsp.tailwindcss.setup({
 	capabilities = capabilities,
 })
 
+lsp.elixirls.setup({
+	cmd = { vim.fn.expand("~/.local/share/nvim/mason/packages/elixir-ls/language_server.sh") },
+	capabilities = capabilities,
+	settings = {
+		elixirLS = {
+			dialyzerEnabled = true,
+			fetchDeps = false,
+		},
+	},
+})
+
 -- Override the default LSP floating window handler
 local orig_util_open_floating_preview = vim.lsp.util.open_floating_preview
 function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)

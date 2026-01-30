@@ -12,6 +12,17 @@ local rustfmt = {
 	}),
 }
 
+local mix_format = {
+	name = "mix_format",
+	method = null_ls.methods.FORMATTING,
+	filetypes = { "elixir", "heex", "eex" },
+	generator = helpers.formatter_factory({
+		command = "mix",
+		args = { "format", "-" },
+		to_stdin = true,
+	}),
+}
+
 null_ls.setup({
 	debug = true,
 	sources = {
@@ -36,6 +47,7 @@ null_ls.setup({
 			end,
 		}),
 		rustfmt,
+		mix_format,
 	},
 	on_attach = function(client, bufnr)
 		require("workspace-diagnostics").populate_workspace_diagnostics(client, bufnr)

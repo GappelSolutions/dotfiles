@@ -1,5 +1,5 @@
 require("nvim-treesitter.configs").setup({
-	ensure_installed = { "lua", "javascript", "html", "typescript", "tsx", "css", "c_sharp", "dockerfile", "razor" },
+	ensure_installed = { "lua", "javascript", "html", "typescript", "tsx", "css", "c_sharp", "dockerfile", "razor", "elixir", "heex", "eex" },
 
 	highlight = {
 		enable = true,
