@@ -92,6 +92,9 @@ gh pr create \
 - [ ] <English test steps>
 EOF
 )"
+
+# Open PR in browser
+gh pr view --web
 ```
 
 ### EasyAsset Rules
