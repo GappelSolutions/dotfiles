@@ -146,14 +146,18 @@ keybinds clear-defaults=true {
         bind "Alt =" { Resize "Increase"; }
         bind "Alt [" { PreviousSwapLayout; }
         bind "Alt ]" { NextSwapLayout; }
+        // Cmd shortcuts (passed through from Alacritty as Alt escape sequences)
         bind "Alt w" { ToggleFloatingPanes; }
         bind "Alt h" { MoveFocusOrTab "left"; }
-        bind "Alt i" { MoveTab "left"; }
         bind "Alt j" { MoveFocus "down"; }
         bind "Alt k" { MoveFocus "up"; }
         bind "Alt l" { MoveFocusOrTab "right"; }
         bind "Alt n" { NewPane; }
-        bind "Alt o" { MoveTab "right"; }
+        bind "Alt H" { MovePane "left"; }
+        bind "Alt J" { MovePane "down"; }
+        bind "Alt K" { MovePane "up"; }
+        bind "Alt L" { MovePane "right"; }
+        // Tab switching (Cmd+1-9 from Alacritty)
         bind "Alt 1" { GoToTab 1; }
         bind "Alt 2" { GoToTab 2; }
         bind "Alt 3" { GoToTab 3; }
