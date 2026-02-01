@@ -1,0 +1,112 @@
+" Vim Options
+set shiftwidth=4
+set tabstop=4
+set softtabstop=4
+set clipboard=unnamedplus
+set backspace=indent,eol,start
+set ignorecase
+set smartindent
+set number
+set wrap
+set noswapfile
+set nobackup
+set hlsearch
+set incsearch
+set scrolloff=8
+set signcolumn=yes
+set updatetime=50
+set colorcolumn=80
+set whichwrap+=h,l
+set surround
+set nerdtree
+set multicursor
+
+autocmd FileType nerdtree nnoremap <buffer> o o:q<CR>
+
+let mapleader = " "
+
+" General Editing Mappings
+nnoremap <C-s> :w<CR>
+nnoremap <C-q> :q<CR>
+inoremap <C-s> <Esc>:w<CR>
+inoremap <C-q> <Esc>:q<CR>
+vnoremap <C-s> :w<CR>
+vnoremap <C-q> :q<CR>
+vnoremap p pgvy
+
+" Visual Mode Mappings for Movement
+vnoremap <C-h> _
+vnoremap <C-l> $
+vnoremap J jzz
+vnoremap K kzz
+vnoremap <A-j> :m '>+1<CR>gv=gvzz
+vnoremap <A-k> :m '<-2<CR>gv=gvzz
+vnoremap <C-k> <C-u>zz
+vnoremap <C-j> <C-d>zz
+vnoremap < <gv
+vnoremap > >gv
+
+" Normal Mode Mappings for Movement
+nnoremap <C-l> $
+nnoremap <C-h> _
+nnoremap <C-k> <C-u>zz
+nnoremap <C-j> <C-d>zz
+nnoremap <leader>[ %
+nnoremap <leader>a ggVG
+nnoremap <leader>y mzggVGy`zzz
+nnoremap <leader>P mzggVGp`zzz
+nnoremap <leader>D ggVGd
+nnoremap <leader>/ /<C-r>"<CR>
+nnoremap <leader>t J
+nnoremap ; nzz
+nnoremap ' Nzz
+nnoremap J jzz
+nnoremap K kzz
+nnoremap <leader>n i<CR><Esc>_
+nnoremap n o<Esc>
+nnoremap N O<Esc>
+nnoremap <S-h> :execute 'normal! 80zh'<CR> " Scroll left half page
+nnoremap <S-l> :execute 'normal! 80zl'<CR> " Scroll right half page
+nnoremap <A-j> :m .+1<CR>==zz
+nnoremap <A-k> :m .-2<CR>==zz
+nnoremap <C-m> <C-w>_
+nnoremap <A-h> <C-o>
+nnoremap <A-l> <C-i>
+
+" Nerd Tree
+map <leader>pe :NERDTreeFind<CR>
+map <leader>q :NERDTreeClose<CR>
+
+" Hover
+map <leader>h <action>(ShowHoverInfo)
+
+" Display options
+map <leader>dd <action>(ToggleDistractionFreeMode)
+map <leader>dz <action>(ToggleZenMode)
+map <leader>df <action>(ToggleFullScreen)
+
+" Actions
+map <leader>am <action>(ShowIntentionActions)
+map <leader>as <action>(SearchEverywhere)
+
+" File navigation
+map <leader>ff <action>(GotoFile)
+map <leader>fr <action>(RecentFiles)
+map <leader>fc <action>(FindInPath)
+map <leader><leader> <action>(RecentFiles)
+map <leader>fl <action>(RecentLocations)
+map <leader>fs <action>(NewScratchFile)
+
+map <leader>r <action>(RenameElement)
+
+" Go to code
+nmap <leader>pd <action>(GotoDeclaration)
+nmap <leader>py <action>(GotoTypeDeclaration)
+nmap <leader>pi <action>(GotoImplementation)
+nmap <leader>pr <action>(ShowUsages)
+nmap <leader>pf <action>(Back)
+nmap <leader>pb <action>(Forward)
+
+" Errors
+map <leader>en <action>(ReSharperGotoNextErrorInSolution)
+map <leader>ep <action>(ReSharperGotoPrevErrorInSolution)
