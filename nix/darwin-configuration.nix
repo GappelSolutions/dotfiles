@@ -33,6 +33,7 @@
 
     taps = [
       "dart-lang/dart"
+      "nikitabobko/tap"  # aerospace
     ];
 
     # CLI tools that work better via Homebrew or aren't in nixpkgs
