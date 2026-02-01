@@ -302,6 +302,13 @@
   # Aerospace config (lives in home directory, not .config)
   home.file.".aerospace.toml".source = ../aerospace/.aerospace.toml;
 
+  # Vim/IdeaVim config
+  home.file.".vimrc".source = ../vim/.vimrc;
+  home.file.".ideavimrc".source = ../jetbrains/.ideavimrc;
+
+  # VS Code settings
+  xdg.configFile."Code/User/settings.json".source = ../vscode/.config/Code/Users/settings.json;
+
   # Claude Code config (only config files, not runtime data)
   home.file.".claude/CLAUDE.md".source = ../claude/.claude/CLAUDE.md;
   home.file.".claude/settings.json".source = ../claude/.claude/settings.json;
