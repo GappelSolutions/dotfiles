@@ -44,6 +44,9 @@
       "cocoapods"         # ios deps
       "nowplaying-cli"    # music info
       "azure-cli"         # nix version triggers Swift build
+      "elixir"
+      "helm"
+      "k9s"
     ];
 
     # GUI applications
@@ -57,6 +60,7 @@
       "jordanbaird-ice"
 
       # Development
+      "dotnet-sdk"
       "android-studio"
       "android-platform-tools"
       "flutter"
