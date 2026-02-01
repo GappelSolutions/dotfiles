@@ -60,13 +60,6 @@
     pipx
   ];
 
-  # TODO: Add these back after initial build works (some may trigger Swift builds):
-  # stow, zsh-autosuggestions, zsh-syntax-highlighting, delta, btop, bottom
-  # lazydocker, tmux, nodejs, pnpm, nodePackages.*, dotnet-sdk_8
-  # docker, docker-compose, colima, minikube, kubernetes-helm, k9s
-  # azure-cli, sops, postgresql_14, redis, elixir, luarocks, pipx, rustup
-  # ffmpeg, pandoc, unar, zip, socat, rclone
-
   # ==========================================================================
   # Program Configurations
   # ==========================================================================
