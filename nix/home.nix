@@ -302,6 +302,13 @@
   # Aerospace config (lives in home directory, not .config)
   home.file.".aerospace.toml".source = ../aerospace/.aerospace.toml;
 
+  # Claude Code config (only config files, not runtime data)
+  home.file.".claude/CLAUDE.md".source = ../claude/.claude/CLAUDE.md;
+  home.file.".claude/settings.json".source = ../claude/.claude/settings.json;
+  home.file.".claude/commands".source = ../claude/.claude/commands;
+  home.file.".claude/frameworks".source = ../claude/.claude/frameworks;
+  home.file.".claude/statusline-command.sh".source = ../claude/.claude/statusline-command.sh;
+
   # ==========================================================================
   # Create directories
   # ==========================================================================
