@@ -1,0 +1,34 @@
+;; Kanata config for home row mods
+;; a/s/d/f and j/k/l/; become modifiers when held
+
+(defcfg
+  process-unmapped-keys yes
+)
+
+(defsrc
+  a    s    d    f    g    h    j    k    l    ;
+)
+
+(defvar
+  ;; Timing settings (in ms)
+  tap-time 200      ;; max time for a tap
+  hold-time 150     ;; time before hold activates
+)
+
+(defalias
+  ;; Left hand home row mods (GACS - GUI/Alt/Ctrl/Shift)
+  a (tap-hold $tap-time $hold-time a lmet)   ;; a = Cmd when held
+  s (tap-hold $tap-time $hold-time s lalt)   ;; s = Alt when held
+  d (tap-hold $tap-time $hold-time d lctl)   ;; d = Ctrl when held
+  f (tap-hold $tap-time $hold-time f lsft)   ;; f = Shift when held
+
+  ;; Right hand home row mods (mirror)
+  j (tap-hold $tap-time $hold-time j rsft)   ;; j = Shift when held
+  k (tap-hold $tap-time $hold-time k rctl)   ;; k = Ctrl when held
+  l (tap-hold $tap-time $hold-time l ralt)   ;; l = Alt when held
+  ; (tap-hold $tap-time $hold-time ; rmet)   ;; ; = Cmd when held
+)
+
+(deflayer homerowmods
+  @a   @s   @d   @f   g    h    @j   @k   @l   @;
+)
