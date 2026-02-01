@@ -302,42 +302,28 @@ cd "$NIX_DIR"
 nix run nix-darwin -- switch --flake ".#$NEW_HOSTNAME"
 
 # =============================================================================
-# Step 8: Interactive Auth Prompts
+# Step 8: Service Authentication
 # =============================================================================
 print_header "Step 8/8: Service Authentication"
 
 echo ""
-echo -e "${CYAN}Now let's authenticate your services.${NC}"
-echo -e "${CYAN}Each of these will open a browser for OAuth.${NC}"
+echo -e "${CYAN}Authenticating your services (browser will open for each)...${NC}"
 echo ""
 
 # GitHub CLI
-print_prompt "Authenticate GitHub CLI? (y/n)"
-read -r DO_GH
-if [[ "$DO_GH" == "y" || "$DO_GH" == "Y" ]]; then
-    print_step "Running: gh auth login"
-    gh auth login
-    print_success "GitHub CLI authenticated"
-fi
+print_step "GitHub CLI..."
+gh auth login
+print_success "GitHub CLI authenticated"
 
 # Azure CLI
-print_prompt "Authenticate Azure CLI? (y/n)"
-read -r DO_AZ
-if [[ "$DO_AZ" == "y" || "$DO_AZ" == "Y" ]]; then
-    print_step "Running: az login"
-    az login
-    print_success "Azure CLI authenticated"
-fi
+print_step "Azure CLI..."
+az login
+print_success "Azure CLI authenticated"
 
 # Claude Code
-print_prompt "Authenticate Claude Code? (y/n)"
-read -r DO_CLAUDE
-if [[ "$DO_CLAUDE" == "y" || "$DO_CLAUDE" == "Y" ]]; then
-    print_step "Running: claude login"
-    npm install -g @anthropic-ai/claude-code
-    claude login
-    print_success "Claude Code authenticated"
-fi
+print_step "Claude Code..."
+claude login
+print_success "Claude Code authenticated"
 
 # =============================================================================
 # Done!
