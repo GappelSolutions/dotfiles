@@ -10,6 +10,34 @@ curl -fsSL https://raw.githubusercontent.com/GappelSolutions/dotfiles/main/nix/b
 
 This sets up a fully declarative system with nix-darwin, home-manager, and agenix for secrets. See [nix/README.md](nix/README.md) for details.
 
+## Post-Setup: Manual Permissions
+
+macOS requires manual approval for certain app permissions. **The setup will appear complete but these apps won't work properly until you grant permissions.**
+
+Open **System Settings > Privacy & Security** and grant the following:
+
+| App | Permission | What breaks without it |
+|-----|------------|------------------------|
+| Alacritty | Accessibility | Karabiner keybindings won't work in terminal |
+| Flameshot | Screen Recording | Cannot capture screenshots |
+| Karabiner-Elements | Input Monitoring | Key remapping won't work at all |
+| Karabiner-Elements | Accessibility | Key remapping won't work at all |
+| AeroSpace | Accessibility | Window management won't work |
+
+### How to grant permissions
+
+1. Open **System Settings** (Cmd+Space, type "System Settings")
+2. Go to **Privacy & Security** (left sidebar)
+3. For each permission type:
+   - Click the permission (e.g., "Accessibility")
+   - Click the **+** button or toggle the app on
+   - You may need to unlock with your password (click the lock icon)
+4. **Restart the app** after granting permissions
+
+### First-launch prompts
+
+Some apps will prompt automatically on first launch - click "Open System Settings" when prompted and toggle them on. If you dismissed the prompt, find the app manually in the lists above.
+
 ### Legacy (Stow-based)
 
 ```bash
