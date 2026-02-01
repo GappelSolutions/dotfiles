@@ -47,6 +47,10 @@
       "elixir"
       "helm"
       "k9s"
+      "docker"
+      "docker-compose"
+      "colima"
+      "minikube"
     ];
 
     # GUI applications
