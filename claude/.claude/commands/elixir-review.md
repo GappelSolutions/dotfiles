@@ -4,7 +4,13 @@ You are reviewing an Elixir exercise solution. Provide deep, educational feedbac
 
 ## Review the Code
 
-Analyze the solution in `$ARGUMENTS` (file path or the code itself).
+Arguments: `$ARGUMENTS`
+
+Parse the arguments:
+- **File path**: The path to the exercise file
+- **exercise:N** (optional): If provided, ONLY review Exercise N. Ignore all other exercises in the file.
+
+If `exercise:N` is specified, focus your entire review on just that exercise module (e.g., `exercise:1` means only review `Exercise1` module). Do not mention or review other exercises.
 
 ## Feedback Structure
 

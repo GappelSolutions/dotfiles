@@ -1,0 +1,10 @@
+# Never commit unencrypted secrets
+*.key
+!*.age
+
+# Nix build outputs
+result
+result-*
+
+# Temporary files
+*.tmp

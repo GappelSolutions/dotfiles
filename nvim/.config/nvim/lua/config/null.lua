@@ -20,6 +20,9 @@ local mix_format = {
 		command = "mix",
 		args = { "format", "-" },
 		to_stdin = true,
+		cwd = function()
+			return vim.fn.getcwd()
+		end,
 	}),
 }
 

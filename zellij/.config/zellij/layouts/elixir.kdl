@@ -8,7 +8,42 @@ layout {
         }
     }
 
-    tab name="1-agent" focus=true {
+    tab name="1-learn" focus=true {
+        pane split_direction="vertical" {
+            pane size="60%" command="/Users/cgpp/.local/share/bob/nvim-bin/nvim" {
+                args "01-elixir-core/01-pattern-matching.md"
+            }
+            pane size="40%" command="bash" {
+                args "-c" "./scripts/elx"
+            }
+        }
+    }
+
+    tab name="2-code" {
+        pane split_direction="vertical" {
+            pane size="60%" command="/Users/cgpp/.local/share/bob/nvim-bin/nvim" {
+                args "exercises/01-elixir-core/01-pattern-matching.ex"
+            }
+            pane size="40%" command="bash" {
+                args "-c" "./scripts/elx"
+            }
+        }
+    }
+
+    tab name="3-repl" {
+        pane command="bash" {
+            args "-lc" "iex"
+        }
+    }
+
+    tab name="4" { pane; }
+    tab name="5" { pane; }
+    tab name="6" { pane; }
+    tab name="7" { pane; }
+    tab name="8" { pane; }
+    tab name="9" { pane; }
+
+    tab name="0-agent" {
         pane split_direction="vertical" {
             pane split_direction="horizontal" {
                 pane command="claude" {
@@ -28,36 +63,6 @@ layout {
             }
         }
     }
-
-    tab name="2-code" {
-        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim" {
-            args "exercises/01-elixir-core/01-pattern-matching.ex"
-        }
-    }
-
-    tab name="3-learn" {
-        pane split_direction="vertical" {
-            pane size="60%" command="/Users/cgpp/.local/share/bob/nvim-bin/nvim" {
-                args "01-elixir-core/01-pattern-matching.md"
-            }
-            pane size="40%" command="bash" {
-                args "-c" "./scripts/elx"
-            }
-        }
-    }
-
-    tab name="4-repl" {
-        pane command="bash" {
-            args "-lc" "iex"
-        }
-    }
-
-    tab name="5" { pane; }
-    tab name="6" { pane; }
-    tab name="7" { pane; }
-    tab name="8" { pane; }
-    tab name="9" { pane; }
-    tab name="0" { pane; }
 }
 
 scrollback_editor "/Users/cgpp/.local/share/bob/nvim-bin/nvim"

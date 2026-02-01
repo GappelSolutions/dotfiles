@@ -20,7 +20,7 @@ layout {
             }
             pane split_direction="horizontal" {
                 pane cwd="CustomerPortal.Angular" command="claude" {
-                    args "--dangerously-skip-permissions" "--add-dir" "../CustomerPortal.WebAPI" "--add-dir" "../ANGULAR-STACK" "--add-dir" "../Repower.Lib.Shared"
+                    args "--dangerously-skip-permissions" "--add-dir" "../CustomerPortal.WebAPI" "--add-dir" "../ANGULAR-STACK" "--add-dir" "../Repower.Lib.Shared" "--resume"
                 }
                 pane cwd="CustomerPortal.Angular" command="claude" {
                     args "--dangerously-skip-permissions" "--add-dir" "../CustomerPortal.WebAPI" "--add-dir" "../ANGULAR-STACK" "--add-dir" "../Repower.Lib.Shared"
