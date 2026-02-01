@@ -4,18 +4,8 @@
   # ==========================================================================
   # Nix Settings
   # ==========================================================================
-  nix = {
-    settings = {
-      experimental-features = [ "nix-command" "flakes" ];
-      trusted-users = [ "root" "cgpp" ];
-    };
-    # Garbage collection
-    gc = {
-      automatic = true;
-      interval = { Weekday = 0; Hour = 2; Minute = 0; };
-      options = "--delete-older-than 30d";
-    };
-  };
+  # Disabled because we use Determinate Nix installer which manages its own daemon
+  nix.enable = false;
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
