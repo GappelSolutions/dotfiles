@@ -37,8 +37,13 @@
     zellij
     tmux
 
+    # Development - Node
+    nodejs
+    pnpm
+
     # Cloud & DevOps
     gh
+    sops
 
     # Utilities
     jq
@@ -121,7 +126,7 @@
       rebuild = "sudo /nix/var/nix/profiles/default/bin/nix run nix-darwin -- switch --flake ~/dev/dotfiles/nix";
     };
 
-    initExtra = ''
+    initContent = ''
       # --- Completion ---
       fpath=(~/.zsh/completions $fpath)
       zstyle ':completion:*' menu select
@@ -159,7 +164,7 @@
       _bubble_right=$'\ue0b4'
       _git_icon=$'\uf418'
       _apple_icon=$'\ue711'
-      _dirty_icon='*'
+      _dirty_icon='●'
 
       precmd() {
         vcs_info
@@ -184,7 +189,7 @@
       bindkey '^M' _transient_accept_line
 
       setopt PROMPT_SUBST
-      PROMPT=$'\n %F{cyan}''${_bubble_left}%K{magenta} %K{red}%F{black}''${_apple_icon}%K{yellow} %K{blue}%F{green}''${_bubble_right}%f%F{blue}%K{blue}%F{black}  %~ %f%k''${_git_info}\n %F{magenta}|->%f '
+      PROMPT=$'\n %F{cyan}''${_bubble_left}%K{magenta} %K{red}%F{black}''${_apple_icon}%K{yellow} %K{blue}%F{green}''${_bubble_right}%f%F{blue}%K{blue}%F{black}  %~ %f%k''${_git_info}\n %F{magenta}╰─❯%f '
 
       # --- Tools ---
       eval "$(zoxide init zsh)"
