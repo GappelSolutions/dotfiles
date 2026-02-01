@@ -297,7 +297,7 @@
     "lazygit".source = ../lazygit/.config/lazygit;
     "yazi".source = ../yazi/.config/yazi;
     "zellij".source = ../zellij/.config/zellij;
-    "karabiner".source = ../karabiner/.config/karabiner;
+    "kanata".source = ../kanata/.config/kanata;
   };
 
   # Aerospace config (lives in home directory, not .config)

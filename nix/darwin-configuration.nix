@@ -62,7 +62,6 @@
 
       # Window Management
       "aerospace"
-      "karabiner-elements"
       "jordanbaird-ice"
 
       # Development
@@ -167,6 +166,18 @@
       ShowSeconds = false;
     };
   };
+
+  # Keyboard remapping (hidutil-based)
+  system.keyboard = {
+    enableKeyMapping = true;
+    remapCapsLockToEscape = true;
+  };
+
+  # Clear System Preferences modifier key mappings that conflict with hidutil
+  system.activationScripts.postActivation.text = ''
+    # Remove any System Preferences modifier key overrides so hidutil mapping works
+    defaults -currentHost delete -g com.apple.keyboard.modifiermapping.0-0-0 2>/dev/null || true
+  '';
 
   # ==========================================================================
   # Security
