@@ -43,6 +43,7 @@
       "mas"               # mac app store cli
       "cocoapods"         # ios deps
       "nowplaying-cli"    # music info
+      "azure-cli"         # nix version triggers Swift build
     ];
 
     # GUI applications
