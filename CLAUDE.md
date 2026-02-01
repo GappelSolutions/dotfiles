@@ -1,13 +1,61 @@
 # Dotfiles
 
-Personal dotfiles managed with GNU Stow for the Angular + .NET development stack.
+Personal dotfiles managed with **nix-darwin + home-manager + agenix**.
 
-## Stow Usage
+## Quick Start (Fresh Mac)
 
 ```bash
-# Apply all dotfiles
-stow -v -R -t ~ *
+curl -fsSL https://raw.githubusercontent.com/GappelSolutions/dotfiles/main/nix/bootstrap.sh | bash
 ```
+
+This installs everything: Nix, packages, configs, and decrypts your SSH keys (requires your passphrase).
+
+## Daily Usage
+
+```bash
+rebuild   # After config changes - rebuilds nix-darwin + home-manager
+```
+
+## Structure
+
+```
+dotfiles/
+├── aerospace/     # window manager config
+├── alacritty/     # terminal config
+├── claude/        # claude code config
+├── jetbrains/     # ideavimrc for Android Studio
+├── lazygit/       # lazygit config
+├── nix/           # main nix config
+│   ├── flake.nix              # flake definition
+│   ├── darwin-configuration.nix  # macOS system config
+│   ├── home.nix               # user packages & dotfiles
+│   ├── bootstrap.sh           # fresh machine setup script
+│   └── secrets/               # agenix-encrypted SSH keys
+├── nvim/          # neovim config
+├── vim/           # vim/ideavim config
+├── vscode/        # vscode settings
+├── yazi/          # file manager config
+└── zellij/        # multiplexer config
+```
+
+## Secrets Management
+
+SSH keys are encrypted with [agenix](https://github.com/ryantm/agenix) using an age master key.
+
+- Master key location: `~/.age/master.key`
+- Encrypted backup: `~/.age/master.key.age` (passphrase-protected)
+- Secrets are decrypted at activation time to `/run/agenix/`
+
+## Legacy (Stow)
+
+The `stow` branch contains the pre-nix setup using GNU Stow. For non-nix machines:
+
+```bash
+git checkout stow
+stow -v -R -t ~ alacritty nvim zsh ...
+```
+
+---
 
 ## Zellij Layout Guidelines
 
