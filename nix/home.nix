@@ -52,6 +52,12 @@
     zip
     socat
     rclone
+    wget
+    pandoc
+    ffmpeg
+    luarocks
+    rustup
+    pipx
   ];
 
   # TODO: Add these back after initial build works (some may trigger Swift builds):
