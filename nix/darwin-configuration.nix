@@ -77,6 +77,7 @@
       "obsidian"
 
       # Utilities
+      "raycast"
       "appcleaner"
       "keka"
       "localsend"
@@ -118,6 +119,8 @@
       ShowPathbar = true;
       ShowStatusBar = true;
       FXEnableExtensionChangeWarning = false;
+      FXPreferredViewStyle = "Nlsv";  # list view
+      _FXShowPosixPathInTitle = true;
     };
 
     # Dock
@@ -125,6 +128,9 @@
       autohide = true;
       show-recents = false;
       mru-spaces = false;
+      minimize-to-application = true;
+      show-process-indicators = true;
+      tilesize = 48;
     };
 
     # Keyboard
@@ -133,12 +139,32 @@
       KeyRepeat = 2;
       InitialKeyRepeat = 15;
       AppleShowAllExtensions = true;
+      AppleInterfaceStyle = "Dark";  # dark mode
+      NSAutomaticCapitalizationEnabled = false;
+      NSAutomaticDashSubstitutionEnabled = false;
+      NSAutomaticPeriodSubstitutionEnabled = false;
+      NSAutomaticQuoteSubstitutionEnabled = false;
+      NSAutomaticSpellingCorrectionEnabled = false;
     };
 
     # Trackpad
     trackpad = {
       Clicking = true;
       TrackpadRightClick = true;
+      TrackpadThreeFingerDrag = true;
+    };
+
+    # Screenshots
+    screencapture = {
+      location = "~/Pictures/Screenshots";
+      type = "png";
+      disable-shadow = true;
+    };
+
+    # Menu bar
+    menuExtraClock = {
+      Show24Hour = true;
+      ShowSeconds = false;
     };
   };
 
