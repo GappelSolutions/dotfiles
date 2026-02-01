@@ -144,7 +144,8 @@
       ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#666666"
       bindkey '^f' autosuggest-accept
 
-      # --- Syntax highlighting colors ---
+      # --- Syntax highlighting colors (set after plugin loads) ---
+      typeset -gA ZSH_HIGHLIGHT_STYLES
       ZSH_HIGHLIGHT_STYLES[command]='fg=green,bold'
       ZSH_HIGHLIGHT_STYLES[builtin]='fg=green,bold'
       ZSH_HIGHLIGHT_STYLES[alias]='fg=cyan,bold'
