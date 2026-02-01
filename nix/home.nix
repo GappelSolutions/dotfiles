@@ -91,7 +91,7 @@
     enable = true;
     settings = {
       user.name = "Christian Gappel";
-      user.email = "christian.gappel@evulution.com";
+      user.email = "aichelberg2@gmail.com";
       init.defaultBranch = "main";
       push.autoSetupRemote = true;
       pull.rebase = true;
