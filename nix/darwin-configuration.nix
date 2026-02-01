@@ -32,7 +32,6 @@
     };
 
     taps = [
-      "homebrew/bundle"
       "dart-lang/dart"
     ];
 
@@ -111,7 +110,7 @@
 
     # Dock
     dock = {
-      autohide = false;
+      autohide = true;
       show-recents = false;
       mru-spaces = false;
     };
