@@ -1,10 +1,16 @@
 # Dotfiles
 
-Personal dotfiles managed with GNU Stow for macOS (Angular + .NET development stack).
+Personal dotfiles for macOS (Angular + .NET development stack).
 
 ## Quick Setup
 
-Bootstrap a fresh macOS machine:
+```bash
+curl -fsSL https://raw.githubusercontent.com/GappelSolutions/dotfiles/main/nix/bootstrap.sh | bash
+```
+
+This sets up a fully declarative system with nix-darwin, home-manager, and agenix for secrets. See [nix/README.md](nix/README.md) for details.
+
+### Legacy (Stow-based)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/GappelSolutions/dotfiles/main/init.sh | bash

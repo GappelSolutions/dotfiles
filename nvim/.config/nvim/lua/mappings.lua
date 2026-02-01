@@ -169,3 +169,4 @@ Map("n", "<leader>ta", "<cmd>lua require('neotest').run.run(vim.loop.cwd())<cr>"
 
 -- Typst
 Map("n", "<leader>cp", "<cmd>!typst compile %:r.typ %:r.pdf<cr>")
+
