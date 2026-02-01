@@ -122,8 +122,8 @@
       py = "python3";
       pip = "pip3";
 
-      # Nix rebuild alias (suppress harmless warnings, unbuffered)
-      rebuild = "sudo -H /nix/var/nix/profiles/default/bin/nix run nix-darwin -- switch --flake ~/dev/dotfiles/nix 2>&1 | grep --line-buffered -v -e \"is not owned by you\" -e \"builtins.toFile\"";
+      # Nix rebuild alias
+      rebuild = "sudo HOME=/var/root /nix/var/nix/profiles/default/bin/nix run nix-darwin -- switch --flake ~/dev/dotfiles/nix 2>&1 | grep --line-buffered -v \"builtins.toFile\"";
     };
 
     initContent = ''
