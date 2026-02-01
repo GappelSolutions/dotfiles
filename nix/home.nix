@@ -122,8 +122,8 @@
       py = "python3";
       pip = "pip3";
 
-      # Nix rebuild alias
-      rebuild = "sudo /nix/var/nix/profiles/default/bin/nix run nix-darwin -- switch --flake ~/dev/dotfiles/nix";
+      # Nix rebuild alias (suppress harmless warnings)
+      rebuild = "sudo -H /nix/var/nix/profiles/default/bin/nix run nix-darwin -- switch --flake ~/dev/dotfiles/nix 2>&1 | grep -v \"is not owned by you\" | grep -v \"builtins.toFile\"";
     };
 
     initContent = ''
