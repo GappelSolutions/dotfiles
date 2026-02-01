@@ -89,14 +89,19 @@
   # Git
   programs.git = {
     enable = true;
-    userName = "Christian Gappel";
-    userEmail = "christian.gappel@evulution.com";
-    delta.enable = true;
-    extraConfig = {
+    settings = {
+      user.name = "Christian Gappel";
+      user.email = "christian.gappel@evulution.com";
       init.defaultBranch = "main";
       push.autoSetupRemote = true;
       pull.rebase = true;
     };
+  };
+
+  # Delta (git pager)
+  programs.delta = {
+    enable = true;
+    enableGitIntegration = true;
   };
 
   # Zsh
@@ -257,6 +262,7 @@
   # SSH
   programs.ssh = {
     enable = true;
+    enableDefaultConfig = false;
     includes = [ "/Users/cgpp/.colima/ssh_config" ];
     matchBlocks = {
       "github.com-personal" = {
