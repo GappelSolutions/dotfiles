@@ -23,7 +23,7 @@
   outputs = inputs@{ self, nixpkgs, nix-darwin, home-manager, agenix }:
     let
       system = "aarch64-darwin";
-      hostname = "cgpp-mac"; # change this to your hostname
+      hostname = "Christians-MacBook-Pro";
 
       pkgs = import nixpkgs {
         inherit system;
