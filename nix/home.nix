@@ -15,6 +15,7 @@
     # Core tools
     git
     age  # for agenix
+    stow
 
     # Terminal & Shell
     zoxide
@@ -23,13 +24,18 @@
     ripgrep
     fd
     bat
+    delta  # git-delta
 
     # File managers & viewers
     yazi
     lazygit
+    btop
+    bottom
+    lazydocker
 
     # Multiplexers
     zellij
+    tmux
 
     # Cloud & DevOps
     gh
@@ -37,6 +43,10 @@
     # Utilities
     jq
     nerdfetch
+    unar
+    zip
+    socat
+    rclone
   ];
 
   # TODO: Add these back after initial build works (some may trigger Swift builds):
@@ -108,7 +118,7 @@
       pip = "pip3";
 
       # Nix rebuild alias
-      rebuild = "darwin-rebuild switch --flake ~/dev/dotfiles/nix";
+      rebuild = "sudo /nix/var/nix/profiles/default/bin/nix run nix-darwin -- switch --flake ~/dev/dotfiles/nix";
     };
 
     initExtra = ''
