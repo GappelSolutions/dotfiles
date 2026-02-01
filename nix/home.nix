@@ -41,9 +41,16 @@
     nodejs
     pnpm
 
+    # Development - .NET & Elixir
+    dotnet-sdk_8
+    elixir
+
     # Cloud & DevOps
     gh
     sops
+    azure-cli
+    kubernetes-helm
+    k9s
 
     # Utilities
     jq
