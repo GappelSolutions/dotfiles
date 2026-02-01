@@ -51,6 +51,8 @@
       "docker-compose"
       "colima"
       "minikube"
+      "postgresql@14"
+      "redis"
     ];
 
     # GUI applications
