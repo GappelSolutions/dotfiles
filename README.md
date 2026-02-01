@@ -19,10 +19,11 @@ Open **System Settings > Privacy & Security** and grant the following:
 | App | Permission | What breaks without it |
 |-----|------------|------------------------|
 | Alacritty | Accessibility | Karabiner keybindings won't work in terminal |
-| Flameshot | Screen Recording | Cannot capture screenshots |
-| Karabiner-Elements | Input Monitoring | Key remapping won't work at all |
-| Karabiner-Elements | Accessibility | Key remapping won't work at all |
 | AeroSpace | Accessibility | Window management won't work |
+| Karabiner-Elements | Accessibility | Key remapping won't work at all |
+| Karabiner-Elements | Input Monitoring | Key remapping won't work at all |
+| Raycast | Accessibility | Window management, snippets won't work |
+| Flameshot | Screen Recording | Cannot capture screenshots |
 
 ### How to grant permissions
 
@@ -77,6 +78,7 @@ stow -t ~ zsh nvim alacritty
 | `lazygit` | Git TUI config |
 | `mcphub` | MCP Hub server config |
 | `nvim` | Neovim config (LazyVim-based) |
+| `raycast` | Raycast settings export (manual import required) |
 | `vim` | Minimal .vimrc |
 | `vscode` | VS Code keybindings |
 | `yazi` | File manager config |
