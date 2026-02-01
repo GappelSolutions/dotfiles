@@ -14,73 +14,37 @@
   home.packages = with pkgs; [
     # Core tools
     git
-    stow  # keep for transition period
+    age  # for agenix
 
     # Terminal & Shell
-    zsh-autosuggestions
-    zsh-syntax-highlighting
     zoxide
     fzf
     eza
     ripgrep
     fd
     bat
-    delta  # git-delta
 
     # File managers & viewers
     yazi
-    btop
-    bottom
     lazygit
-    lazydocker
 
     # Multiplexers
     zellij
-    tmux
-
-    # Development - Node
-    nodejs
-    pnpm
-    nodePackages.prettier
-    nodePackages.eslint
-
-    # Development - .NET
-    dotnet-sdk_8
-
-    # Containers & K8s
-    docker
-    docker-compose
-    colima
-    minikube
-    kubernetes-helm
-    k9s
 
     # Cloud & DevOps
-    azure-cli
     gh
-    sops
-    age  # for agenix
-
-    # Database
-    postgresql_14
-    redis
-
-    # Languages & Build
-    elixir
-    luarocks
-    pipx
-    rustup
 
     # Utilities
     jq
-    ffmpeg
-    pandoc
-    unar
-    zip
-    socat
-    rclone
     nerdfetch
   ];
+
+  # TODO: Add these back after initial build works (some may trigger Swift builds):
+  # stow, zsh-autosuggestions, zsh-syntax-highlighting, delta, btop, bottom
+  # lazydocker, tmux, nodejs, pnpm, nodePackages.*, dotnet-sdk_8
+  # docker, docker-compose, colima, minikube, kubernetes-helm, k9s
+  # azure-cli, sops, postgresql_14, redis, elixir, luarocks, pipx, rustup
+  # ffmpeg, pandoc, unar, zip, socat, rclone
 
   # ==========================================================================
   # Program Configurations
