@@ -48,7 +48,7 @@
     # Cloud & DevOps
     gh
     sops
-    azure-cli
+    # azure-cli  # triggers Swift build - install via: brew install azure-cli
     kubernetes-helm
     k9s
 
