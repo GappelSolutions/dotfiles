@@ -242,6 +242,7 @@ plugins {
     }
     plugin-manager location="zellij:plugin-manager"
     session-manager location="zellij:session-manager"
+    zellij-switch location="file:~/.config/zellij/plugins/zellij-switch.wasm"
     status-bar location="zellij:status-bar"
     strider location="zellij:strider"
     tab-bar location="zellij:tab-bar"

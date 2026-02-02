@@ -212,6 +212,25 @@
         export EDITOR="nvim"
       fi
 
+      # --- Zellij session helpers ---
+      # Attach to active session or create new one with layout-timestamp (ignores exited sessions)
+      _zj() {
+        local layout="$1"
+        local existing=$(zellij list-sessions 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' | grep "^$layout-" | grep -v "EXITED" | awk '{print $1}' | head -1)
+        if [[ -n "$existing" ]]; then
+          zellij pipe --plugin "file:$HOME/dev/dotfiles/zellij/.config/zellij/plugins/zellij-switch.wasm" -- "-s $existing"
+        else
+          zellij pipe --plugin "file:$HOME/dev/dotfiles/zellij/.config/zellij/plugins/zellij-switch.wasm" -- "-s $layout-$(date +%Y%m%d-%H%M%S) -l $layout"
+        fi
+      }
+      zeb() { _zj energyboard; }
+      zbo() { _zj backoffice; }
+      zea() { _zj easyasset; }
+      zex() { _zj elixir; }
+      zgs() { _zj gappel-solutions; }
+      zdc() { _zj decon; }
+      zsc() { _zj screensaver; }
+
       # --- Yazi integration ---
       function y() {
         local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
@@ -236,7 +255,6 @@
 
       # --- Splash ---
       clear
-      echo ""
       $HOME/.local/bin/nerdfetch
       echo "\n"
     '';
