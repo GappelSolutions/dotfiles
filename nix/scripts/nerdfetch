@@ -1,0 +1,386 @@
+#!/bin/sh
+
+## OS/ENVIRONMENT INFO DETECTION
+
+ostype="$(uname)"
+
+version=8.4.2
+font=nerd
+distrotype=none
+osi=""
+ki=""
+ri="󰍛"
+pi="󰏔"
+ui="󰅶"
+ci="󰏘"
+
+case $1 in
+"-p")
+	font=phosphor
+	osi=""
+	ki=""
+	ri=""
+	pi=""
+	ui=""
+	ci=""
+	;;
+"-c")
+	font=cozette
+	ki=""
+	ri=""
+	pi=""
+	ui=""
+	ci=""
+	;;
+"-e")
+	font=emoji
+	osi="🐧"
+	ki="💓"
+	ri="🐐"
+	pi="📦"
+	ui="☕"
+	ci="🎨"
+	;;
+"-v")
+	echo "NerdFetch $version (Nix Edition)"
+	exit
+	;;
+"-h"|"--help")
+	echo "Flags:
+-c: Cozette font
+-p: Phosphor font
+-e: Emoji font
+-v: Version"
+	exit
+	;;
+esac
+
+if command -v getprop 1>/dev/null 2>&1; then
+	distrotype=android
+fi
+kernel=$(uname -r)
+kernel=${kernel%%-*}
+case $ostype in
+*"Linux"*)
+	if [ $distrotype = android ]; then
+		host="$(hostname)"
+		USER="$(whoami)"
+		os="Android $(getprop ro.build.version.release)"
+		case $font in
+		phosphor) osi="" ;;
+		emoji) osi="🤖" ;;
+		*) osi="󰀲" ;;
+		esac
+	else
+		host="$(cat /proc/sys/kernel/hostname)"
+		. /etc/os-release
+		if [ -f /bedrock/etc/bedrock-release ]; then
+			os="$(brl version)"
+		else
+			os="${PRETTY_NAME}"
+			if [ $font = nerd ]; then
+				case ${ID%% *} in
+				debian) osi="" ;;
+				arch) osi="󰣇" ;;
+				endeavouros) osi="" ;;
+				fedora) osi="" ;;
+				gentoo) osi="" ;;
+				rhel) osi="" ;;
+				slackware) osi="" ;;
+				void) osi="" ;;
+				alpine) osi="" ;;
+				nixos) osi="󱄅" ;;
+				artix) osi="" ;;
+				exherbo) osi="󰆚" ;;
+				mageia) osi="" ;;
+				manjaro) osi="" ;;
+				opensuse) osi="" ;;
+				solus) osi="" ;;
+				ubuntu) osi="" ;;
+				linuxmint) osi="󰣭" ;;
+				trisquel) osi="" ;;
+				puppy) osi="" ;;
+				coreos) osi="" ;;
+				mx) osi="" ;;
+				vanilla) osi="" ;;
+				pop_os) osi="" ;;
+				raspbian) osi="" ;;
+				deepin) osi="" ;;
+				almalinux) osi="" ;;
+				garuda) osi="" ;;
+				centos) osi="" ;;
+				rocky) osi="" ;;
+				esac
+			elif [ $font = cozette ]; then
+				case ${ID%% *} in
+				debian) osi="" ;;
+				arch) osi="" ;;
+				fedora) osi="" ;;
+				gentoo) osi="" ;;
+				slackware) osi="" ;;
+				void) osi="" ;;
+				alpine) osi="" ;;
+				nixos) osi="" ;;
+				mageia) osi="" ;;
+				manjaro) osi="" ;;
+				opensuse) osi="" ;;
+				ubuntu) osi="" ;;
+				linuxmint) osi="" ;;
+				coreos) osi="" ;;
+				centos) osi="" ;;
+				esac
+			fi
+		fi
+	fi
+	;;
+*"Darwin"*)
+	host="$(hostname -f | sed -e 's/^[^.]*\.//')"
+	mac_product="$(/usr/libexec/PlistBuddy -c "Print:ProductName" /System/Library/CoreServices/SystemVersion.plist)"
+	mac_version="$(/usr/libexec/PlistBuddy -c "Print:ProductVersion" /System/Library/CoreServices/SystemVersion.plist)"
+	os="${mac_product} ${mac_version}"
+	case $font in
+	nerd) osi="" ;;
+	phosphor) osi="" ;;
+	cozette) osi="" ;;
+	emoji) osi="❄️" ;;
+	esac
+	;;
+*"FreeBSD"*)
+	host="$(hostname)"
+	distrotype=bsd
+	os="FreeBSD $(freebsd-version | sed 's/-.*//')"
+	case $font in
+	nerd) osi="" ;;
+	phosphor) osi="" ;;
+	cozette) osi="" ;;
+	emoji) osi="😈" ;;
+	esac
+	;;
+*"OpenBSD"*)
+	host="$(hostname)"
+	distrotype=bsd
+	os="OpenBSD $(uname -r)"
+	case $font in
+	nerd) osi="" ;;
+	phosphor) osi="" ;;
+	cozette) osi="⌘" ;;
+	emoji) osi="🐡" ;;
+	esac
+	;;
+*"NetBSD"*)
+	host="$(hostname)"
+	distrotype=netbsd
+	os="NetBSD $(uname -r)"
+	case $font in
+	nerd) osi="󰉀" ;;
+	phosphor) osi="" ;;
+	cozette) osi="" ;;
+	emoji) osi="🚩" ;;
+	esac
+	;;
+*)
+	os="Unix-like"
+	host="host"
+	;;
+esac
+
+## PACKAGE MANAGER AND PACKAGES DETECTION
+
+MANAGER=$(for x in nix-env pkg flatpak yum zypper dnf rpm dpkg-query brew port pacman xbps-query emerge cave apk kiss pmm /usr/sbin/slackpkg bulge birb yay paru pacstall cpm pmm opkg eopkg getprop; do command -v $x; done 2>/dev/null)
+manager=${MANAGER##*/}
+if [ $distrotype = netbsd ]; then
+	manager="pkg_info-netbsd"
+fi
+case $manager in
+cpm) packages="$(cpm C)" ;;
+flatpak) packages="$(flatpak list --app | wc -l)" ;;
+brew) packages="$(printf '%s\n' "$(brew --cellar)/"* | wc -l)" ;;
+port) packages="$(($(port installed | wc -l) - 1))" ;;
+dpkg-query) packages="$(dpkg-query -f '${binary:Package}\n' -W | wc -l)" ;;
+rpm) packages="$(rpm -qa --last | wc -l)" ;;
+yum) packages="$(yum list installed | wc -l)" ;;
+dnf) packages="$(dnf list installed | wc -l)" ;;
+zypper) packages="$(zypper se | wc -l)" ;;
+pacman) packages="$(pacman -Q | wc -l)" ;;
+yay) packages="$(yay -Q | wc -l)" ;;
+paru) packages="$(paru -Q | wc -l)" ;;
+pacstall) packages="$(pacstall -L | wc -l)" ;;
+kiss) packages="$(kiss list | wc -l)" ;;
+emerge) packages="$(qlist -I | wc -l)" ;;
+pkg) packages="$(pkg info | wc -l | tr -d ' ')" ;;
+cave) packages="$(cave show installed-slots | wc -l)" ;;
+xbps-query) packages="$(xbps-query -l | wc -l)" ;;
+nix-env) packages="$(nix-store -q --requisites /run/current-system/sw | wc -l)" ;;
+apk) packages="$(apk list --installed | wc -l)" ;;
+pmm) packages="$(/bedrock/libexec/pmm pacman pmm -Q 2>/dev/null | wc -l)" ;;
+opkg) packages="$(opkg list-installed | wc -l)" ;;
+eopkg) packages="$(eopkg li | wc -l)" ;;
+slackpkg) packages="$(ls /var/log/packages | wc -l)" ;;
+bulge) packages="$(bulge list | wc -l)" ;;
+birb) packages="$(birb --list-installed | wc -l)" ;;
+pkg_info)
+	packages="$(pkg_info -A | wc -l)"
+	manager="pkg"
+	;;
+pkg_info-netbsd)
+	packages="$(pkg_info -a | wc -l)"
+	manager="pkg"
+	;;
+*)
+	if [ $distrotype = android ]; then
+		packages="$(pkg list-installed 2>/dev/null | wc -l)"
+		manager="pkg"
+	else
+		packages="$(ls /usr/bin | wc -l)"
+		manager="bin"
+	fi
+	;;
+esac
+
+packages="${packages#"${packages%%[![:space:]]*}"}"
+manager=${manager%-query}
+
+## NIX PACKAGES DETECTION
+
+nix_sys=$(nix-store -q --requisites /run/current-system/sw 2>/dev/null | wc -l | tr -d ' ')
+nix_hm=$(nix-store -q --requisites ~/.nix-profile 2>/dev/null | wc -l | tr -d ' ')
+if [ -n "$nix_sys" ] && [ "$nix_sys" -gt 0 ]; then
+	nixpkgs="${nix_sys} (nix-darwin)"
+	if [ -n "$nix_hm" ] && [ "$nix_hm" -gt 0 ]; then
+		nixpkgs="${nixpkgs} + ${nix_hm} (hm)"
+	fi
+else
+	nixpkgs=""
+fi
+ni="󱄅"
+
+## UPTIME DETECTION
+
+if [ $distrotype = android ]; then
+	uptime="$(uptime -p | cut -c 4-)"
+elif [ $distrotype = bsd ] || [ $distrotype = netbsd ]; then
+	uptime="$(uptime | sed -e 's/.* up //; s/, [0-9]* user.*//')"
+else
+	case $ostype in
+	*"Linux"*)
+		IFS=. read -r s _ </proc/uptime
+		;;
+	*)
+		s=$(sysctl -n kern.boottime)
+		s=${s#*=}
+		s=${s%,*}
+		s=$(($(date +%s) - s))
+		;;
+	esac
+	d="$((s / 60 / 60 / 24))"
+	h="$((s / 60 / 60 % 24))"
+	m="$((s / 60 % 60))"
+	# Plurals
+	[ "$d" -gt 1 ] && dp=s
+	[ "$h" -gt 1 ] && hp=s
+	[ "$m" -gt 1 ] && mp=s
+	[ "$s" -gt 1 ] && sp=s
+	# Hide empty fields.
+	[ "$d" = 0 ] && d=
+	[ "$h" = 0 ] && h=
+	[ "$m" = 0 ] && m=
+	[ "$d$h$m" != "" ] && s=
+	# Make the output of uptime smaller.
+	[ "$d" ] && uptime="$d day$dp, "
+	[ "$h" ] && uptime="$uptime$h hour$hp, "
+	[ "$m" ] && uptime="$uptime$m min$mp"
+	[ "$s" ] && uptime="$uptime$s sec$sp"
+	uptime=${uptime%, }
+fi
+
+## RAM DETECTION
+
+case $ostype in
+*"Linux"*)
+	while IFS=':k ' read -r key val _; do
+		case $key in
+		MemTotal)
+			mem_used=$((mem_used + val))
+			mem_full=$val
+			;;
+		Shmem) mem_used=$((mem_used + val)) ;;
+		MemFree | Buffers | Cached | SReclaimable) mem_used=$((mem_used - val)) ;;
+		esac
+	done </proc/meminfo
+	mem_used=$((mem_used / 1024))
+	mem_full=$((mem_full / 1024))
+	;;
+*"Darwin"*)
+	mem_full=$(($(sysctl -n hw.memsize) / 1024 / 1024))
+	[ $mem_full -gt 0 ] || mem_full=$(expr $(sysctl -n hw.memsize) / 1024 / 1024)
+	while IFS=:. read -r key val _; do
+		case $key in
+		'Anonymous '*|*' wired'* | *' occupied'*)
+			mem_used=$((mem_used + ${val:-0}))
+			;;
+		*' purgeable'*)
+			mem_used=$((mem_used - ${val:-0}))
+			;;
+		esac
+	done <<-EOF
+		$(vm_stat)
+	EOF
+
+	mem_used=$((mem_used * ( $(sysctl -n vm.pagesize) / 1024 ) / 1024))
+	;;
+*"BSD"*)
+	mem_full=$(($(sysctl -n hw.physmem) / 1024 / 1024))
+	[ $mem_full -gt 0 ] || mem_full=$(expr $(sysctl -n hw.physmem) / 1024 / 1024)
+	if [ $distrotype = netbsd ]; then
+		mem_free=$(($(vmstat | awk 'NR==3 {print $4}') / 1024))
+	else
+		mem_free=$(($(sysctl -n vm.stats.vm.v_free_count) * ( $(sysctl -n vm.stats.vm.v_page_size) / 1024 ) / 1024))
+	fi
+	mem_used=$((mem_full - mem_free))
+	;;
+*)
+	mem_full=1
+	mem_used=0
+	;;
+esac
+memstat="${mem_used}/${mem_full} MiB"
+mempercent='('$((mem_used * 100 / mem_full))'%)'
+
+## DEFINE COLORS
+
+esc=$(printf '\033')
+bold="${esc}[1m"
+reset="${esc}[0m"
+red="${esc}[31m"
+green="${esc}[32m"
+yellow="${esc}[33m"
+blue="${esc}[34m"
+magenta="${esc}[35m"
+cyan="${esc}[36m"
+grey="${esc}[90m"
+white="${esc}[37m"
+
+## USER VARIABLES -- YOU CAN CHANGE THESE
+
+lc="${reset}${bold}${magenta}" # labels
+nc="${reset}${bold}${yellow}"  # user
+hn="${reset}${bold}${blue}"    # hostname
+ic="${reset}${green}"          # info
+c0="${reset}${blue}"           # first color (##)
+c1="${reset}${cyan}"           # second color
+
+## OUTPUT
+
+cat <<EOF
+
+${c0}    **   ${c1}##   ##
+${c0}     **   ${c1}## ##       ${nc}${USER}${red}@${reset}${hn}${host}${reset}
+${c0}  *********${c1}###  ${c0}**    ${lc}${osi}  ${ic}${os}${reset}
+${c1}     ##     ## ${c0}**     ${lc}${ki}  ${ic}${kernel}${reset}
+${c1}######       #${c0}**      ${lc}${ri}  ${ic}${memstat} ${mempercent}
+${c1}   ##${c0}*       ******${reset}   ${lc}${pi}  ${ic}${packages} (${manager})${reset}
+${c1}  ## ${c0}**     **        ${lc}${ni}  ${ic}${nixpkgs}${reset}
+${c1} ##  ${c0}***${c1}#########     ${lc}${ui}  ${ic}${uptime}${reset}
+${c0}    ** **   ${c1}##        ${lc}${ci}  ${red}███${green}███${yellow}███${blue}███${magenta}███${cyan}███${reset}
+${c0}   **   **   ${c1}##${reset}
+EOF

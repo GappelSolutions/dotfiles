@@ -47,9 +47,6 @@
       "elixir"
       "helm"
       "k9s"
-      "docker"
-      "docker-compose"
-      "colima"
       "minikube"
       "postgresql@14"
       "redis"
@@ -188,12 +185,6 @@
   # Primary User (required for homebrew and user defaults)
   # ==========================================================================
   system.primaryUser = "cgpp";
-
-  # ==========================================================================
-  # Services
-  # ==========================================================================
-  # Add any launchd services here if needed
-  # services.yabai.enable = true;
 
   # ==========================================================================
   # Agenix Secrets
