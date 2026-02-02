@@ -1,0 +1,7 @@
+layout {
+    pane borderless=true {
+        command "bash"
+        args "-c" "$HOME/.local/bin/zellij-welcome"
+    }
+}
+session_serialization false

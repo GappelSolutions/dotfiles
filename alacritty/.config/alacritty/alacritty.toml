@@ -70,7 +70,7 @@ y = 4
 
 [terminal.shell]
 program = "zsh"
-args = ["-l", "-c", "zellij -l welcome"]
+args = ["-l", "-c", "zellij -l welcome-custom"]
 
 # Cmd+1-9 sends Alt+1-9 escape sequences for Zellij tab switching
 [[keyboard.bindings]]

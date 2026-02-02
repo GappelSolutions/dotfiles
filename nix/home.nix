@@ -338,6 +338,10 @@
     source = ./scripts/nerdfetch;
     executable = true;
   };
+  home.file.".local/bin/zellij-welcome" = {
+    source = ./scripts/zellij-welcome;
+    executable = true;
+  };
 
   # ==========================================================================
   # Create directories
