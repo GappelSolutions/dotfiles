@@ -2,6 +2,13 @@
 
 Personal dotfiles managed with **nix-darwin + home-manager + agenix**.
 
+## Nix Flake Rules
+
+**IMPORTANT:** Nix flakes only see files tracked by git. When creating or modifying files:
+- Always run `git add <path>` for new files/directories BEFORE running `rebuild`
+- This applies to any new config directories (e.g., `kanata/`, `karabiner/`)
+- Forgetting this causes: `error: Path 'X' in the repository is not tracked by Git`
+
 ## Quick Start (Fresh Mac)
 
 ```bash

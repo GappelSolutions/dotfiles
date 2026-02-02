@@ -1,34 +1,40 @@
-;; Kanata config for home row mods
-;; a/s/d/f and j/k/l/; become modifiers when held
+;; Home Row Mods - GACS Layout (Gui-Alt-Ctrl-Shift)
+;; Optimized for reduced latency
 
 (defcfg
   process-unmapped-keys yes
+  macos-dev-names-include (
+    "Apple Internal Keyboard / Trackpad"
+  )
 )
 
 (defsrc
   a    s    d    f    g    h    j    k    l    ;
 )
 
-(defvar
-  ;; Timing settings (in ms)
-  tap-time 200      ;; max time for a tap
-  hold-time 150     ;; time before hold activates
-)
+;; tap-hold-release: activates mod as soon as another key is pressed
+;; Format: (tap-hold-release tap-timeout hold-timeout tap-action hold-action)
+;;
+;; tap-timeout: how long to wait before deciding it's a hold (affects roll tolerance)
+;; hold-timeout: max time to wait for another key before defaulting to tap
+;;
+;; Lower tap-timeout = faster response but less forgiving for slow rolls
+;; Start with 150ms, adjust down if comfortable
 
 (defalias
-  ;; Left hand home row mods (GACS - GUI/Alt/Ctrl/Shift)
-  a (tap-hold $tap-time $hold-time a lmet)   ;; a = Cmd when held
-  s (tap-hold $tap-time $hold-time s lalt)   ;; s = Alt when held
-  d (tap-hold $tap-time $hold-time d lctl)   ;; d = Ctrl when held
-  f (tap-hold $tap-time $hold-time f lsft)   ;; f = Shift when held
+  ;; Left hand: a=Cmd, s=Alt, d=Ctrl, f=Shift
+  a (tap-hold-release 150 150 a lmet)
+  s (tap-hold-release 150 150 s lalt)
+  d (tap-hold-release 150 150 d lctl)
+  f (tap-hold-release 150 150 f lsft)
 
-  ;; Right hand home row mods (mirror)
-  j (tap-hold $tap-time $hold-time j rsft)   ;; j = Shift when held
-  k (tap-hold $tap-time $hold-time k rctl)   ;; k = Ctrl when held
-  l (tap-hold $tap-time $hold-time l ralt)   ;; l = Alt when held
-  ; (tap-hold $tap-time $hold-time ; rmet)   ;; ; = Cmd when held
+  ;; Right hand: j=Shift, k=Ctrl, l=Alt, ;=Cmd
+  j (tap-hold-release 150 150 j rsft)
+  k (tap-hold-release 150 150 k rctl)
+  l (tap-hold-release 150 150 l ralt)
+  ; (tap-hold-release 150 150 ; rmet)
 )
 
-(deflayer homerowmods
+(deflayer base
   @a   @s   @d   @f   g    h    @j   @k   @l   @;
 )

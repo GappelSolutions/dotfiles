@@ -58,6 +58,12 @@
     luarocks
     rustup
     pipx
+
+    # Container runtime (moved from Homebrew for nix purity)
+    colima
+    docker-client
+    docker-compose
+
   ];
 
   # ==========================================================================
@@ -120,6 +126,9 @@
 
       py = "python3";
       pip = "pip3";
+
+      # Custom nerdfetch with Nix logo
+      nerdfetch = "$HOME/.local/bin/nerdfetch";
 
       # Nix rebuild alias
       rebuild = "sudo HOME=/var/root /nix/var/nix/profiles/default/bin/nix run nix-darwin -- switch --flake ~/dev/dotfiles/nix 2>&1 | grep --line-buffered -v \"builtins.toFile\"";
@@ -233,7 +242,7 @@
       # --- Splash ---
       clear
       echo ""
-      nerdfetch
+      $HOME/.local/bin/nerdfetch
       echo "\n"
     '';
   };
@@ -297,7 +306,6 @@
     "lazygit".source = ../lazygit/.config/lazygit;
     "yazi".source = ../yazi/.config/yazi;
     "zellij".source = ../zellij/.config/zellij;
-    "kanata".source = ../kanata/.config/kanata;
   };
 
   # Aerospace config (lives in home directory, not .config)
@@ -316,6 +324,10 @@
   home.file.".claude/commands".source = ../claude/.claude/commands;
   home.file.".claude/frameworks".source = ../claude/.claude/frameworks;
   home.file.".claude/statusline-command.sh".source = ../claude/.claude/statusline-command.sh;
+  home.file.".local/bin/nerdfetch" = {
+    source = ./scripts/nerdfetch;
+    executable = true;
+  };
 
   # ==========================================================================
   # Create directories
