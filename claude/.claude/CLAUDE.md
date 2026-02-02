@@ -2,6 +2,42 @@
 
 The `~/.claude` directory is symlinked from `~/dev/dotfiles/claude/.claude` via GNU Stow. When editing Claude configuration files (CLAUDE.md, commands, settings), **always edit the dotfiles version** at `~/dev/dotfiles/claude/.claude/` - changes will automatically apply to `~/.claude` via the symlink.
 
+# Nix / Home-Manager
+
+The dotfiles use nix-darwin and home-manager for system configuration. Location: `~/dev/dotfiles/nix/`
+
+## CRITICAL: New Files Must Be Git-Tracked
+
+**Before running `rebuild`, any NEW files must be added to git:**
+```bash
+git add path/to/new/file
+```
+
+Nix uses a flake that only sees git-tracked files. If you create a new file (script, config, etc.) and run `rebuild` without `git add`, you'll get:
+```
+error: Path 'path/to/file' in the repository is not tracked by Git.
+```
+
+**Workflow for adding new files to nix config:**
+1. Create the file
+2. `git add path/to/new/file` (stage it)
+3. `rebuild` (now nix can see it)
+4. Test
+5. Commit when ready
+
+## Zellij Session Shortcuts
+
+Quick session launchers (attach to active or create new):
+- `zeb` - Energyboard
+- `zbo` - Backoffice
+- `zea` - EasyAsset
+- `zex` - Elixir
+- `zgs` - Gappel Solutions
+- `zdc` - Decon
+- `zsc` - Screensaver
+
+Sessions are named `LAYOUT-TIMESTAMP` (e.g., `elixir-20260202-131805`). Only attaches to active sessions, never resurrects exited ones.
+
 # Test Credentials
 
 For testing the customer portal locally (works for all tenants):

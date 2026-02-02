@@ -154,6 +154,15 @@ keybinds clear-defaults=true {
         bind "Alt l" { MoveFocusOrTab "right"; }
         bind "Alt n" { NewPane; }
         bind "Alt f" { ToggleFocusFullscreen; }
+        // Close pane (Alt+x / Cmd+x)
+        bind "Alt x" { CloseFocus; }
+        // Session picker (Alt+o / Cmd+o)
+        bind "Alt o" {
+            Run "bash" "-c" "$HOME/.local/bin/zellij-welcome" {
+                floating true
+                close_on_exit true
+            }
+        }
         bind "Alt H" { MovePane "left"; }
         bind "Alt J" { MovePane "down"; }
         bind "Alt K" { MovePane "up"; }
