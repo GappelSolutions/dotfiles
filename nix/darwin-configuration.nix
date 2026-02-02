@@ -57,6 +57,9 @@
 
     # GUI applications
     casks = [
+      # Browsers
+      "zen"
+
       # Terminal
       "alacritty"
 
