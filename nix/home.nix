@@ -59,11 +59,6 @@
     rustup
     pipx
 
-    # Container runtime (moved from Homebrew for nix purity)
-    colima
-    docker-client
-    docker-compose
-
   ];
 
   # ==========================================================================

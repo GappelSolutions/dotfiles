@@ -47,6 +47,9 @@
       "elixir"
       "helm"
       "k9s"
+      "docker"
+      "docker-compose"
+      "colima"
       "minikube"
       "postgresql@14"
       "redis"
@@ -73,6 +76,7 @@
       "obsidian"
 
       # Utilities
+      "karabiner-elements"  # driver only - needed for kanata
       "raycast"
       "appcleaner"
       "keka"
