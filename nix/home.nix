@@ -1,5 +1,9 @@
 { config, pkgs, inputs, ... }:
 
+let
+  zellij-welcome = pkgs.callPackage ./rust/zellij-welcome { };
+  lazyops = pkgs.callPackage ./rust/lazyops { };
+in
 {
   home.username = "cgpp";
   home.homeDirectory = "/Users/cgpp";
@@ -11,7 +15,11 @@
   # ==========================================================================
   # Packages
   # ==========================================================================
-  home.packages = with pkgs; [
+  home.packages = [
+    # Custom packages
+    zellij-welcome
+    lazyops
+  ] ++ (with pkgs; [
     # Core tools
     git
     age  # for agenix
@@ -40,6 +48,7 @@
     # Development - Node
     nodejs
     pnpm
+    bun
 
     # Cloud & DevOps
     gh
@@ -59,7 +68,7 @@
     rustup
     pipx
 
-  ];
+  ]);
 
   # ==========================================================================
   # Program Configurations
@@ -113,6 +122,7 @@
       ld = "lazydocker";
       lg = "lazygit";
       lc = "lazychat";
+      lo = "lazyops";
 
       ai = "claude --dangerously-skip-permissions";
       sz = "source ~/.zshrc";
@@ -125,6 +135,9 @@
 
       # Custom nerdfetch with Nix logo
       nerdfetch = "$HOME/.local/bin/nerdfetch";
+
+      # macOS screensaver CLI
+      sc = "~/bin/macos-screensaver";
 
       # Nix rebuild alias
       rebuild = "sudo HOME=/var/root /nix/var/nix/profiles/default/bin/nix run nix-darwin -- switch --flake ~/dev/dotfiles/nix 2>&1 | grep --line-buffered -v \"builtins.toFile\"";
@@ -231,6 +244,7 @@
       zgs() { _zj gappel-solutions; }
       zdc() { _zj decon; }
       zsc() { _zj screensaver; }
+      zlc() { _zj lazychat; }
 
       # --- Yazi integration ---
       function y() {
@@ -340,10 +354,6 @@
   home.file.".claude/statusline-command.sh".source = ../claude/.claude/statusline-command.sh;
   home.file.".local/bin/nerdfetch" = {
     source = ./scripts/nerdfetch;
-    executable = true;
-  };
-  home.file.".local/bin/zellij-welcome" = {
-    source = ./scripts/zellij-welcome;
     executable = true;
   };
 
