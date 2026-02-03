@@ -112,6 +112,7 @@
       dcd = "docker-compose down";
       ld = "lazydocker";
       lg = "lazygit";
+      lc = "lazychat";
 
       ai = "claude --dangerously-skip-permissions";
       sz = "source ~/.zshrc";
