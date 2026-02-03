@@ -1,0 +1,16 @@
+[package]
+name = "zellij-welcome"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ratatui = "0.29"
+crossterm = { version = "0.28", features = ["event-stream"] }
+chrono = "0.4"
+clap = { version = "4.5", features = ["derive"] }
+anyhow = "1.0"
+fuzzy-matcher = "0.3"
+
+[[bin]]
+name = "zellij-welcome"
+path = "src/main.rs"
