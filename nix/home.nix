@@ -2,7 +2,6 @@
 
 let
   zellij-welcome = pkgs.callPackage ./rust/zellij-welcome { };
-  lazyops = pkgs.callPackage ./rust/lazyops { };
 in
 {
   home.username = "cgpp";
@@ -18,7 +17,6 @@ in
   home.packages = [
     # Custom packages
     zellij-welcome
-    lazyops
   ] ++ (with pkgs; [
     # Core tools
     git
@@ -322,6 +320,10 @@ in
     # Settings are sourced from your existing config
   };
 
+  # Custom TUIs (from flake inputs)
+  programs.lazyops.enable = true;
+  programs.lazychat.enable = true;
+
   # ==========================================================================
   # Dotfiles (xdg.configFile)
   # ==========================================================================
@@ -350,6 +352,7 @@ in
   home.file.".claude/CLAUDE.md".source = ../claude/.claude/CLAUDE.md;
   home.file.".claude/settings.json".source = ../claude/.claude/settings.json;
   home.file.".claude/commands".source = ../claude/.claude/commands;
+  home.file.".claude/data".source = ../claude/.claude/data;
   home.file.".claude/frameworks".source = ../claude/.claude/frameworks;
   home.file.".claude/statusline-command.sh".source = ../claude/.claude/statusline-command.sh;
   home.file.".local/bin/nerdfetch" = {
