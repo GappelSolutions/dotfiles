@@ -1,1 +1,5 @@
 lazygit/.config/lazygit/development.log
+
+# OMC state
+.omc/
+**/.omc/
