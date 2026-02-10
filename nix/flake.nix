@@ -18,9 +18,20 @@
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Custom Rust TUIs
+    lazyops = {
+      url = "path:/Users/cgpp/dev/lazyops";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    lazychat = {
+      url = "path:/Users/cgpp/dev/lazychat";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = inputs@{ self, nixpkgs, nix-darwin, home-manager, agenix }:
+  outputs = inputs@{ self, nixpkgs, nix-darwin, home-manager, agenix, lazyops, lazychat }:
     let
       system = "aarch64-darwin";
       hostname = "Christians-MacBook-Pro";
@@ -44,6 +55,10 @@
               useUserPackages = true;
               backupFileExtension = "backup";
               extraSpecialArgs = { inherit inputs; };
+              sharedModules = [
+                lazyops.homeManagerModules.default
+                lazychat.homeManagerModules.default
+              ];
               users.cgpp = import ./home.nix;
             };
           }

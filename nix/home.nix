@@ -115,8 +115,9 @@ in
       ssh-cloud = "ssh cgpp@192.168.178.33";
       ftp-cloud = "sftp cgpp@192.168.178.33";
 
-      dcu = "docker-compose up -d --build";
-      dcd = "docker-compose down";
+      docker = "podman";
+      dcu = "podman-compose up -d --build";
+      dcd = "podman-compose down";
       ld = "lazydocker";
       lg = "lazygit";
       lc = "lazychat";
@@ -277,7 +278,6 @@ in
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;
-    includes = [ "/Users/cgpp/.colima/ssh_config" ];
     matchBlocks = {
       "github.com-personal" = {
         hostname = "github.com";
@@ -325,6 +325,20 @@ in
   programs.lazychat.enable = true;
 
   # ==========================================================================
+  # Launchd Agents
+  # ==========================================================================
+  launchd.agents.podman-machine = {
+    enable = true;
+    config = {
+      Label = "com.podman.machine.default";
+      ProgramArguments = [ "/opt/homebrew/bin/podman" "machine" "start" ];
+      RunAtLoad = true;
+      StandardOutPath = "/tmp/podman-machine.log";
+      StandardErrorPath = "/tmp/podman-machine.log";
+    };
+  };
+
+  # ==========================================================================
   # Dotfiles (xdg.configFile)
   # ==========================================================================
   # These symlink your existing configs into ~/.config
@@ -369,5 +383,6 @@ in
     mkdir -p $HOME/.zsh/completions
     mkdir -p $HOME/.ssh
     chmod 700 $HOME/.ssh
+
   '';
 }
