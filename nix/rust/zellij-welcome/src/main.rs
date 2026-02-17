@@ -53,15 +53,16 @@ struct App {
 impl App {
     fn new(minimal: bool) -> Self {
         let sessions = vec![
+            Session::new("new", "Start a new session"),
             Session::new("energyboard", "Energy management portal"),
-            Session::new("backoffice", "Admin backend systems"),
             Session::new("easyasset", "Asset tracking platform"),
-            Session::new("elixir", "Elixir projects"),
+            Session::new("colony", "Multi-agent dev environments"),
+            Session::new("backoffice", "Admin backend systems"),
             Session::new("gappel-solutions", "Company solutions"),
             Session::new("decon", "Decon project"),
             Session::new("screensaver", "Screensaver development"),
             Session::new("lazychat", "Lazychat TUI for Claude sessions"),
-            Session::new("new", "Start a new session"),
+            Session::new("elixir", "Elixir projects"),
             Session::new("welcome", "Return to this screen"),
         ];
 
@@ -616,13 +617,14 @@ fn cleanup_old_sessions() -> Result<()> {
     // Valid session prefixes
     let valid_prefixes = [
         "energyboard-",
-        "backoffice-",
         "easyasset-",
-        "elixir-",
+        "colony-",
+        "backoffice-",
         "gappel-solutions-",
         "decon-",
         "screensaver-",
         "lazychat-",
+        "elixir-",
     ];
 
     for line in sessions.lines() {

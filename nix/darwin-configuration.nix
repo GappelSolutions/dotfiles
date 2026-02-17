@@ -51,6 +51,7 @@
       "podman-compose"
       "minikube"
       "postgresql@14"
+      "libpq"
       "redis"
     ];
 

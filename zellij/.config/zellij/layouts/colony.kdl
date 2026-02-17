@@ -1,0 +1,66 @@
+layout {
+    cwd "~/dev/colony/"
+
+    default_tab_template {
+        children
+        pane size=1 borderless=true {
+            plugin location="compact-bar"
+        }
+    }
+
+    tab name="1-agent" {
+        pane split_direction="vertical" {
+            pane command="claude" {
+                args "--dangerously-skip-permissions"
+            }
+            pane command="claude" {
+                args "--dangerously-skip-permissions"
+            }
+        }
+    }
+
+    tab name="2-infra" {
+        pane split_direction="vertical" {
+            pane split_direction="horizontal" {
+                pane name="gleam" cwd="mycelium" start_suspended=true command="nix" {
+                    args "develop" "/Users/cgpp/dev/colony" "--command" "gleam" "run"
+                }
+                pane name="caddy" start_suspended=true command="nix" {
+                    args "develop" "/Users/cgpp/dev/colony" "--command" "caddy" "run" "--config" "config/caddy.json"
+                }
+            }
+            pane split_direction="horizontal" {
+                pane name="bloom" cwd="bloom" start_suspended=true command="nix" {
+                    args "develop" "/Users/cgpp/dev/colony" "--command" "npm" "run" "dev"
+                }
+                pane name="canopy" cwd="canopy" start_suspended=true command="nix" {
+                    args "develop" "/Users/cgpp/dev/colony" "--command" "npm" "run" "dev"
+                }
+            }
+        }
+    }
+
+    tab name="3-term" {
+        pane split_direction="vertical" {
+            pane split_direction="horizontal" {
+                pane
+                pane
+            }
+            pane split_direction="horizontal" {
+                pane
+                pane
+            }
+        }
+    }
+
+    tab name="4" { pane; }
+    tab name="5" { pane; }
+    tab name="6" { pane; }
+    tab name="7" { pane; }
+    tab name="8" { pane; }
+    tab name="9" { pane; }
+    tab name="0" { pane; }
+}
+
+scrollback_editor "/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+default_mode "locked"

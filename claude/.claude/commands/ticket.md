@@ -174,9 +174,55 @@ URL-decode and extract the last segment as the PR ID.
 
 Strip HTML tags from description fields for readability. Keep the text content.
 
+## Implementation Notes
+
+### CRITICAL: Use Temp Files for JSON
+
+Azure DevOps API responses often contain special characters that break shell piping. **Always save JSON to temp files first:**
+
+```bash
+# WRONG - will fail with parse errors
+WI=$(az boards work-item show --id 22648 --expand all -o json)
+echo $WI | jq '.fields["System.Title"]'
+
+# CORRECT - save to file first
+az boards work-item show --id 22648 --expand all -o json > /tmp/ticket.json
+jq -r '.fields["System.Title"]' /tmp/ticket.json
+```
+
+### jq Field Extraction Examples
+
+```bash
+# Basic fields
+jq -r '.fields["System.Title"]' /tmp/ticket.json
+jq -r '.fields["System.State"]' /tmp/ticket.json
+jq -r '.fields["System.AssignedTo"].displayName // "Unassigned"' /tmp/ticket.json
+
+# Description (strip HTML)
+jq -r '.fields["System.Description"] // "No description"' /tmp/ticket.json | sed 's/<[^>]*>//g' | sed 's/&nbsp;/ /g'
+
+# Relations - get child IDs
+jq -r '.relations[]? | select(.rel == "System.LinkTypes.Hierarchy-Forward") | .url | split("/") | last' /tmp/ticket.json
+
+# Relations - get PR IDs (URL-encoded)
+jq -r '.relations[]? | select(.attributes.name == "Pull Request") | .url' /tmp/ticket.json | sed 's/%2F/\//g' | grep -oE '[0-9]+$'
+
+# Relations - get commit hashes
+jq -r '.relations[]? | select(.attributes.name == "Fixed in Commit") | .url' /tmp/ticket.json | sed 's/%2F/\//g' | grep -oE '[a-f0-9]{40}'
+```
+
+### PR Reviewer Votes
+
+Vote values: `10` = Approved, `5` = Approved with suggestions, `0` = No vote, `-5` = Waiting for author, `-10` = Rejected
+
+```bash
+jq -r '[.reviewers[]? | "\(.displayName) (\(if .vote == 10 then "Approved" elif .vote == -10 then "Rejected" elif .vote == 0 then "No vote" else "vote: \(.vote)" end))"] | join(", ")' /tmp/pr.json
+```
+
 ## Notes
 
 - If a ticket doesn't exist, report the error and continue with other tickets
 - If PRs or comments API calls fail, note the failure but continue with available data
 - For attachments, provide the URL - the user can download manually or you can use WebFetch if needed
 - Always include the direct Azure DevOps link for easy browser access
+- Use `/tmp/ticket-{ID}.json` pattern when processing multiple tickets to avoid collisions

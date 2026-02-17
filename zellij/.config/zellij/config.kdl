@@ -153,6 +153,8 @@ keybinds clear-defaults=true {
         bind "Alt k" { MoveFocus "up"; }
         bind "Alt l" { MoveFocusOrTab "right"; }
         bind "Alt n" { NewPane; }
+        bind "Alt a" { NewPane "right"; }
+        bind "Alt d" { NewPane "down"; }
         bind "Alt f" { ToggleFocusFullscreen; }
         // Close pane (Alt+x / Cmd+x)
         bind "Alt x" { CloseFocus; }

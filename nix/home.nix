@@ -52,6 +52,11 @@ in
     gh
     sops
 
+    # Document tools
+    typst
+    qpdf
+    ghostscript
+
     # Utilities
     jq
     nerdfetch
@@ -244,6 +249,7 @@ in
       zdc() { _zj decon; }
       zsc() { _zj screensaver; }
       zlc() { _zj lazychat; }
+      zco() { _zj colony; }
 
       # --- Yazi integration ---
       function y() {

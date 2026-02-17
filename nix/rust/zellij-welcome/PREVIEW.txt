@@ -1,0 +1,80 @@
+================================================================================
+                         FULL MODE PREVIEW
+================================================================================
+
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║    ███████╗███████╗██╗     ██╗     ██╗     ██╗              ║
+║    ╚══███╔╝██╔════╝██║     ██║     ██║     ██║              ║
+║      ███╔╝ █████╗  ██║     ██║     ██║     ██║              ║
+║     ███╔╝  ██╔══╝  ██║     ██║     ██║     ██║              ║
+║    ███████╗███████╗███████╗███████╗██║     ██║              ║
+╚══════════════════════════════════════════════════════════════╝
+
+                            23:39:42
+                   Sunday, February 02, 2026
+
+┌─ Select a Session ─────────────────────────────────────────┐
+│▶ energyboard          Energy management portal             │
+│  backoffice           Admin backend systems                │
+│  easyasset            Asset tracking platform              │
+│  elixir               Elixir projects                       │
+│  gappel-solutions     Company solutions                     │
+│  decon                Decon project                         │
+│  screensaver          Screensaver development              │
+│  new                  Start a new session                   │
+│  welcome              Return to this screen                 │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│  First, solve the problem. Then, write the code.            │
+└─────────────────────────────────────────────────────────────┘
+
+────────────────────────────────────────────────────────────────
+  j/↓: down  k/↑: up  Enter: select  q/Esc: quit
+────────────────────────────────────────────────────────────────
+
+
+================================================================================
+                        MINIMAL MODE PREVIEW
+================================================================================
+
+┌─ Zellij Sessions ──────────────────────────────────────────┐
+│  energyboard          Energy management portal             │
+│  backoffice           Admin backend systems                │
+│  easyasset            Asset tracking platform              │
+│  elixir               Elixir projects                       │
+│  gappel-solutions     Company solutions                     │
+│  decon                Decon project                         │
+│  screensaver          Screensaver development              │
+│  new                  Start a new session                   │
+│  welcome              Return to this screen                 │
+└─────────────────────────────────────────────────────────────┘
+────────────────────────────────────────────────────────────────
+          j/k: navigate • Enter: select • q: quit
+────────────────────────────────────────────────────────────────
+
+
+================================================================================
+                           COLOR SCHEME
+================================================================================
+
+Cyan (Headers, Selected):     #00FFFF
+Yellow (Time):                #FFFF00
+Magenta (Quotes):             #FF00FF
+Green (Confirm):              #00FF00
+Red (Quit):                   #FF0000
+Dark Gray (Secondary):        #555555
+White (Primary text):         #FFFFFF
+Black on Cyan (Selection):    #000000 on #00FFFF
+
+================================================================================
+                      NAVIGATION REFERENCE
+================================================================================
+
+j or ↓          Move selection down
+k or ↑          Move selection up
+Enter           Launch selected session
+q or Esc        Quit without selecting
+
+================================================================================
