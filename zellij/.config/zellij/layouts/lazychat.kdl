@@ -1,0 +1,57 @@
+layout {
+    cwd "~/dev/lazychat/"
+
+    default_tab_template {
+        children
+        pane size=1 borderless=true {
+            plugin location="compact-bar"
+        }
+    }
+
+    tab name="1-agent" {
+        pane borderless=true command="claude" {
+            args "--dangerously-skip-permissions"
+        }
+    }
+
+    tab name="2-rust-nvim" {
+        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+    }
+
+    tab name="3-rust-tools" {
+        pane split_direction="vertical" {
+            pane size="58%" split_direction="horizontal" {
+                pane command="yazi" {
+                    args "~/dev/lazychat/"
+                }
+
+                pane cwd="~/dev/lazychat/"
+            }
+
+            pane size="42%" split_direction="horizontal" {
+                pane focus=true command="cargo" start_suspended=true {
+                    args "run"
+               }
+
+                pane command="cargo" start_suspended=true {
+                    args "check"
+                }
+
+                pane command="cargo" start_suspended=true {
+                    args "test"
+                }
+            }
+        }
+    }
+
+    tab name="4" { pane; }
+    tab name="5" { pane; }
+    tab name="6" { pane; }
+    tab name="7" { pane; }
+    tab name="8" { pane; }
+    tab name="9" { pane; }
+    tab name="0" { pane; }
+}
+
+scrollback_editor "/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+default_mode "locked"

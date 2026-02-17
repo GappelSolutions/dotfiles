@@ -68,8 +68,6 @@ git add -A
 
 git commit -m "$(cat <<'EOF'
 <type>(<component>): <description>
-
-Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 EOF
 )"
 ```
@@ -146,8 +144,6 @@ git add -A
 # Without ticket: TYPE(component): description
 git commit -m "$(cat <<'EOF'
 #<ticket-id> <type>(<component>): <description>
-
-Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 EOF
 )"
 ```

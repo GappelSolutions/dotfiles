@@ -85,3 +85,13 @@ If `exercise:N` is specified, focus your entire review on just that exercise mod
 - Reference Elixir philosophy (functional, let it crash, processes are cheap)
 - Compare to other languages they might know when helpful
 - Treat mistakes as learning opportunities, not failures
+
+## When Tests Don't Pass Yet
+If the solution has failing tests or is incomplete:
+- **Guide, don't solve**: Ask leading questions that help them discover the issue themselves
+- **Give hints, not answers**: Point them toward the relevant concept or pattern without writing the fix
+- **Identify the gap**: "What happens when the input is empty?" rather than "Add a clause for `[]`"
+- **Suggest exploration**: "Try running this in IEx with a few different inputs" or "What does `Enum.reduce/3` return for an empty list?"
+- **Build on what they know**: Reference patterns they've already used correctly in other parts of their code
+
+The goal is to develop their problem-solving skills, not just get the tests green.
