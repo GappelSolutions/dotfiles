@@ -42,27 +42,7 @@ layout {
     tab name="7" { pane; }
     tab name="8" { pane; }
     tab name="9" { pane; }
-
-    tab name="0-agent" {
-        pane split_direction="vertical" {
-            pane split_direction="horizontal" {
-                pane command="claude" {
-                    args "--dangerously-skip-permissions"
-                }
-                pane command="claude" {
-                    args "--dangerously-skip-permissions"
-                }
-            }
-            pane split_direction="horizontal" {
-                pane command="claude" {
-                    args "--dangerously-skip-permissions" "--resume"
-                }
-                pane command="claude" {
-                    args "--dangerously-skip-permissions"
-                }
-            }
-        }
-    }
+    tab name="0" { pane; }
 }
 
 scrollback_editor "/Users/cgpp/.local/share/bob/nvim-bin/nvim"

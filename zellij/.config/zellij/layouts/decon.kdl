@@ -8,28 +8,7 @@ layout {
         }
     }
 
-    tab name="1-agent" {
-        pane split_direction="vertical" {
-            pane split_direction="horizontal" {
-                pane command="claude" {
-                    args "--dangerously-skip-permissions"
-                }
-                pane command="claude" {
-                    args "--dangerously-skip-permissions"
-                }
-            }
-            pane split_direction="horizontal" {
-                pane command="claude" {
-                    args "--dangerously-skip-permissions"
-                }
-                pane command="claude" {
-                    args "--dangerously-skip-permissions"
-                }
-            }
-        }
-    }
-
-    tab name="2-tools" cwd="app" {
+    tab name="1-tools" cwd="app" {
         pane split_direction="vertical" {
             pane size="40%" split_direction="horizontal" {
                 pane size="50%" focus=true start_suspended=true command="/opt/homebrew/share/flutter/bin/flutter" {
@@ -48,10 +27,11 @@ layout {
         }
     }
 
-    tab name="3-nvim" cwd="app" {
+    tab name="2-nvim" cwd="app" {
         pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
     }
 
+    tab name="3" { pane; }
     tab name="4" { pane; }
     tab name="5" { pane; }
     tab name="6" { pane; }
