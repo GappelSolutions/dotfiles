@@ -8,18 +8,7 @@ layout {
         }
     }
 
-    tab name="1-agent" {
-        pane split_direction="vertical" {
-            pane command="claude" {
-                args "--dangerously-skip-permissions"
-            }
-            pane command="claude" {
-                args "--dangerously-skip-permissions"
-            }
-        }
-    }
-
-    tab name="2-infra" {
+    tab name="1-infra" {
         pane split_direction="vertical" {
             pane split_direction="horizontal" {
                 pane name="gleam" cwd="mycelium" start_suspended=true command="nix" {
@@ -40,7 +29,7 @@ layout {
         }
     }
 
-    tab name="3-term" {
+    tab name="2-term" {
         pane split_direction="vertical" {
             pane split_direction="horizontal" {
                 pane
@@ -53,6 +42,7 @@ layout {
         }
     }
 
+    tab name="3" { pane; }
     tab name="4" { pane; }
     tab name="5" { pane; }
     tab name="6" { pane; }

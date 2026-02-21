@@ -8,32 +8,11 @@ layout {
         }
     }
 
-    tab name="1-agent" {
-        pane split_direction="vertical" {
-            pane split_direction="horizontal" {
-                pane cwd="CustomerPortal.Angular" command="claude" {
-                    args "--dangerously-skip-permissions" "--add-dir" "../CustomerPortal.WebAPI" "--add-dir" "../ANGULAR-STACK" "--add-dir" "../Repower.Lib.Shared"
-                }
-                pane cwd="CustomerPortal.Angular" command="claude" {
-                    args "--dangerously-skip-permissions" "--add-dir" "../CustomerPortal.WebAPI" "--add-dir" "../ANGULAR-STACK" "--add-dir" "../Repower.Lib.Shared"
-                }
-            }
-            pane split_direction="horizontal" {
-                pane cwd="CustomerPortal.Angular" command="claude" {
-                    args "--dangerously-skip-permissions" "--add-dir" "../CustomerPortal.WebAPI" "--add-dir" "../ANGULAR-STACK" "--add-dir" "../Repower.Lib.Shared" "--resume"
-                }
-                pane cwd="CustomerPortal.Angular" command="claude" {
-                    args "--dangerously-skip-permissions" "--add-dir" "../CustomerPortal.WebAPI" "--add-dir" "../ANGULAR-STACK" "--add-dir" "../Repower.Lib.Shared"
-                }
-            }
-        }
-    }
-
-    tab name="2-front-nvim" cwd="CustomerPortal.Angular" {
+    tab name="1-front-nvim" cwd="CustomerPortal.Angular" {
         pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
     }
 
-    tab name="3-front-tools" cwd="CustomerPortal.Angular" {
+    tab name="2-front-tools" cwd="CustomerPortal.Angular" {
         pane split_direction="vertical" {
             pane size="58%" split_direction="horizontal" {
                 pane command="yazi" {
@@ -55,17 +34,17 @@ layout {
         }
     }
 
+    tab name="3" { pane; }
     tab name="4" { pane; }
-    tab name="5" { pane; }
 
-    tab name="6-time"  {
+    tab name="5-time"  {
         pane borderless=true command="/Applications/work-tuimer-macos-aarch64"
     }
+    tab name="6" { pane; }
+
     tab name="7" { pane; }
 
-    tab name="8" { pane; }
-
-    tab name="9-back-tools" cwd="CustomerPortal.WebAPI" {
+    tab name="8-back-tools" cwd="CustomerPortal.WebAPI" {
         pane split_direction="vertical" {
             pane size="58%" split_direction="horizontal" {
                 pane command="yazi" {
@@ -82,9 +61,11 @@ layout {
         }
     }
 
-    tab name="0-back-nvim" cwd="CustomerPortal.WebAPI" {
+    tab name="9-back-nvim" cwd="CustomerPortal.WebAPI" {
         pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
     }
+
+    tab name="0" { pane; }
 }
 
 scrollback_editor "/Users/cgpp/.local/share/bob/nvim-bin/nvim"

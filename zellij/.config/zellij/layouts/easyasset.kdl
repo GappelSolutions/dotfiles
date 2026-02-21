@@ -8,32 +8,11 @@ layout {
         }
     }
 
-    tab name="1-agent" {
-        pane split_direction="vertical" {
-            pane split_direction="horizontal" {
-                pane command="claude" cwd="ea-angular-frontend" {
-                    args "--dangerously-skip-permissions" "--add-dir" "../ANGULAR-STACK" "--add-dir" "../ea-dot-net-authentication"
-                }
-                pane command="claude" cwd="ea-angular-frontend" {
-                    args "--dangerously-skip-permissions" "--add-dir" "../ANGULAR-STACK" "--add-dir" "../ea-dot-net-authentication"
-                }
-            }
-            pane split_direction="horizontal" {
-                pane command="claude" cwd="ea-angular-frontend" {
-                    args "--dangerously-skip-permissions" "--add-dir" "../ANGULAR-STACK" "--add-dir" "../ea-dot-net-authentication"
-                }
-                pane command="claude" cwd="ea-angular-frontend" {
-                    args "--dangerously-skip-permissions" "--add-dir" "../ANGULAR-STACK" "--add-dir" "../ea-dot-net-authentication"
-                }
-            }
-        }
-    }
-
-    tab name="2-front-nvim" cwd="ea-angular-frontend" {
+    tab name="1-front-nvim" cwd="ea-angular-frontend" {
         pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
     }
 
-    tab name="3-front-tools" cwd="ea-angular-frontend" {
+    tab name="2-front-tools" cwd="ea-angular-frontend" {
         pane split_direction="vertical" {
             pane size="58%" split_direction="horizontal" {
                 pane command="yazi" {
@@ -55,17 +34,17 @@ layout {
         }
     }
 
+    tab name="3" { pane; }
     tab name="4" { pane; }
-    tab name="5" { pane; }
 
-    tab name="6-time"  {
+    tab name="5-time"  {
         pane borderless=true command="/Applications/work-tuimer-macos-aarch64"
     }
+    tab name="6" { pane; }
+
     tab name="7" { pane; }
 
-    tab name="8" { pane; }
-
-    tab name="9-back-tools" cwd="ea-dot-net-authentication" {
+    tab name="8-back-tools" cwd="ea-dot-net-authentication" {
         pane split_direction="vertical" {
             pane size="58%" split_direction="horizontal" {
                 pane command="yazi" {
@@ -86,9 +65,11 @@ layout {
         }
     }
 
-    tab name="0-back-nvim" cwd="ea-dot-net-authentication" {
+    tab name="9-back-nvim" cwd="ea-dot-net-authentication" {
         pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
     }
+
+    tab name="0" { pane; }
 }
 
 scrollback_editor "/Users/cgpp/.local/share/bob/nvim-bin/nvim"

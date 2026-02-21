@@ -8,17 +8,11 @@ layout {
         }
     }
 
-    tab name="1-agent" {
-        pane borderless=true command="claude" {
-            args "--dangerously-skip-permissions"
-        }
-    }
-
-    tab name="2-rust-nvim" {
+    tab name="1-rust-nvim" {
         pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
     }
 
-    tab name="3-rust-tools" {
+    tab name="2-rust-tools" {
         pane split_direction="vertical" {
             pane size="58%" split_direction="horizontal" {
                 pane command="yazi" {
@@ -44,6 +38,7 @@ layout {
         }
     }
 
+    tab name="3" { pane; }
     tab name="4" { pane; }
     tab name="5" { pane; }
     tab name="6" { pane; }
