@@ -1,5 +1,5 @@
 layout {
-    cwd "~/dev/gappel-cloud/"
+    cwd "~/dev/private/gappel-cloud/"
 
     default_tab_template {
         children
@@ -21,13 +21,13 @@ layout {
     tab name="5" { pane; }
     tab name="6" { pane; }
 
-    tab name="7-ssh" cwd="~/dev/gappel-cloud" {
+    tab name="7-ssh" cwd="~/dev/private/gappel-cloud" {
         pane borderless=true command="ssh" {
             args "cgpp@192.168.178.33"
         }
     }
 
-    tab name="8-repo-nvim" cwd="~/dev/gappel-cloud" {
+    tab name="8-repo-nvim" cwd="~/dev/private/gappel-cloud" {
         pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
     }
 
@@ -37,7 +37,7 @@ layout {
         pane split_direction="vertical" {
             pane size="60%" split_direction="horizontal" {
                 pane size="50%" command="yazi" {
-                    args "~/dev/gappel-cloud/src/backend/GappelCloud.Api"
+                    args "~/dev/private/gappel-cloud/src/backend/GappelCloud.Api"
                 }
 
                 pane size="50%" command="lazydocker"

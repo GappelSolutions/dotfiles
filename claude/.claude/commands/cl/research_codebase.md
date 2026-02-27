@@ -81,14 +81,14 @@ Then wait for the user's research query.
 
 5. **Gather metadata for the research document:**
    - Run Bash() tools to generate all relevant metadata
-   - Filename: `~/dev/codelayer-vault/{project}/TASKNAME/YYYY-MM-DD-research.md`
-     - Format: `~/dev/codelayer-vault/{project}/TASKNAME/YYYY-MM-DD-research.md` where:
+   - Filename: `~/dev/codelayer-vault/{project}/TASKNAME/YYYY-MM-DD-HHmm-research.md`
+     - Format: `~/dev/codelayer-vault/{project}/TASKNAME/YYYY-MM-DD-HHmm-research.md` where:
        - `{project}` is detected via `basename $(git rev-parse --show-toplevel 2>/dev/null || pwd)`
        - TASKNAME is the task directory (e.g., eng-1478-parent-child-tracking)
-       - YYYY-MM-DD is today's date
+       - YYYY-MM-DD-HHmm is today's date and current time (hours and minutes, 24h format)
      - Examples:
-       - With ticket: `~/dev/codelayer-vault/customer-portal/eng-1478-parent-child-tracking/2025-01-08-research.md`
-       - Without ticket: `~/dev/codelayer-vault/easyasset/authentication-flow/2025-01-08-research.md`
+       - With ticket: `~/dev/codelayer-vault/customer-portal/eng-1478-parent-child-tracking/2025-01-08-1430-research.md`
+       - Without ticket: `~/dev/codelayer-vault/easyasset/authentication-flow/2025-01-08-0915-research.md`
 
 6. **Generate research document:**
    - Use the metadata gathered in step 4
@@ -103,7 +103,7 @@ Then wait for the user's research query.
      topic: "[User's Question/Topic]"
      tags: [research, codebase, relevant-component-names]
      status: complete
-     last_updated: [Current date in YYYY-MM-DD format]
+     last_updated: [Current date and time in YYYY-MM-DD-HHmm format]
      last_updated_by: [Researcher name]
      ---
 

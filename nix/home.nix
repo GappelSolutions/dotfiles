@@ -58,6 +58,7 @@ in
     ghostscript
 
     # Utilities
+    duti  # set default file associations
     jq
     nerdfetch
     unar
@@ -395,17 +396,22 @@ in
   # Claude Code config (only config files, not runtime data)
   home.file.".claude/CLAUDE.md".source = ../claude/.claude/CLAUDE.md;
   home.file.".claude/settings.json".source = ../claude/.claude/settings.json;
-  home.file.".claude/commands" = {
-    source = ../claude/.claude/commands;
-    recursive = true;
-  };
-  home.file.".claude/commands/cl" = {
-    source = ../claude/.claude/commands/cl;
-    recursive = true;
-  };
+  home.file.".claude/commands".source = pkgs.runCommand "claude-commands" {} ''
+    mkdir -p $out/cl
+    for f in ${../claude/.claude/commands}/*.md; do
+      cp "$f" $out/
+    done
+    for f in ${../claude/.claude/commands/cl}/*.md; do
+      cp "$f" $out/cl/
+    done
+  '';
   home.file.".claude/data".source = ../claude/.claude/data;
   home.file.".claude/frameworks".source = ../claude/.claude/frameworks;
   home.file.".claude/statusline-command.sh".source = ../claude/.claude/statusline-command.sh;
+  home.file.".local/bin/open-in-obsidian" = {
+    source = ./scripts/open-in-obsidian;
+    executable = true;
+  };
   home.file.".local/bin/nerdfetch" = {
     source = ./scripts/nerdfetch;
     executable = true;

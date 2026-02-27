@@ -21,12 +21,12 @@
 
     # Custom Rust TUIs
     lazyops = {
-      url = "path:/Users/cgpp/dev/lazyops";
+      url = "path:/Users/cgpp/dev/private/lazyops";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
     lazychat = {
-      url = "path:/Users/cgpp/dev/lazychat";
+      url = "path:/Users/cgpp/dev/private/lazychat";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };

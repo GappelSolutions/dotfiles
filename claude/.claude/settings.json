@@ -2,10 +2,6 @@
   "env": {
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
-  "statusLine": {
-    "type": "command",
-    "command": "node /Users/cgpp/.claude/hud/omc-hud.mjs"
-  },
   "hooks": {
     "Stop": [
       {
@@ -33,7 +29,6 @@
   "enabledPlugins": {
     "typescript-lsp@claude-plugins-official": true,
     "csharp-lsp@claude-plugins-official": true,
-    "frontend-design@claude-plugins-official": true,
-    "oh-my-claudecode@omc": true
+    "frontend-design@claude-plugins-official": true
   }
 }

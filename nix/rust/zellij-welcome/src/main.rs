@@ -63,6 +63,7 @@ impl App {
             Session::new("screensaver", "Screensaver development"),
             Session::new("lazychat", "Lazychat TUI for Claude sessions"),
             Session::new("elixir", "Elixir projects"),
+            Session::new("msp", "Smartpower MSP platform"),
             Session::new("welcome", "Return to this screen"),
         ];
 
@@ -625,6 +626,7 @@ fn cleanup_old_sessions() -> Result<()> {
         "screensaver-",
         "lazychat-",
         "elixir-",
+        "msp-",
     ];
 
     for line in sessions.lines() {

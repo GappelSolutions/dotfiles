@@ -1,5 +1,5 @@
 layout {
-    cwd "~/dev/decon/"
+    cwd "~/dev/private/decon/"
 
     default_tab_template {
         children
@@ -19,7 +19,7 @@ layout {
 
             pane size="60%" split_direction="horizontal" {
                 pane size="50%" command="yazi" {
-                    args "~/dev/decon"
+                    args "~/dev/private/decon"
                 }
 
                 pane size="50%"

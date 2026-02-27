@@ -167,14 +167,14 @@ Once aligned on approach:
 
 After structure approval:
 
-1. **Write the plan** to `~/dev/codelayer-vault/{project}/TASKNAME/YYYY-MM-DD-plan.md`
-   - Format: `~/dev/codelayer-vault/{project}/TASKNAME/YYYY-MM-DD-plan.md` where:
+1. **Write the plan** to `~/dev/codelayer-vault/{project}/TASKNAME/YYYY-MM-DD-HHmm-plan.md`
+   - Format: `~/dev/codelayer-vault/{project}/TASKNAME/YYYY-MM-DD-HHmm-plan.md` where:
      - `{project}` is detected via `basename $(git rev-parse --show-toplevel 2>/dev/null || pwd)`
      - ENG-XXXX-description is the task directory (e.g., eng-1478-parent-child-tracking)
-     - YYYY-MM-DD is today's date
+     - YYYY-MM-DD-HHmm is today's date and current time (hours and minutes, 24h format)
    - Examples:
-     - With ticket: `~/dev/codelayer-vault/customer-portal/eng-1478-parent-child-tracking/2025-01-08-plan.md`
-     - Without ticket: `~/dev/codelayer-vault/easyasset/improve-error-handling/2025-01-08-plan.md`
+     - With ticket: `~/dev/codelayer-vault/customer-portal/eng-1478-parent-child-tracking/2025-01-08-1430-plan.md`
+     - Without ticket: `~/dev/codelayer-vault/easyasset/improve-error-handling/2025-01-08-0915-plan.md`
 2. **Use this template structure**:
 
 ````markdown
@@ -293,7 +293,7 @@ After structure approval:
 ## References
 
 - Original ticket: `~/dev/codelayer-vault/{project}/ENG-XXXX-description/ticket.md`
-- Related research: `~/dev/codelayer-vault/{project}/ENG-XXXX-description/YYYY-MM-DD-research.md`
+- Related research: `~/dev/codelayer-vault/{project}/ENG-XXXX-description/YYYY-MM-DD-HHmm-research.md`
 - Similar implementation: `[file:line]`
 ````
 
@@ -302,7 +302,7 @@ After structure approval:
 1. **Present the draft plan location**:
    ```
    I've created the initial implementation plan at:
-   `~/dev/codelayer-vault/{project}/ENG-XXXX-description/YYYY-MM-DD-plan.md`
+   `~/dev/codelayer-vault/{project}/ENG-XXXX-description/YYYY-MM-DD-HHmm-plan.md`
 
    Please review it and let me know:
    - Are the phases properly scoped?

@@ -298,9 +298,9 @@ require("lazy").setup({
 		"coffebar/neovim-project",
 		opts = {
 			projects = {
-				"/Users/cgpp/dev/*",
-				"/Users/cgpp/dev/gappel-cloud/src/backend/GappelCloud.Api",
-				"/Users/cgpp/dev/gappel-cloud/src/frontend",
+				"/Users/cgpp/dev/*/*",
+				"/Users/cgpp/dev/private/gappel-cloud/src/backend/GappelCloud.Api",
+				"/Users/cgpp/dev/private/gappel-cloud/src/frontend",
 			},
 			picker = {
 				type = "telescope",

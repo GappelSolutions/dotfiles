@@ -20,7 +20,7 @@ Use this as `{project}` in all vault paths: `~/dev/codelayer-vault/{project}/TAS
 When this command is invoked:
 
 1. **Parse the input to identify**:
-   - Plan file path (e.g., `~/dev/codelayer-vault/{project}/eng-xxxx-feature/2025-10-16-plan.md`)
+   - Plan file path (e.g., `~/dev/codelayer-vault/{project}/eng-xxxx-feature/2025-10-16-1430-plan.md`)
    - Requested changes/feedback
 
 2. **Handle different input scenarios**:
@@ -29,7 +29,7 @@ When this command is invoked:
    ```
    I'll help you iterate on an existing implementation plan.
 
-   Which plan would you like to update? Please provide the path to the plan file (e.g., `~/dev/codelayer-vault/{project}/eng-xxxx-feature/2025-10-16-plan.md`).
+   Which plan would you like to update? Please provide the path to the plan file (e.g., `~/dev/codelayer-vault/{project}/eng-xxxx-feature/2025-10-16-1430-plan.md`).
 
    Tip: You can list recent task directories with `ls -lt ~/dev/codelayer-vault/{project}/ | head`
    ```
@@ -136,7 +136,7 @@ Get user confirmation before proceeding.
 
 **Present the changes made**:
    ```
-   I've updated the plan at `~/dev/codelayer-vault/{project}/ENG-XXXX-description/YYYY-MM-DD-plan.md`
+   I've updated the plan at `~/dev/codelayer-vault/{project}/ENG-XXXX-description/YYYY-MM-DD-HHmm-plan.md`
 
    Changes made:
    - [Specific change 1]
@@ -223,13 +223,13 @@ When spawning research sub-tasks:
 
 **Scenario 1: User provides everything upfront**
 ```
-User: /iterate_plan ~/dev/codelayer-vault/{project}/eng-xxxx-feature/2025-10-16-plan.md - add phase for error handling
+User: /iterate_plan ~/dev/codelayer-vault/{project}/eng-xxxx-feature/2025-10-16-1430-plan.md - add phase for error handling
 Assistant: [Reads plan, researches error handling patterns, updates plan]
 ```
 
 **Scenario 2: User provides just plan file**
 ```
-User: /iterate_plan ~/dev/codelayer-vault/{project}/eng-xxxx-feature/2025-10-16-plan.md
+User: /iterate_plan ~/dev/codelayer-vault/{project}/eng-xxxx-feature/2025-10-16-1430-plan.md
 Assistant: I've found the plan. What changes would you like to make?
 User: Split Phase 2 into two phases - one for backend, one for frontend
 Assistant: [Proceeds with update]
@@ -239,7 +239,7 @@ Assistant: [Proceeds with update]
 ```
 User: /iterate_plan
 Assistant: Which plan would you like to update? Please provide the path...
-User: ~/dev/codelayer-vault/{project}/eng-xxxx-feature/2025-10-16-plan.md
+User: ~/dev/codelayer-vault/{project}/eng-xxxx-feature/2025-10-16-1430-plan.md
 Assistant: I've found the plan. What changes would you like to make?
 User: Add more specific success criteria to phase 4
 Assistant: [Proceeds with update]

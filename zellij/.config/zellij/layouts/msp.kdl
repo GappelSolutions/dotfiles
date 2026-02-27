@@ -24,7 +24,7 @@ layout {
 
             pane size="42%" split_direction="horizontal" {
                 pane focus=true command="pnpm" {
-                    args "run" "startMspLocal"
+                    args "exec" "ng" "serve" "--project=evulution" "--build-target=evulution:build:stage"
                 }
 
                 pane command="pnpm" start_suspended=true {

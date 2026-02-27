@@ -13,6 +13,8 @@
   # ==========================================================================
   # System Packages (available system-wide)
   # ==========================================================================
+  environment.variables.EDITOR = "nvim";
+
   environment.systemPackages = with pkgs; [
     vim
     git
@@ -33,6 +35,7 @@
 
     taps = [
       "dart-lang/dart"
+      "humanlayer/humanlayer"  # codelayer
       "nikitabobko/tap"  # aerospace
     ];
 
@@ -68,6 +71,7 @@
       "jordanbaird-ice"
 
       # Development
+      "humanlayer/humanlayer/codelayer-nightly"
       "dotnet-sdk"
       "android-studio"
       "android-platform-tools"
@@ -181,6 +185,12 @@
   system.activationScripts.postActivation.text = ''
     # Remove any System Preferences modifier key overrides so hidutil mapping works
     defaults -currentHost delete -g com.apple.keyboard.modifiermapping.0-0-0 2>/dev/null || true
+
+    # Remove quarantine flag from unsigned casks
+    xattr -rd com.apple.quarantine /Applications/CodeLayer-Nightly.app 2>/dev/null || true
+
+    # File associations (duti)
+    ${pkgs.duti}/bin/duti -s md.obsidian .md all 2>/dev/null || true
   '';
 
   # ==========================================================================
