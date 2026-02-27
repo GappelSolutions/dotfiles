@@ -250,6 +250,7 @@ in
       zsc() { _zj screensaver; }
       zlc() { _zj lazychat; }
       zco() { _zj colony; }
+      zms() { _zj msp; }
 
       # --- Yazi integration ---
       function y() {
@@ -344,6 +345,29 @@ in
     };
   };
 
+  launchd.agents.fix-codelayer-quarantine = {
+    enable = true;
+    config = {
+      Label = "com.cgpp.fix-codelayer-quarantine";
+      ProgramArguments = [ "/usr/bin/xattr" "-rd" "com.apple.quarantine" "/Applications/CodeLayer-Nightly.app" ];
+      RunAtLoad = true;
+    };
+  };
+
+  launchd.agents.update-codelayer = {
+    enable = true;
+    config = {
+      Label = "com.cgpp.update-codelayer";
+      ProgramArguments = [ "/Users/cgpp/.local/bin/update-codelayer" ];
+      StartCalendarInterval = [{ Weekday = 1; Hour = 10; Minute = 0; }];
+      StandardOutPath = "/tmp/codelayer-update.log";
+      StandardErrorPath = "/tmp/codelayer-update.log";
+      EnvironmentVariables = {
+        PATH = "/usr/bin:/bin:/usr/sbin:/sbin:/Users/cgpp/.nix-profile/bin:/nix/var/nix/profiles/default/bin";
+      };
+    };
+  };
+
   # ==========================================================================
   # Dotfiles (xdg.configFile)
   # ==========================================================================
@@ -371,12 +395,23 @@ in
   # Claude Code config (only config files, not runtime data)
   home.file.".claude/CLAUDE.md".source = ../claude/.claude/CLAUDE.md;
   home.file.".claude/settings.json".source = ../claude/.claude/settings.json;
-  home.file.".claude/commands".source = ../claude/.claude/commands;
+  home.file.".claude/commands" = {
+    source = ../claude/.claude/commands;
+    recursive = true;
+  };
+  home.file.".claude/commands/cl" = {
+    source = ../claude/.claude/commands/cl;
+    recursive = true;
+  };
   home.file.".claude/data".source = ../claude/.claude/data;
   home.file.".claude/frameworks".source = ../claude/.claude/frameworks;
   home.file.".claude/statusline-command.sh".source = ../claude/.claude/statusline-command.sh;
   home.file.".local/bin/nerdfetch" = {
     source = ./scripts/nerdfetch;
+    executable = true;
+  };
+  home.file.".local/bin/update-codelayer" = {
+    source = ./scripts/update-codelayer;
     executable = true;
   };
 
