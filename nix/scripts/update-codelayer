@@ -1,88 +1,30 @@
 #!/bin/sh
-# Update CodeLayer nightly from GitHub releases
+# Update CodeLayer nightly via Homebrew
 # Runs weekly via launchd agent
 
 set -e
 
 LOG="/tmp/codelayer-update.log"
-APP_NAME="CodeLayer Nightly"
-DMG_PATTERN="CodeLayer-Nightly-darwin-arm64.dmg"
-DMG_PATH="/tmp/$DMG_PATTERN"
-MOUNT_POINT="/tmp/codelayer-mount"
-REPO="humanlayer/humanlayer"
+BREW="/opt/homebrew/bin/brew"
 
 log() { echo "$(date '+%Y-%m-%d %H:%M:%S') $1" >> "$LOG"; }
 
 log "Starting CodeLayer nightly update"
 
-# Find latest nightly release tag
-TAG=$(gh release list --repo "$REPO" --limit 50 --json tagName,isPrerelease,name \
-  --jq '[.[] | select(.isPrerelease and (.tagName | startswith("nightly-")))] | first | .tagName' 2>>"$LOG")
-
-if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
-  log "ERROR: No nightly release found"
-  exit 1
-fi
-
-log "Found nightly: $TAG"
-
-# Check if we already have this version
-INSTALLED_TAG_FILE="$HOME/.local/share/codelayer-nightly-version"
-mkdir -p "$(dirname "$INSTALLED_TAG_FILE")"
-CURRENT_TAG=""
-[ -f "$INSTALLED_TAG_FILE" ] && CURRENT_TAG=$(cat "$INSTALLED_TAG_FILE")
-
-if [ "$TAG" = "$CURRENT_TAG" ]; then
-  log "Already up to date ($TAG), skipping"
-  exit 0
-fi
-
-log "Updating from ${CURRENT_TAG:-none} to $TAG"
-
-# Download
-rm -f "$DMG_PATH"
-gh release download "$TAG" --repo "$REPO" --pattern "$DMG_PATTERN" --dir /tmp --clobber 2>>"$LOG"
-
-if [ ! -f "$DMG_PATH" ]; then
-  log "ERROR: Download failed"
-  exit 1
-fi
-
-log "Downloaded $DMG_PATH ($(du -h "$DMG_PATH" | cut -f1))"
-
-# Unmount if previously mounted
-hdiutil detach "$MOUNT_POINT" 2>/dev/null || true
-
-# Mount DMG
-mkdir -p "$MOUNT_POINT"
-hdiutil attach "$DMG_PATH" -mountpoint "$MOUNT_POINT" -nobrowse -quiet 2>>"$LOG"
-
-# Find .app in mounted DMG
-APP=$(find "$MOUNT_POINT" -maxdepth 1 -name "*.app" -print -quit 2>/dev/null)
-
-if [ -z "$APP" ]; then
-  log "ERROR: No .app found in DMG"
-  hdiutil detach "$MOUNT_POINT" 2>/dev/null || true
-  exit 1
-fi
-
-APP_BASENAME=$(basename "$APP")
-log "Found app: $APP_BASENAME"
-
 # Quit app if running
-osascript -e "tell application \"$APP_BASENAME\" to quit" 2>/dev/null || true
-sleep 1
+osascript -e 'tell application "CodeLayer-Nightly" to quit' 2>/dev/null || true
+sleep 2
 
-# Copy to /Applications
-rm -rf "/Applications/$APP_BASENAME"
-cp -R "$APP" /Applications/
-log "Installed to /Applications/$APP_BASENAME"
+# Update brew tap and upgrade cask
+$BREW update --quiet 2>>"$LOG"
+OUTPUT=$($BREW upgrade --cask humanlayer/humanlayer/codelayer-nightly 2>&1) || true
 
-# Cleanup
-hdiutil detach "$MOUNT_POINT" -quiet 2>/dev/null || true
-rm -f "$DMG_PATH"
+if echo "$OUTPUT" | grep -q "already installed"; then
+  log "Already up to date"
+else
+  log "Upgrade output: $OUTPUT"
+fi
 
-# Record installed version
-echo "$TAG" > "$INSTALLED_TAG_FILE"
-
-log "Update complete: $TAG"
+# Remove quarantine flag (Gatekeeper) — cask upgrades reapply it
+xattr -rd com.apple.quarantine /Applications/CodeLayer-Nightly.app 2>/dev/null || true
+log "Update complete"
