@@ -308,6 +308,14 @@ in
     };
   };
 
+  # Direnv (auto-loads nix flake environments on cd)
+  programs.direnv = {
+    enable = true;
+    enableZshIntegration = true;
+    nix-direnv.enable = true;
+    config.whitelist.prefix = [ "$HOME/dev" ];
+  };
+
   # FZF
   programs.fzf = {
     enable = true;
