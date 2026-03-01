@@ -11,19 +11,19 @@ layout {
     tab name="1-infra" {
         pane split_direction="vertical" {
             pane split_direction="horizontal" {
-                pane name="gleam" cwd="mycelium" start_suspended=true command="nix" {
-                    args "develop" "/Users/cgpp/dev/colony" "--command" "gleam" "run"
+                pane name="init" start_suspended=true command="nix" {
+                    args "develop" "/Users/cgpp/dev/private/colony" "--command" "make" "init"
                 }
-                pane name="caddy" start_suspended=true command="nix" {
-                    args "develop" "/Users/cgpp/dev/colony" "--command" "caddy" "run" "--config" "config/caddy.json"
+                pane name="run" start_suspended=true command="nix" {
+                    args "develop" "/Users/cgpp/dev/private/colony" "--command" "make" "dev"
                 }
             }
             pane split_direction="horizontal" {
-                pane name="bloom" cwd="bloom" start_suspended=true command="nix" {
-                    args "develop" "/Users/cgpp/dev/colony" "--command" "npm" "run" "dev"
+                pane name="restart" start_suspended=true command="nix" {
+                    args "develop" "/Users/cgpp/dev/private/colony" "--command" "overmind" "restart"
                 }
                 pane name="canopy" cwd="canopy" start_suspended=true command="nix" {
-                    args "develop" "/Users/cgpp/dev/colony" "--command" "npm" "run" "dev"
+                    args "develop" "/Users/cgpp/dev/private/colony" "--command" "bun" "run" "dev"
                 }
             }
         }
