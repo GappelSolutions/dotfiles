@@ -1,0 +1,76 @@
+layout {
+    cwd "~/dev/smartflex"
+
+    default_tab_template {
+        children
+        pane size=1 borderless=true {
+            plugin location="compact-bar"
+        }
+    }
+
+    tab name="1-front-nvim" cwd="sf-frontend" {
+        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+    }
+
+    tab name="2-front-tools" cwd="sf-frontend" {
+        pane split_direction="vertical" {
+            pane size="58%" split_direction="horizontal" {
+                pane command="yazi" {
+                    args "~/dev/smartflex/sf-frontend"
+                }
+
+                pane
+            }
+
+            pane size="42%" split_direction="horizontal" {
+                pane focus=true command="bun" start_suspended=true {
+                    args "start"
+                }
+
+                pane command="bun" start_suspended=true {
+                    args "install"
+                }
+            }
+        }
+    }
+
+    tab name="3" { pane; }
+    tab name="4" { pane; }
+
+    tab name="5-time"  {
+        pane borderless=true command="/Applications/work-tuimer-macos-aarch64"
+    }
+    tab name="6" { pane; }
+
+    tab name="7" { pane; }
+
+    tab name="8-back-tools" cwd="sf-backend" {
+        pane split_direction="vertical" {
+            pane size="58%" split_direction="horizontal" {
+                pane command="yazi" {
+                    args "~/dev/smartflex/sf-backend"
+                }
+
+                pane
+            }
+
+            pane size="42%" split_direction="horizontal" {
+                pane focus=true start_suspended=true command="/usr/local/share/dotnet/dotnet" {
+                    args "run"
+                }
+                pane start_suspended=true command="/usr/local/share/dotnet/dotnet" {
+                    args "build"
+                }
+            }
+        }
+    }
+
+    tab name="9-back-nvim" cwd="sf-backend" {
+        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+    }
+
+    tab name="0" { pane; }
+}
+
+scrollback_editor "/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+default_mode "locked"
