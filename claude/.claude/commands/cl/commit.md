@@ -6,7 +6,14 @@ description: Create git commits with user approval and no Claude attribution
 
 You are tasked with creating git commits for the changes made during this session.
 
-## Process:
+## Pre-commit: Run PR-Ready Check
+
+**Before doing anything else**, execute the full `/pr-ready` workflow automatically:
+- Identify changed files, run tests, check coverage, write missing tests, deep code review, fix issues, re-run tests, run build, run formatter.
+- Do NOT ask the user for feedback during this phase — just execute it end to end and fix any issues found.
+- Only proceed to the commit step once all pr-ready checks pass.
+
+## Commit Process:
 
 1. **Think about what changed:**
    - Review the conversation history and understand what was accomplished

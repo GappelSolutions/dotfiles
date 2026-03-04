@@ -48,7 +48,7 @@ If tests are missing or incomplete, **write them**.
 Delegate to the `code-reviewer` agent for thorough analysis:
 
 ```
-Task(subagent_type="oh-my-claudecode:code-reviewer", prompt="
+Task(subagent_type="general-purpose", prompt="
 Review all changed files for:
 
 CODE QUALITY:
@@ -70,7 +70,7 @@ Provide severity-rated findings (CRITICAL/HIGH/MEDIUM/LOW) with specific file:li
 ")
 ```
 
-Fix all CRITICAL and HIGH issues before proceeding.
+Fix ALL issues found (CRITICAL, HIGH, MEDIUM, and LOW) — even if they are in code you didn't change. Do not skip issues because they are "unrelated" or "pre-existing". If you found it, fix it.
 
 ### Step 5: Run Tests Again
 
@@ -120,7 +120,7 @@ dart format <changed-files>
 
 - ALWAYS run tests, don't just check if they exist
 - WRITE missing tests for changed code
-- Fix CRITICAL and HIGH issues from code review before proceeding
+- Fix ALL issues from code review (CRITICAL, HIGH, MEDIUM, LOW) — no exceptions, even if unrelated to your changes
 - Fix failing tests before approving PR readiness
 - Formatter runs last to ensure final code is properly formatted
 - Follow existing codebase patterns
