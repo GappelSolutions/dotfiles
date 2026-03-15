@@ -1,0 +1,52 @@
+layout {
+    cwd "~/dev/private/lazylink/"
+
+    default_tab_template {
+        children
+        pane size=1 borderless=true {
+            plugin location="compact-bar"
+        }
+    }
+
+    tab name="1-nvim" {
+        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+    }
+
+    tab name="2-tools" {
+        pane split_direction="vertical" {
+            pane size="58%" split_direction="horizontal" {
+                pane command="yazi" {
+                    args "~/dev/private/lazylink/"
+                }
+
+                pane cwd="~/dev/private/lazylink/"
+            }
+
+            pane size="42%" split_direction="horizontal" {
+                pane focus=true command="nix-shell" start_suspended=true {
+                    args "-p" "go" "--run" "go run ."
+                }
+
+                pane command="nix-shell" start_suspended=true {
+                    args "-p" "go" "--run" "go build ./..."
+                }
+
+                pane command="nix-shell" start_suspended=true {
+                    args "-p" "go" "--run" "go test ./..."
+                }
+            }
+        }
+    }
+
+    tab name="3" { pane; }
+    tab name="4" { pane; }
+    tab name="5" { pane; }
+    tab name="6" { pane; }
+    tab name="7" { pane; }
+    tab name="8" { pane; }
+    tab name="9" { pane; }
+    tab name="0" { pane; }
+}
+
+scrollback_editor "/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+default_mode "locked"

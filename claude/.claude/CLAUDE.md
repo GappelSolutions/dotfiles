@@ -308,3 +308,14 @@ jj rebase -d main@origin
 - Do NOT include "Generated with Claude Code" or similar in PR descriptions
 - Always link the work item using `az repos pr work-item add`
 - Direct pushes to `dev` are blocked; must use PR
+
+# Cloud Server (Home Server)
+
+- **Host**: `cloud` (resolves to `192.168.178.33` on local network)
+- **SSH User**: `cgpp`
+- **Auth**: Password-based (ask user for password before connecting)
+- **Access**: `sshpass -p '<password>' ssh -o StrictHostKeyChecking=accept-new cgpp@cloud "<command>"`
+
+When SSH access is needed, always prompt the user for the password first. Do not assume or store the password.
+
+The server runs Docker containers for private projects (e.g., berp/ConstructSync with MariaDB).

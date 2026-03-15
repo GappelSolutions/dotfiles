@@ -2,6 +2,9 @@
 
 let
   zellij-welcome = pkgs.callPackage ./rust/zellij-welcome { };
+  pencil-dev = pkgs.callPackage ./pencil { };
+  tui-studio = pkgs.callPackage ./tui-studio { };
+
 in
 {
   home.username = "cgpp";
@@ -17,6 +20,10 @@ in
   home.packages = [
     # Custom packages
     zellij-welcome
+    pencil-dev
+    tui-studio
+    inputs.llm-agents.packages.aarch64-darwin.pi
+
   ] ++ (with pkgs; [
     # Core tools
     git
@@ -48,6 +55,9 @@ in
     pnpm
     bun
 
+    # API Testing
+    bruno
+
     # Cloud & DevOps
     gh
     sops
@@ -56,6 +66,9 @@ in
     typst
     qpdf
     ghostscript
+
+    # Design & Screenshots
+    charm-freeze
 
     # Utilities
     duti  # set default file associations
@@ -71,6 +84,7 @@ in
     luarocks
     rustup
     pipx
+    sshpass
 
   ]);
 
@@ -126,6 +140,7 @@ in
       dcd = "podman-compose down";
       ld = "lazydocker";
       lg = "lazygit";
+
       lc = "lazychat";
       lo = "lazyops";
 
@@ -248,6 +263,8 @@ in
       zsc() { _zj screensaver; }
       zlc() { _zj lazychat; }
       zco() { _zj colony; }
+      zll() { _zj lazylink; }
+      zpi() { _zj pi; }
 
       # --- Yazi integration ---
       function y() {
@@ -260,6 +277,7 @@ in
       }
 
       # --- Paths ---
+      export PATH="$HOME/.opencode/bin:$PATH"
       export PATH="/Users/cgpp/.local/share/bob/nvim-bin:$PATH"
       export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
       export DOTNET_ROOT=/usr/local/share/dotnet
@@ -335,6 +353,7 @@ in
   # Custom TUIs (from flake inputs)
   programs.lazyops.enable = true;
   programs.lazychat.enable = true;
+  programs.lazylink.enable = true;
 
   # ==========================================================================
   # Launchd Agents
@@ -372,6 +391,7 @@ in
       };
     };
   };
+
 
   # ==========================================================================
   # Dotfiles (xdg.configFile)
@@ -425,6 +445,12 @@ in
     executable = true;
   };
 
+  # Pi extensions (symlinked to dev repos)
+  home.file.".pi/agent/extensions/pi-workflow".source =
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dev/pi/pi-workflow";
+home.file.".pi/agent/extensions/pi-session-dashboard".source =
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dev/pi/pi-session-dashboard";
+
   # ==========================================================================
   # Create directories
   # ==========================================================================
@@ -434,6 +460,8 @@ in
     mkdir -p $HOME/.zsh/completions
     mkdir -p $HOME/.ssh
     chmod 700 $HOME/.ssh
+    mkdir -p $HOME/dev/pi-vault
+    mkdir -p $HOME/.pi/agent
 
   '';
 }
