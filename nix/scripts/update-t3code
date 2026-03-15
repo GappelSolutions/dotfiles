@@ -1,0 +1,47 @@
+#!/bin/sh
+# Update T3 Code derivation to latest GitHub release
+# Runs weekly via launchd agent
+
+set -e
+
+LOG="/tmp/t3code-update.log"
+DERIVATION="$HOME/dev/dotfiles/nix/t3code/default.nix"
+
+log() { echo "$(date '+%Y-%m-%d %H:%M:%S') $1" >> "$LOG"; }
+
+log "Checking for T3 Code updates"
+
+# Get latest release version from GitHub API
+LATEST=$(curl -sfL "https://api.github.com/repos/pingdotgg/t3code/releases/latest" | /usr/bin/python3 -c "import sys,json; print(json.load(sys.stdin)['tag_name'])")
+# Strip leading 'v'
+LATEST="${LATEST#v}"
+
+if [ -z "$LATEST" ]; then
+  log "ERROR: Could not fetch latest version"
+  exit 1
+fi
+
+CURRENT=$(grep 'version = ' "$DERIVATION" | head -1 | sed 's/.*"\(.*\)".*/\1/')
+
+if [ "$CURRENT" = "$LATEST" ]; then
+  log "Already up to date (v$CURRENT)"
+  exit 0
+fi
+
+log "Updating v$CURRENT -> v$LATEST"
+
+# Prefetch new DMG and get hash
+URL="https://github.com/pingdotgg/t3code/releases/download/v${LATEST}/T3-Code-${LATEST}-arm64.dmg"
+HASH=$(nix hash convert --hash-algo sha256 --to sri $(nix-prefetch-url --type sha256 "$URL" 2>/dev/null))
+
+if [ -z "$HASH" ]; then
+  log "ERROR: Could not prefetch DMG"
+  exit 1
+fi
+
+# Update derivation
+sed -i '' "s|version = \".*\"|version = \"$LATEST\"|" "$DERIVATION"
+sed -i '' "s|hash = \".*\"|hash = \"$HASH\"|" "$DERIVATION"
+
+log "Updated derivation to v$LATEST (hash: $HASH)"
+log "Run 'rebuild' to apply"

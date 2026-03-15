@@ -357,6 +357,33 @@ After login, you land on admin dashboard. To view customer data:
 | `/verbrauch-kosten` or `/consumption` | Consumption & costs page |
 | `/rechnungen` or `/invoices` | Invoices page |
 
+## Seq Logging (Dev)
+
+Both EasyAsset and Customer Portal (EnergyBoard) log to the same local Seq instance:
+- **URL**: http://localhost:5341
+- **API Key**: `wUc2lqD0zQ7vlR5W0jdu`
+- **Admin password**: `admin`
+- Filter by `Application == 'EasyAsset'` or `Application == 'EnergyBoard'`
+
+Use `curl` to check logs when debugging backend issues:
+```bash
+# Query recent errors
+curl -s "http://localhost:5341/api/events?filter=@Level%3D'Error'" -H "X-Seq-ApiKey: wUc2lqD0zQ7vlR5W0jdu" | jq
+# Filter by app
+curl -s "http://localhost:5341/api/events?filter=Application%3D'EasyAsset'" -H "X-Seq-ApiKey: wUc2lqD0zQ7vlR5W0jdu" | jq
+```
+
+# Cloud Server (Home Server)
+
+- **Host**: `cloud` (resolves to `192.168.178.33` on local network)
+- **SSH User**: `cgpp`
+- **Auth**: Password-based (ask user for password before connecting)
+- **Access**: `sshpass -p '<password>' ssh -o StrictHostKeyChecking=accept-new cgpp@cloud "<command>"`
+
+When SSH access is needed, always prompt the user for the password first. Do not assume or store the password.
+
+The server runs Docker containers for private projects (e.g., berp/ConstructSync with MariaDB).
+
 ## Browser Agent Tips for Portal
 
 1. **Dropdowns appear as empty buttons** in snapshot - look for `button ""` refs

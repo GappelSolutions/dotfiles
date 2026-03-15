@@ -1,0 +1,16 @@
+layout {
+    default_tab_template {
+        pane borderless=true {
+            plugin location="zellij:compact-bar"
+        }
+        children
+    }
+
+    tab name="pi" focus=true {
+        pane name="pi-main" focus=true
+    }
+
+    tab name="agents" {
+        pane name="agent-hub"
+    }
+}
