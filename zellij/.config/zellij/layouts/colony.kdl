@@ -19,11 +19,11 @@ layout {
                 }
             }
             pane split_direction="horizontal" {
-                pane name="restart" start_suspended=true command="nix" {
-                    args "develop" "/Users/cgpp/dev/private/colony" "--command" "overmind" "restart"
+                pane name="stop" start_suspended=true command="nix" {
+                    args "develop" "/Users/cgpp/dev/private/colony" "--command" "make" "dev-stop"
                 }
-                pane name="canopy" cwd="canopy" start_suspended=true command="nix" {
-                    args "develop" "/Users/cgpp/dev/private/colony" "--command" "bun" "run" "dev"
+                pane name="restart" start_suspended=true command="nix" {
+                    args "develop" "/Users/cgpp/dev/private/colony" "--command" "make" "dev-restart"
                 }
             }
         }

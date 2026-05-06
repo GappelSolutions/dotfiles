@@ -1,0 +1,7 @@
+{ ... }:
+
+{
+  imports = [
+    ../../darwin-configuration.nix
+  ];
+}

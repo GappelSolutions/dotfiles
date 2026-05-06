@@ -295,6 +295,7 @@ After structure approval:
 - Original ticket: `~/dev/codelayer-vault/{project}/ENG-XXXX-description/ticket.md`
 - Related research: `~/dev/codelayer-vault/{project}/ENG-XXXX-description/YYYY-MM-DD-HHmm-research.md`
 - Similar implementation: `[file:line]`
+
 ````
 
 ### Step 5: Review

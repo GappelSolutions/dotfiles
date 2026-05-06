@@ -60,6 +60,7 @@ impl App {
             Session::new("screensaver", "Screensaver development"),
             Session::new("lazychat", "Lazychat TUI for Claude sessions"),
             Session::new("elixir", "Elixir projects"),
+            Session::new("lazylink", "TUI task board + agent coordination"),
             Session::new("welcome", "Return to this screen"),
         ];
 
@@ -619,6 +620,7 @@ fn cleanup_old_sessions() -> Result<()> {
         "screensaver-",
         "lazychat-",
         "elixir-",
+        "lazylink-",
     ];
 
     for line in sessions.lines() {
@@ -681,7 +683,7 @@ fn launch_session(layout: &str) -> Result<()> {
     writeln!(log_file, "Layout requested: {}", layout)?;
 
     let plugin_path = format!(
-        "{}/dev/dotfiles/zellij/.config/zellij/plugins/zellij-switch.wasm",
+        "{}/dev/misc/dotfiles/zellij/.config/zellij/plugins/zellij-switch.wasm",
         home
     );
     writeln!(log_file, "Plugin path: {}", plugin_path)?;

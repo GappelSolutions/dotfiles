@@ -18,65 +18,64 @@
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    # Custom Rust TUIs
-    lazyops = {
-      url = "path:/Users/cgpp/dev/private/lazyops";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    lazychat = {
-      url = "path:/Users/cgpp/dev/private/lazychat";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    llm-agents = {
-      url = "github:numtide/llm-agents.nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
-  outputs = inputs@{ self, nixpkgs, nix-darwin, home-manager, agenix, lazyops, lazychat, llm-agents }:
+  outputs = inputs@{ self, nixpkgs, nix-darwin, home-manager, agenix }:
     let
-      system = "aarch64-darwin";
+      darwinSystem = "aarch64-darwin";
+      linuxSystem = "x86_64-linux";
       hostname = "Christians-MacBook-Pro";
 
-      pkgs = import nixpkgs {
-        inherit system;
+      darwinPkgs = import nixpkgs {
+        system = darwinSystem;
         config.allowUnfree = true;
       };
     in
     {
       darwinConfigurations.${hostname} = nix-darwin.lib.darwinSystem {
-        inherit system;
+        system = darwinSystem;
         specialArgs = { inherit inputs; };
         modules = [
-          ./darwin-configuration.nix
+          ./hosts/macbook/darwin.nix
           agenix.darwinModules.default
           home-manager.darwinModules.home-manager
           {
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
-              backupFileExtension = "backup";
+              backupFileExtension = "hm-backup";
               extraSpecialArgs = { inherit inputs; };
-              sharedModules = [
-                lazyops.homeManagerModules.default
-                lazychat.homeManagerModules.default
-              ];
-              users.cgpp = import ./home.nix;
+              users.cgpp = import ./hosts/macbook/home.nix;
+            };
+          }
+        ];
+      };
+
+      nixosConfigurations.dev = nixpkgs.lib.nixosSystem {
+        system = linuxSystem;
+        specialArgs = { inherit inputs; };
+        modules = [
+          ./hosts/dev/configuration.nix
+          home-manager.nixosModules.home-manager
+          {
+            home-manager = {
+              useGlobalPkgs = true;
+              useUserPackages = true;
+              backupFileExtension = "hm-backup";
+              users.cgpp = import ./hosts/dev/home.nix;
             };
           }
         ];
       };
 
       # Convenience alias for rebuild
-      # Usage: nix run .#rebuild
-      apps.${system}.rebuild = {
+      # Usage: nix run .#rb
+      apps.${darwinSystem}.rb = {
         type = "app";
-        program = toString (pkgs.writeShellScript "rebuild" ''
+        program = toString (darwinPkgs.writeShellScript "rb" ''
           darwin-rebuild switch --flake ${self}#${hostname}
         '');
+        meta.description = "Rebuild the Darwin host";
       };
     };
 }

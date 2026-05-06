@@ -35,8 +35,9 @@ text = "#c6c8d1"
 
 [env]
 TERM = "xterm-256color"
-EDITOR = "/Users/cgpp/.local/share/bob/nvim-bin/nvim"
-VISUAL = "/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+EDITOR = "nvim"
+VISUAL = "nvim"
+ZELLIJ_SOCKET_DIR = "/tmp/zellij"
 
 [font]
 size = 16.0
@@ -122,4 +123,3 @@ chars = "\u001b9"
 key = "Key0"
 mods = "Command"
 chars = "\u001b0"
-

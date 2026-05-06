@@ -22,7 +22,6 @@ cleanup_sessions
 SESSIONS="elixir
 gappel-solutions
 decon
-screensaver
 new
 welcome"
 
@@ -41,7 +40,7 @@ selected=$(echo "$SESSIONS" | fzf \
   2>/dev/null)
 
 # Plugin path
-PLUGIN="file:$HOME/dev/dotfiles/zellij/.config/zellij/plugins/zellij-switch.wasm"
+PLUGIN="file:$HOME/dev/misc/dotfiles/zellij/.config/zellij/plugins/zellij-switch.wasm"
 
 # Handle selection
 if [[ -z "$selected" ]]; then

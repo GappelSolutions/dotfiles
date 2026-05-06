@@ -64,7 +64,7 @@ ssh-azure.age           --> ~/.ssh/id_azure
 After changing any config:
 
 ```bash
-cd ~/dev/dotfiles/nix
+cd ~/dev/misc/dotfiles/nix
 darwin-rebuild switch --flake .
 
 # Or use the alias:
@@ -96,7 +96,7 @@ curl -fsSL https://raw.githubusercontent.com/GappelSolutions/dotfiles/main/nix/b
 ## Adding New Secrets
 
 ```bash
-cd ~/dev/dotfiles/nix/secrets
+cd ~/dev/misc/dotfiles/nix/secrets
 
 # Edit secrets.nix to add the new secret declaration
 # Then encrypt:
@@ -151,7 +151,7 @@ Then: `rebuild`
 ### Update All Packages
 
 ```bash
-cd ~/dev/dotfiles/nix
+cd ~/dev/misc/dotfiles/nix
 nix flake update
 rebuild
 ```

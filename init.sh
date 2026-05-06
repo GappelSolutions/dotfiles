@@ -8,7 +8,7 @@ set -e
 # Or:  ./init.sh
 # =============================================================================
 
-DOTFILES_DIR="$HOME/dev/dotfiles"
+DOTFILES_DIR="$HOME/dev/misc/dotfiles"
 REPO_URL="https://github.com/GappelSolutions/dotfiles.git"
 
 # Colors
@@ -120,9 +120,8 @@ FORMULAE=(
 
     # Development
     node
-    pnpm
+    bun
     dotnet@8
-    bob           # Neovim version manager
 
     # Containers & K8s
     docker
@@ -151,7 +150,6 @@ FORMULAE=(
 
     # Utilities
     wget
-    mas           # Mac App Store CLI
     jq
     ffmpeg
     pandoc
@@ -160,8 +158,6 @@ FORMULAE=(
     socat
     rclone
 
-    # Utilities
-    nowplaying-cli
 )
 
 print_step "Installing Homebrew formulae..."
@@ -203,7 +199,6 @@ CASKS=(
     obsidian
 
     # Utilities
-    appcleaner
     keka
     localsend
     balenaetcher
@@ -211,14 +206,12 @@ CASKS=(
 
     # Fonts
     font-fira-code-nerd-font
-    font-hack-nerd-font
     font-sf-mono
     font-sf-pro
     sf-symbols
 
     # PDF & Docs
     master-pdf-editor
-    basictex
 
     # Communication
     thunderbird
@@ -272,21 +265,14 @@ for pkg in "${STOW_PACKAGES[@]}"; do
     fi
 done
 
-# =============================================================================
-# 7. Neovim (via bob)
-# =============================================================================
-print_header "Neovim"
-
-if command -v bob &>/dev/null; then
-    print_step "Installing latest stable Neovim via bob..."
-    bob install stable
-    bob use stable
-else
-    print_warning "Bob not found, skipping Neovim installation"
+if [[ -f "$DOTFILES_DIR/codex/.codex/AGENTS.md" ]]; then
+    print_step "Linking Codex AGENTS.md..."
+    mkdir -p "$HOME/.codex"
+    ln -sfn "$DOTFILES_DIR/codex/.codex/AGENTS.md" "$HOME/.codex/AGENTS.md" || print_warning "Failed to link Codex AGENTS.md"
 fi
 
 # =============================================================================
-# 8. Rust
+# 7. Rust
 # =============================================================================
 print_header "Rust"
 
@@ -426,10 +412,10 @@ mkdir -p ~/dev
 mkdir -p ~/bin
 mkdir -p ~/.zsh/completions
 
-# Generate pnpm completions
-if command -v pnpm &>/dev/null; then
-    print_step "Generating pnpm completions..."
-    pnpm completion zsh > ~/.zsh/completions/_pnpm 2>/dev/null || true
+# Generate bun completions
+if command -v bun &>/dev/null; then
+    print_step "Generating bun completions..."
+    bun completions > ~/.zsh/completions/_bun 2>/dev/null || true
 fi
 
 # =============================================================================
