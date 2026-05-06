@@ -16,6 +16,15 @@ require("gitsigns").setup({
 		ignore_whitespace = false,
 	},
 	current_line_blame_formatter = "<author>, <author_time:%Y-%m-%d> - <summary>",
+	on_attach = function(bufnr)
+		local gs = require("gitsigns")
+		vim.keymap.set("n", "<leader>gj", function()
+			gs.next_hunk()
+		end, { buffer = bufnr, desc = "Next git hunk" })
+		vim.keymap.set("n", "<leader>gk", function()
+			gs.prev_hunk()
+		end, { buffer = bufnr, desc = "Previous git hunk" })
+	end,
 })
 
 -- Define highlight groups for gitsigns

@@ -1,10 +1,13 @@
 ---
-description: Create visual designs and wireframes using Pencil (.pen files)
+description: Create visual designs and wireframes using Pencil (.pen files) or TUI Studio (.tui files)
 ---
 
-# Quick Pencil Sketch
+# Quick Sketch
 
-Create visual designs, wireframes, and UI mockups on the fly using Pencil.
+Create visual designs, wireframes, and UI mockups on the fly.
+
+- **Web/mobile UI**: Use Pencil (.pen files)
+- **Terminal UIs (TUIs)**: Use TUI Studio (tui.studio) — open the app, design visually, export Bubble Tea code
 
 ## Usage Examples
 
@@ -12,8 +15,17 @@ Create visual designs, wireframes, and UI mockups on the fly using Pencil.
 - `/sketch dashboard layout with sidebar nav and data cards`
 - `/sketch component library: buttons, inputs, dropdowns, modals`
 - `/sketch ~/dev/codelayer-vault/myproject/task/sketch.pen - redesign the header`
+- `/sketch a three-pane TUI task manager` (routes to TUI Studio)
 
 ## Process
+
+### Step 0: Route by Type
+
+**If the design is a TUI** (terminal app, CLI tool, Bubble Tea, terminal dashboard):
+→ Skip to **TUI Design with TUI Studio** section below.
+
+**Otherwise** (web, mobile, dashboard, component library):
+→ Continue with Pencil workflow.
 
 ### Step 1: Parse the Request
 
@@ -87,8 +99,30 @@ pencil --agent-config /tmp/pencil-config.json
    - What design prompt was used
    - Whether Pencil was launched successfully
 
+## TUI Design with TUI Studio
+
+For terminal UIs, use **TUI Studio** instead of Pencil. It's a visual drag-and-drop editor purpose-built for TUI layouts that generates Bubble Tea (Go) code.
+
+### TUI Workflow
+
+1. **Open TUI Studio**: `open -a "TUI Studio"` (installed via nix)
+2. **Describe the design** to the user in detail (layout, components, panes, keybindings)
+3. **Provide an ASCII wireframe** of each screen in the output — these are the authoritative mockups for character-grid TUIs
+4. **Write the design spec** to `~/dev/codelayer-vault/{project}/design.md` with:
+   - ASCII wireframes of each screen
+   - Color palette (use Iceberg Dark theme in TUI Studio)
+   - Component list and keybinding map
+   - Link to the plan.md if one exists
+
+### Why Not Pencil for TUIs?
+
+Terminal UIs are character-grid based, not pixel based. Pencil renders text too small to be legible at overview zoom, resulting in unreadable color blocks. ASCII wireframes captured in markdown are the correct representation and can be directly referenced during implementation.
+
+TUI Studio speaks the same language as the implementation (Bubble Tea components, flexbox layout) and can export starter code.
+
 ## Tips
 
 - For iterating on an existing sketch, provide the .pen file path: `/sketch path/to/existing.pen - add a footer`
 - Attach plan files for context when sketching planned features
 - Multiple .pen files can be created in one run for multi-screen flows
+- For TUI projects, ASCII wireframes in design.md are the primary deliverable

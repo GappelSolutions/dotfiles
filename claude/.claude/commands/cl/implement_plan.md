@@ -78,6 +78,18 @@ When something isn't working as expected:
 
 Use sub-tasks sparingly - mainly for targeted debugging or exploring unfamiliar territory.
 
+## Vault Cleanup (Automatic)
+
+When ALL phases of the plan are complete and verified:
+
+1. Delete the entire task folder from the vault:
+   ```bash
+   rm -rf ~/dev/codelayer-vault/{project}/TASKNAME/
+   ```
+2. Briefly confirm: "Vault cleaned up - removed `TASKNAME/` from codelayer-vault."
+
+This is automatic. Do not ask for confirmation. The plan has served its purpose - the work is in git now. Clean up and move on.
+
 ## Resuming Work
 
 If the plan has existing checkmarks:

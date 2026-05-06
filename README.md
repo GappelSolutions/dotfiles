@@ -48,8 +48,8 @@ curl -fsSL https://raw.githubusercontent.com/GappelSolutions/dotfiles/main/init.
 Or clone and run locally:
 
 ```bash
-git clone https://github.com/GappelSolutions/dotfiles.git ~/dev/dotfiles
-cd ~/dev/dotfiles
+git clone https://github.com/GappelSolutions/dotfiles.git ~/dev/misc/dotfiles
+cd ~/dev/misc/dotfiles
 ./init.sh
 ```
 
@@ -78,7 +78,6 @@ stow -t ~ zsh nvim alacritty
 | `lazygit` | Git TUI config |
 | `mcphub` | MCP Hub server config |
 | `nvim` | Neovim config (LazyVim-based) |
-| `raycast` | Raycast settings export (manual import required) |
 | `vim` | Minimal .vimrc |
 | `vscode` | VS Code keybindings |
 | `yazi` | File manager config |
@@ -87,10 +86,10 @@ stow -t ~ zsh nvim alacritty
 
 ## What init.sh Installs
 
-- **CLI tools**: git, stow, neovim (via bob), zsh, fzf, ripgrep, fd, bat, eza, zoxide, lazygit, yazi, zellij, btop, k9s
-- **Development**: node, pnpm, dotnet, rust, angular-cli, flutter, docker, colima
+- **CLI tools**: git, stow, neovim, zsh, fzf, ripgrep, fd, bat, eza, zoxide, lazygit, yazi, zellij, btop, k9s
+- **Development**: node, bun, dotnet, rust, angular-cli, flutter, docker, colima
 - **GUI apps**: alacritty, aerospace, obsidian, postman, android-studio
-- **Fonts**: Fira Code Nerd Font, Hack Nerd Font, SF Mono, SF Pro
+- **Fonts**: Fira Code Nerd Font, SF Mono, SF Pro
 
 ## Zellij Layouts
 

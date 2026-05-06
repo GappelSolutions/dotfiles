@@ -158,8 +158,8 @@ keybinds clear-defaults=true {
         bind "Alt f" { ToggleFocusFullscreen; }
         // Close pane (Alt+x / Cmd+x)
         bind "Alt x" { CloseFocus; }
-        // Session picker (Alt+o / Cmd+o)
-        bind "Alt o" {
+        // Session picker (Alt+m / Cmd+m)
+        bind "Alt m" {
             Run "bash" "-c" "$HOME/.local/bin/zellij-welcome" {
                 floating true
                 close_on_exit true
@@ -252,12 +252,15 @@ plugins {
         cwd "/"
     }
     plugin-manager location="zellij:plugin-manager"
-    session-manager location="zellij:session-manager"
+    session-manager location="zellij:session-manager" {
+        multi_screen true
+    }
     zellij-switch location="file:~/.config/zellij/plugins/zellij-switch.wasm"
     status-bar location="zellij:status-bar"
     strider location="zellij:strider"
     tab-bar location="zellij:tab-bar"
     welcome-screen location="zellij:session-manager" {
+        multi_screen true
         welcome_screen true
     }
 }

@@ -102,7 +102,7 @@ end
 require("neotest").setup({
 	adapters = {
 		require("neotest-vitest")({
-			vitestCommand = "pnpm vitest",
+			vitestCommand = "bun vitest",
 			vitestConfigFile = "./vitest.config.ts",
 		}),
 	},

@@ -34,42 +34,45 @@ layout {
         }
     }
 
-    tab name="3" { pane; }
-    tab name="4" { pane; }
-
-    tab name="5-time"  {
-        pane borderless=true command="/Applications/work-tuimer-macos-aarch64"
+    tab name="3-lc-nvim" cwd="Msp.LoadControl" {
+        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
     }
+
+    tab name="4" { pane; }
+    tab name="5" { pane; }
     tab name="6" { pane; }
-
     tab name="7" { pane; }
+    tab name="8" { pane; }
 
-    tab name="8-back-tools" cwd="sf-backend" {
+    tab name="9-back-tools" {
         pane split_direction="vertical" {
             pane size="58%" split_direction="horizontal" {
                 pane command="yazi" {
-                    args "~/dev/smartflex/sf-backend"
+                    args "~/dev/smartflex"
                 }
 
                 pane
             }
 
             pane size="42%" split_direction="horizontal" {
-                pane focus=true start_suspended=true command="/usr/local/share/dotnet/dotnet" {
-                    args "run"
+                pane cwd="sf-backend" focus=true start_suspended=true command="/usr/local/share/dotnet/dotnet" {
+                    args "watch" "run" "--project" "SmartFlex.Portal"
                 }
-                pane start_suspended=true command="/usr/local/share/dotnet/dotnet" {
-                    args "build"
+
+                pane cwd="sf-backend" focus=true start_suspended=true command="/usr/local/share/dotnet/dotnet" {
+                    args "watch" "run" "--project" "SmartFlex.Gateway"
+                }
+
+                pane cwd="Msp.LoadControl" focus=true start_suspended=true command="./run" {  
+                    args "restart"
                 }
             }
         }
     }
 
-    tab name="9-back-nvim" cwd="sf-backend" {
+    tab name="0-back-nvim" cwd="sf-backend" {
         pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
     }
-
-    tab name="0" { pane; }
 }
 
 scrollback_editor "/Users/cgpp/.local/share/bob/nvim-bin/nvim"

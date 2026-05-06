@@ -101,7 +101,7 @@ Compact picker - perfect for floating panes or quick session switches.
 
 ```bash
 # Build
-cd /Users/cgpp/dev/dotfiles/nix/rust/zellij-welcome
+cd /Users/cgpp/dev/misc/dotfiles/nix/rust/zellij-welcome
 ./build.sh
 
 # Deploy (via home-manager)

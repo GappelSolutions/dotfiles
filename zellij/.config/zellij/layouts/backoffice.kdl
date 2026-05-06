@@ -23,11 +23,11 @@ layout {
             }
 
             pane size="42%" split_direction="horizontal" {
-                pane focus=true command="pnpm" {
+                pane focus=true command="bun" {
                     args "start"
                 }
 
-                pane command="pnpm" start_suspended=true {
+                pane command="bun" start_suspended=true {
                     args "i"
                 }
             }

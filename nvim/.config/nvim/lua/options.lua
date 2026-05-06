@@ -1,4 +1,4 @@
-vim.opt.shell = "/bin/zsh"
+vim.opt.shell = vim.env.SHELL or "/bin/sh"
 vim.opt.shellcmdflag = "-lc"
 
 vim.opt.expandtab = true
@@ -17,7 +17,7 @@ vim.opt.relativenumber = true
 vim.opt.wrap = true
 vim.opt.swapfile = false
 vim.opt.backup = false
-vim.opt.undodir = "/Users/cgpp/.undotree/"
+vim.opt.undodir = vim.fn.stdpath("state") .. "/undo"
 vim.opt.undofile = true
 vim.g.undotree_WindowLayout = 3
 vim.g.undotree_SetFocusWhenToggle = 1

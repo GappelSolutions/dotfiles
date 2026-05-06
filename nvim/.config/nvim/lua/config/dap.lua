@@ -2,12 +2,17 @@ local dap = require("dap")
 
 require("mason-nvim-dap").setup()
 --
--- dap.adapters.coreclr = {
--- 	type = "executable",
--- 	command = "/Users/cgpp/dev/netcoredbg/netcoredbg",
--- 	args = { "--interpreter=vscode" },
--- }
-require("netcoredbg-macOS-arm64").setup(dap)
+local has_mac_netcoredbg, mac_netcoredbg = pcall(require, "netcoredbg-macOS-arm64")
+
+if has_mac_netcoredbg and vim.uv.os_uname().sysname == "Darwin" then
+	mac_netcoredbg.setup(dap)
+else
+	dap.adapters.coreclr = {
+		type = "executable",
+		command = vim.env.NETCOREDBG_PATH or "netcoredbg",
+		args = { "--interpreter=vscode" },
+	}
+end
 
 dap.configurations.cs = {
 	{

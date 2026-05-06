@@ -132,6 +132,15 @@ Get user confirmation before proceeding.
    - Use `make` commands for automated verification
    - Keep language clear and actionable
 
+4. **Update associated Pencil sketches if visual aspects changed**:
+   - Check for existing .pen files: `ls ~/dev/codelayer-vault/{project}/TASKNAME/*.pen 2>/dev/null`
+   - If visual/UI requirements changed, recreate the sketch:
+     1. Write updated Pencil agent config to `/tmp/pencil-config.json` with a prompt reflecting the changes
+     2. Attach the updated plan markdown as context
+     3. Run: `pencil --agent-config /tmp/pencil-config.json`
+   - If no .pen files exist but the update adds visual requirements, create them (follow create_plan Step 4b)
+   - If `pencil` CLI is not found, note it and move on
+
 ### Step 5: Sync and Review
 
 **Present the changes made**:
