@@ -1,7 +1,7 @@
 layout {
     pane borderless=true {
         command "bash"
-        args "-c" "$HOME/.local/bin/zellij-welcome"
+        args "-lc" "while true; do zellij-welcome; sleep 0.2; done"
     }
 }
 session_serialization false

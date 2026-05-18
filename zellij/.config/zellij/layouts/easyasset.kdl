@@ -9,7 +9,7 @@ layout {
     }
 
     tab name="1-front-nvim" cwd="ea-angular-frontend" {
-        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+        pane borderless=true command="nvim"
     }
 
     tab name="2-front-tools" cwd="ea-angular-frontend" {
@@ -66,11 +66,11 @@ layout {
     }
 
     tab name="9-back-nvim" cwd="ea-dot-net-authentication" {
-        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+        pane borderless=true command="nvim"
     }
 
     tab name="0" { pane; }
 }
 
-scrollback_editor "/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+scrollback_editor "nvim"
 default_mode "locked"

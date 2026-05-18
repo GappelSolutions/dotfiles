@@ -8,6 +8,8 @@
   };
 
   home.sessionPath = [
+    "/etc/profiles/per-user/${config.home.username}/bin"
+    "/run/current-system/sw/bin"
     "/opt/homebrew/bin"
     "/opt/homebrew/sbin"
     "/opt/homebrew/opt/libpq/bin"
@@ -67,10 +69,15 @@
       nerdfetch = "$HOME/.local/bin/nerdfetch";
       sc = "~/bin/macos-screensaver";
       rb = "sudo HOME=/var/root /nix/var/nix/profiles/default/bin/nix run nix-darwin -- switch --flake ~/dev/misc/dotfiles/nix 2>&1 | grep --line-buffered -v \"builtins.toFile\"";
+      dsh = "ssh dev";
+      dev = "ssh -t dev 'cd /home/cgpp/dev && zellij attach welcome || zellij --session welcome --new-session-with-layout welcome-custom'";
+      dev-files = "open smb://dev/dev";
+      ydev = "ssh -t dev 'cd /home/cgpp/dev && yazi'";
     };
 
     profileExtra = ''
       eval "$(/opt/homebrew/bin/brew shellenv)"
+      export PATH="/etc/profiles/per-user/${config.home.username}/bin:/run/current-system/sw/bin:$PATH"
     '';
 
     initContent = ''
@@ -174,6 +181,10 @@
       zms() { _zj msp; }
       zsf() { _zj smartflex; }
       zll() { _zj lazylink; }
+
+      zel() {
+        zellij attach welcome || zellij --session welcome --new-session-with-layout welcome-custom
+      }
 
       function y() {
         local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"

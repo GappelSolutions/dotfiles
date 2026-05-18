@@ -24,9 +24,6 @@ require("lazy").setup({
 		opts = {},
 	},
 	{
-		"mluders/comfy-line-numbers.nvim",
-	},
-	{
 		"eoh-bse/minintro.nvim",
 		opts = { color = "#8f84b0" },
 		config = true,
@@ -295,15 +292,13 @@ require("lazy").setup({
 	},
 
 	-- Others
-	"mbbill/undotree",
-	"github/copilot.vim",
 	{
 		"coffebar/neovim-project",
 		opts = {
 			projects = {
-				"/Users/cgpp/dev/*/*",
-				"/Users/cgpp/dev/private/gappel-cloud/src/backend/GappelCloud.Api",
-				"/Users/cgpp/dev/private/gappel-cloud/src/frontend",
+				"~/dev/*/*",
+				vim.fn.expand("~/dev/private/gappel-cloud/src/backend/GappelCloud.Api"),
+				vim.fn.expand("~/dev/private/gappel-cloud/src/frontend"),
 			},
 			picker = {
 				type = "telescope",
@@ -316,25 +311,5 @@ require("lazy").setup({
 		},
 		lazy = false,
 		priority = 100,
-	},
-	{
-		"ravitemer/mcphub.nvim",
-		dependencies = {
-			"nvim-lua/plenary.nvim",
-		},
-		build = "npm install -g mcp-hub@latest",
-		config = function()
-			require("mcphub").setup()
-		end,
-	},
-	{
-		"olimorris/codecompanion.nvim",
-		opts = {},
-		dependencies = {
-			"nvim-lua/plenary.nvim",
-			"nvim-treesitter/nvim-treesitter",
-			"ravitemer/mcphub.nvim",
-			"ravitemer/codecompanion-history.nvim",
-		},
 	},
 })

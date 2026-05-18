@@ -10,6 +10,7 @@ in
 
   networking.useDHCP = lib.mkDefault true;
   networking.firewall.checkReversePath = "loose";
+  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 445 ];
 
   services.openssh = {
     enable = true;
@@ -22,20 +23,54 @@ in
 
   services.tailscale.enable = true;
 
+  virtualisation.podman = {
+    enable = true;
+    dockerCompat = true;
+    defaultNetwork.settings.dns_enabled = true;
+  };
+
+  services.samba = {
+    enable = true;
+    openFirewall = false;
+    settings = {
+      global = {
+        workgroup = "WORKGROUP";
+        security = "user";
+        "map to guest" = "Bad User";
+        "server min protocol" = "SMB3";
+      };
+      dev = {
+        path = "/home/cgpp/dev";
+        browseable = "yes";
+        writeable = "yes";
+        "guest ok" = "yes";
+        "force user" = "cgpp";
+        "create mask" = "0644";
+        "directory mask" = "0755";
+      };
+    };
+  };
+
   users.users.cgpp = {
     isNormalUser = true;
     extraGroups = [ "wheel" ];
+    shell = pkgs.zsh;
     openssh.authorizedKeys.keys = sshKeys.cgpp;
   };
 
   security.sudo.wheelNeedsPassword = false;
 
   programs.bash.shellAliases.rb = "sudo nixos-rebuild switch";
+  programs.zsh.enable = true;
 
   environment.systemPackages = with pkgs; [
     curl
     vim
     htop
+    podman
+    podman-compose
+    kubectl
+    minikube
   ];
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];

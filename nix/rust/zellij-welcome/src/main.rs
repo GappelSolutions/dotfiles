@@ -631,6 +631,8 @@ fn cleanup_old_sessions() -> Result<()> {
         "msp-",
         "smartflex-",
         "lazylink-",
+        "dev",
+        "new-",
     ];
 
     for line in sessions.lines() {
@@ -709,16 +711,16 @@ fn launch_session(layout: &str) -> Result<()> {
 
     let prefix = format!("{}-", layout);
 
-    let existing = sessions
-        .lines()
-        .map(|line| strip_ansi_codes(line))
-        .filter(|line| !line.contains("EXITED"))
-        .filter_map(|line| {
-            line.split_whitespace()
-                .next()
-                .map(|s| s.to_string())
-        })
-        .find(|name| name.starts_with(&prefix));
+    let existing = if layout == "new" {
+        None
+    } else {
+        sessions
+            .lines()
+            .map(|line| strip_ansi_codes(line))
+            .filter(|line| !line.contains("EXITED"))
+            .filter_map(|line| line.split_whitespace().next().map(|s| s.to_string()))
+            .find(|name| name.starts_with(&prefix))
+    };
 
     writeln!(log_file, "Looking for prefix: {}", prefix)?;
     writeln!(log_file, "Found existing: {:?}", existing)?;

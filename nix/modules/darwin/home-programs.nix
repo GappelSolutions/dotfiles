@@ -46,6 +46,30 @@
         user = "cgpp";
         identityFile = "~/.ssh/id_ed25519";
       };
+      "dev-tunnel" = {
+        hostname = "100.71.40.31";
+        user = "cgpp";
+        identityFile = "~/.ssh/id_ed25519";
+        dynamicForwards = [
+          {
+            address = "127.0.0.1";
+            port = 1080;
+          }
+        ];
+        remoteForwards = [
+          {
+            bind.address = "127.0.0.1";
+            bind.port = 19777;
+            host.address = "127.0.0.1";
+            host.port = 19777;
+          }
+        ];
+        extraOptions = {
+          ExitOnForwardFailure = "yes";
+          ServerAliveInterval = "30";
+          ServerAliveCountMax = "3";
+        };
+      };
     };
   };
 

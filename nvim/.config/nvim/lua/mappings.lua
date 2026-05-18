@@ -132,8 +132,9 @@ Map("n", "<leader>fw", "<cmd>Telescope live_grep<cr>")
 Map("n", "<leader>fp", "<cmd>Telescope resume<cr>")
 Map("n", "<leader><leader>", "<cmd>lua require('telescope').extensions.recent_files.pick()<cr>")
 
--- UndoTree
-Map("n", "<leader>u", "<cmd>UndotreeToggle<cr>")
+if vim.fn.has("nvim-0.12") == 1 then
+	Map("n", "<leader>u", "<cmd>packadd nvim.undotree<bar>lua require('undotree').open({ command = 'rightbelow 30vnew' })<cr>", { desc = "Undo tree" })
+end
 
 -- NvimTree
 Map("n", "<leader>pf", "<cmd>NvimTreeToggle<cr>")
@@ -148,15 +149,6 @@ vim.api.nvim_create_autocmd("FileType", {
 -- Twighlight
 Map("n", "<leader>tt", "<cmd>Twilight<cr>")
 
--- CodeCompanion Mappings
-Map("n", "<leader>aa", "<cmd>CodeCompanionActions<cr>")
-Map("n", "<leader>A", "<cmd>CodeCompanionChat Toggle<cr>")
-Map("v", "ga", "<cmd>CodeCompanionChat Add<cr>")
-Map("n", "<leader>ah", "<cmd>CodeCompanionHistory<cr>")
-
--- Expand 'cc' into 'CodeCompanion' in the command line
-vim.cmd([[cab cc CodeCompanion]])
-
 -- Neotest Mappings
 Map("n", "<leader>tr", "<cmd>lua require('neotest').run.run()<cr>")
 Map("n", "<leader>tf", "<cmd>lua require('neotest').run.run(vim.fn.expand('%'))<cr>")
@@ -169,4 +161,3 @@ Map("n", "<leader>ta", "<cmd>lua require('neotest').run.run(vim.loop.cwd())<cr>"
 
 -- Typst
 Map("n", "<leader>cp", "<cmd>!typst compile %:r.typ %:r.pdf<cr>")
-

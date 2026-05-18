@@ -9,7 +9,7 @@ layout {
     }
 
     tab name="1-front-nvim" cwd="sf-frontend" {
-        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+        pane borderless=true command="nvim"
     }
 
     tab name="2-front-tools" cwd="sf-frontend" {
@@ -34,8 +34,8 @@ layout {
         }
     }
 
-    tab name="3-lc-nvim" cwd="Msp.LoadControl" {
-        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+    tab name="3-lc-nvim" cwd="sf-backend/Msp.LoadControl" {
+        pane borderless=true command="nvim"
     }
 
     tab name="4" { pane; }
@@ -44,36 +44,27 @@ layout {
     tab name="7" { pane; }
     tab name="8" { pane; }
 
-    tab name="9-back-tools" {
+    tab name="9-back-tools" cwd="sf-backend" {
         pane split_direction="vertical" {
             pane size="58%" split_direction="horizontal" {
                 pane command="yazi" {
-                    args "~/dev/smartflex"
+                    args "~/dev/smartflex/sf-backend"
                 }
 
-                pane
+                pane command="lazydocker"
             }
 
             pane size="42%" split_direction="horizontal" {
-                pane cwd="sf-backend" focus=true start_suspended=true command="/usr/local/share/dotnet/dotnet" {
-                    args "watch" "run" "--project" "SmartFlex.Portal"
-                }
-
-                pane cwd="sf-backend" focus=true start_suspended=true command="/usr/local/share/dotnet/dotnet" {
-                    args "watch" "run" "--project" "SmartFlex.Gateway"
-                }
-
-                pane cwd="Msp.LoadControl" focus=true start_suspended=true command="./run" {  
-                    args "restart"
-                }
+                pane focus=true start_suspended=true command="/Users/cgpp/dev/smartflex/sf-backend/run"
+                pane
             }
         }
     }
 
     tab name="0-back-nvim" cwd="sf-backend" {
-        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+        pane borderless=true command="nvim"
     }
 }
 
-scrollback_editor "/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+scrollback_editor "nvim"
 default_mode "locked"

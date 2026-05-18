@@ -7,7 +7,6 @@ in
   xdg.configFile = {
     "nvim".source = repo + /nvim/.config/nvim;
     "alacritty".source = repo + /alacritty/.config/alacritty;
-    "lazygit".source = repo + /lazygit/.config/lazygit;
     "yazi".source = repo + /yazi/.config/yazi;
     "zellij".source = repo + /zellij/.config/zellij;
     "Code/User/settings.json".source = repo + /vscode/.config/Code/Users/settings.json;
@@ -16,6 +15,16 @@ in
   home.file.".aerospace.toml".source = repo + /aerospace/.aerospace.toml;
   home.file.".vimrc".source = repo + /vim/.vimrc;
   home.file.".ideavimrc".source = repo + /jetbrains/.ideavimrc;
+  home.file."dev.smb.inetloc".text = ''
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+    <plist version="1.0">
+    <dict>
+      <key>URL</key>
+      <string>smb://dev/dev</string>
+    </dict>
+    </plist>
+  '';
 
   home.file.".claude/CLAUDE.md".source = repo + /claude/.claude/CLAUDE.md;
   home.file.".claude/settings.json".source = repo + /claude/.claude/settings.json;
