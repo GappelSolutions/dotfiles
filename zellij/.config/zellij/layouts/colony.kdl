@@ -11,19 +11,19 @@ layout {
     tab name="1-infra" {
         pane split_direction="vertical" {
             pane split_direction="horizontal" {
-                pane name="init" start_suspended=true command="nix" {
-                    args "develop" "/Users/cgpp/dev/private/colony" "--command" "make" "init"
+                pane name="init" start_suspended=true command="bash" {
+                    args "-lc" "nix develop \"$HOME/dev/private/colony\" --command make init"
                 }
-                pane name="run" start_suspended=true command="nix" {
-                    args "develop" "/Users/cgpp/dev/private/colony" "--command" "make" "dev"
+                pane name="run" start_suspended=true command="bash" {
+                    args "-lc" "nix develop \"$HOME/dev/private/colony\" --command make dev"
                 }
             }
             pane split_direction="horizontal" {
-                pane name="stop" start_suspended=true command="nix" {
-                    args "develop" "/Users/cgpp/dev/private/colony" "--command" "make" "dev-stop"
+                pane name="stop" start_suspended=true command="bash" {
+                    args "-lc" "nix develop \"$HOME/dev/private/colony\" --command make dev-stop"
                 }
-                pane name="restart" start_suspended=true command="nix" {
-                    args "develop" "/Users/cgpp/dev/private/colony" "--command" "make" "dev-restart"
+                pane name="restart" start_suspended=true command="bash" {
+                    args "-lc" "nix develop \"$HOME/dev/private/colony\" --command make dev-restart"
                 }
             }
         }
@@ -52,5 +52,5 @@ layout {
     tab name="0" { pane; }
 }
 
-scrollback_editor "/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+scrollback_editor "nvim"
 default_mode "locked"

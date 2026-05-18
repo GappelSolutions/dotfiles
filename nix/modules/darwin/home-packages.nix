@@ -29,6 +29,7 @@ in
 
     zellij
     tmux
+    neovim
 
     nodejs
     bun

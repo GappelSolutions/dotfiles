@@ -1,106 +1,81 @@
 # Dotfiles
 
-Personal dotfiles for macOS (Angular + .NET development stack).
+Personal workstation config. Current path is Nix first:
 
-## Quick Setup
+- macOS: `nix-darwin` + Home Manager + Homebrew + agenix.
+- NixOS: host config for `dev`, plus shared Home Manager CLI/dotfiles.
+- WSL: use plain Nix for now; no dedicated `hosts/wsl` flake output yet.
+
+## macOS
+
+Fresh Mac:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/GappelSolutions/dotfiles/main/nix/bootstrap.sh | bash
 ```
 
-This sets up a fully declarative system with nix-darwin, home-manager, and agenix for secrets. See [nix/README.md](nix/README.md) for details.
-
-## Post-Setup: Manual Permissions
-
-macOS requires manual approval for certain app permissions. **The setup will appear complete but these apps won't work properly until you grant permissions.**
-
-Open **System Settings > Privacy & Security** and grant the following:
-
-| App | Permission | What breaks without it |
-|-----|------------|------------------------|
-| Alacritty | Accessibility | Karabiner keybindings won't work in terminal |
-| AeroSpace | Accessibility | Window management won't work |
-| Karabiner-Elements | Accessibility | Key remapping won't work at all |
-| Karabiner-Elements | Input Monitoring | Key remapping won't work at all |
-| Raycast | Accessibility | Window management, snippets won't work |
-| Flameshot | Screen Recording | Cannot capture screenshots |
-
-### How to grant permissions
-
-1. Open **System Settings** (Cmd+Space, type "System Settings")
-2. Go to **Privacy & Security** (left sidebar)
-3. For each permission type:
-   - Click the permission (e.g., "Accessibility")
-   - Click the **+** button or toggle the app on
-   - You may need to unlock with your password (click the lock icon)
-4. **Restart the app** after granting permissions
-
-### First-launch prompts
-
-Some apps will prompt automatically on first launch - click "Open System Settings" when prompted and toggle them on. If you dismissed the prompt, find the app manually in the lists above.
-
-### Legacy (Stow-based)
+Rebuild after changes:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/GappelSolutions/dotfiles/main/init.sh | bash
+cd ~/dev/misc/dotfiles/nix
+darwin-rebuild switch --flake .#Christians-MacBook-Pro
+# or: rb
 ```
 
-Or clone and run locally:
+After first build, grant macOS permissions in System Settings:
+
+- Alacritty, AeroSpace, Karabiner-Elements, Raycast: Accessibility.
+- Karabiner-Elements: Input Monitoring.
+- Flameshot: Screen Recording.
+
+## NixOS
+
+This repo exposes one NixOS host: `dev`.
 
 ```bash
 git clone https://github.com/GappelSolutions/dotfiles.git ~/dev/misc/dotfiles
+cd ~/dev/misc/dotfiles/nix
+sudo nixos-rebuild switch --flake .#dev
+# or after activation: rb
+```
+
+`dev` is meant as a clean VM/thin dev host: SSH, Tailscale, Podman, Samba,
+CLI tools, shell, Neovim, Zellij, and shared dotfiles.
+
+## WSL
+
+WSL is not a flake host yet. Current minimal setup:
+
+```bash
+sh <(curl -L https://nixos.org/nix/install) --daemon
+mkdir -p ~/dev/misc
+git clone https://github.com/GappelSolutions/dotfiles.git ~/dev/misc/dotfiles
 cd ~/dev/misc/dotfiles
-./init.sh
 ```
 
-## Manual Stow
+Use the shared configs manually until a `hosts/wsl` output exists. Keep Windows
+Terminal, PowerShell, winget, and WSL bootstrap separate from the NixOS/Darwin
+module tree.
 
-Apply all dotfiles:
+## Repo Map
 
-```bash
-stow -v -R -t ~ */
+```text
+nix/flake.nix                 flake entrypoint
+nix/hosts/macbook/            macOS host
+nix/hosts/dev/                NixOS dev host
+nix/modules/darwin/           macOS-only modules
+nix/modules/nixos/            NixOS-only modules
+nix/modules/shared/           portable CLI + dotfile modules
+nix/secrets/                  agenix-encrypted secrets
+nvim/ zellij/ alacritty/      source dotfiles linked by Home Manager
 ```
 
-Apply specific packages:
+## Rules
 
-```bash
-stow -t ~ zsh nvim alacritty
-```
+- New files used by flakes must be tracked before rebuild: `git add <path>`.
+- Put portable CLI/dotfile behavior in `nix/modules/shared`.
+- Keep macOS GUI, Homebrew, launchd, `/Applications`, and `/Users/cgpp` paths in
+  Darwin modules.
+- Keep NixOS/VM services in NixOS modules.
 
-## Packages
-
-| Package | Description |
-|---------|-------------|
-| `aerospace` | Tiling window manager config |
-| `alacritty` | Terminal emulator config |
-| `claude` | Claude Code settings, commands, and MCP config |
-| `jetbrains` | JetBrains IDE keymaps |
-| `lazygit` | Git TUI config |
-| `mcphub` | MCP Hub server config |
-| `nvim` | Neovim config (LazyVim-based) |
-| `vim` | Minimal .vimrc |
-| `vscode` | VS Code keybindings |
-| `yazi` | File manager config |
-| `zellij` | Terminal multiplexer config and layouts |
-| `zsh` | Shell config with custom prompt |
-
-## What init.sh Installs
-
-- **CLI tools**: git, stow, neovim, zsh, fzf, ripgrep, fd, bat, eza, zoxide, lazygit, yazi, zellij, btop, k9s
-- **Development**: node, bun, dotnet, rust, angular-cli, flutter, docker, colima
-- **GUI apps**: alacritty, aerospace, obsidian, postman, android-studio
-- **Fonts**: Fira Code Nerd Font, SF Mono, SF Pro
-
-## Zellij Layouts
-
-Tabs organized by keyboard position for ergonomic access:
-
-```
-Left hand (primary):     1  2  3      → Main development
-Middle (utility):              4  5  6  7  8  → Misc/scratch, time tracker at 6
-Right hand (secondary):                    9  0  → Backend
-```
-
-## References
-
-- [Arch-Hyprland](https://github.com/JaKooLit/Arch-Hyprland) - Base for Linux setup
+More detail: [nix/ARCHITECTURE.md](nix/ARCHITECTURE.md).

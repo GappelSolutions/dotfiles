@@ -28,7 +28,7 @@ layout {
     }
 
     tab name="2-nvim" cwd="app" {
-        pane borderless=true command="/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+        pane borderless=true command="nvim"
     }
 
     tab name="3" { pane; }
@@ -41,5 +41,5 @@ layout {
     tab name="0" { pane; }
 }
 
-scrollback_editor "/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+scrollback_editor "nvim"
 default_mode "locked"

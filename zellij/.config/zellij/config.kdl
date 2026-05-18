@@ -160,7 +160,7 @@ keybinds clear-defaults=true {
         bind "Alt x" { CloseFocus; }
         // Session picker (Alt+m / Cmd+m)
         bind "Alt m" {
-            Run "bash" "-c" "$HOME/.local/bin/zellij-welcome" {
+            Run "bash" "-lc" "zellij-welcome" {
                 floating true
                 close_on_exit true
             }
@@ -382,7 +382,7 @@ default_mode "locked"
  
 // Path to the default editor to use to edit pane scrollbuffer
 // Default: $EDITOR or $VISUAL
-scrollback_editor "/Users/cgpp/.local/share/bob/nvim-bin/nvim"
+scrollback_editor "nvim"
  
 // A fixed name to always give the Zellij session.
 // Consider also setting `attach_to_session true,`
