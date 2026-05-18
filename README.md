@@ -2,7 +2,7 @@
 
 Personal workstation config. Current path is Nix first:
 
-- macOS: `nix-darwin` + Home Manager + Homebrew + agenix.
+- macOS: `nix-darwin` + Home Manager + Homebrew.
 - NixOS: host config for `dev`, plus shared Home Manager CLI/dotfiles.
 - WSL: use plain Nix for now; no dedicated `hosts/wsl` flake output yet.
 
@@ -66,7 +66,7 @@ nix/hosts/dev/                NixOS dev host
 nix/modules/darwin/           macOS-only modules
 nix/modules/nixos/            NixOS-only modules
 nix/modules/shared/           portable CLI + dotfile modules
-nix/secrets/                  agenix-encrypted secrets
+nix/secrets/                  encrypted SSH key material for macOS
 nvim/ zellij/ alacritty/      source dotfiles linked by Home Manager
 ```
 
