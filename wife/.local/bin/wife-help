@@ -1,0 +1,36 @@
+#!/bin/bash
+
+if ! pgrep -x elephant > /dev/null; then
+    setsid uwsm-app -- elephant &
+fi
+
+if ! pgrep -f "walker --gapplication-service" > /dev/null; then
+    setsid uwsm-app -- walker --gapplication-service &
+fi
+
+CHEST_SHEET="󰍉 GEAM + SPACE           App Launcher
+󰍉 GEAM + ESC             System Launcher
+──────────────────────────────────────────
+                   󰀻  APPS
+──────────────────────────────────────────
+󰪑 GEAM + B               Screensaver (Bye)
+󰖔 GEAM + N               Nightlight
+󰈹 GEAM + S               Zen Browser
+󱓧 GEAM + O               Obsidian
+󰚩 GEAM + P               Perplexity AI
+󰚩 GEAM + A               T3 Chat (AI)
+──────────────────────────────────────────
+                  󱂬  WINDOWS
+──────────────────────────────────────────
+󰅖 GEAM + Q               Close Window
+󰊓 GEAM + F               Toggle Fullscreen
+󰊓 GEAM + W               Toggle Float
+󰒫 GEAM + 1-0             Switch Workspace
+󰒫 GEAM + SHIFT + 1-0     Move Workspace
+󰜮 GEAM + HJKL            Switch Focus
+󰜮 GEAM + SHIFT + HJKL    Move Window"
+
+echo -e "$CHEST_SHEET" | walker --dmenu \
+    --placeholder "Search Shortcuts..." \
+    --width 500 \
+    --maxheight 600

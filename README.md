@@ -3,7 +3,8 @@
 Personal workstation config. Current path is Nix first:
 
 - macOS: `nix-darwin` + Home Manager + Homebrew.
-- NixOS: host config for `dev`, plus shared Home Manager CLI/dotfiles.
+- NixOS: host configs for `dev` and `cgpp-t14-nix`, plus shared Home Manager
+  CLI/dotfiles.
 - WSL: use plain Nix for now; no dedicated `hosts/wsl` flake output yet.
 
 ## macOS
@@ -30,7 +31,8 @@ After first build, grant macOS permissions in System Settings:
 
 ## NixOS
 
-This repo exposes one NixOS host: `dev`.
+This repo exposes a thin NixOS host, `dev`, and the new desktop migration host,
+`cgpp-t14-nix`.
 
 ```bash
 git clone https://github.com/GappelSolutions/dotfiles.git ~/dev/misc/dotfiles
@@ -41,6 +43,15 @@ sudo nixos-rebuild switch --flake .#dev
 
 `dev` is meant as a clean VM/thin dev host: SSH, Tailscale, Podman, Samba,
 CLI tools, shell, Neovim, Zellij, and shared dotfiles.
+
+The desktop host is for the ThinkPad dual boot milestone:
+
+```bash
+cd ~/dev/misc/dotfiles/nix
+sudo nixos-rebuild switch --flake .#cgpp-t14-nix
+```
+
+Its first-install runbook is in [nix/NIX_DESKTOP_PLAN.md](nix/NIX_DESKTOP_PLAN.md).
 
 ## WSL
 
@@ -63,10 +74,14 @@ module tree.
 nix/flake.nix                 flake entrypoint
 nix/hosts/macbook/            macOS host
 nix/hosts/dev/                NixOS dev host
+nix/hosts/desktop/cgpp-t14/   NixOS desktop migration host
 nix/modules/darwin/           macOS-only modules
 nix/modules/nixos/            NixOS-only modules
+nix/modules/desktop/          NixOS desktop services and Hyprland/Caelestia
 nix/modules/shared/           portable CLI + dotfile modules
 nix/secrets/                  encrypted SSH key material for macOS
+windows/.config/windows/      Dockur Windows compose for CareLink
+wife/                         shortcut reference helper and cheatsheet
 nvim/ zellij/ alacritty/      source dotfiles linked by Home Manager
 ```
 
@@ -77,5 +92,7 @@ nvim/ zellij/ alacritty/      source dotfiles linked by Home Manager
 - Keep macOS GUI, Homebrew, launchd, `/Applications`, and `/Users/cgpp` paths in
   Darwin modules.
 - Keep NixOS/VM services in NixOS modules.
+- Keep graphical laptop services in `nix/modules/desktop`.
 
 More detail: [nix/ARCHITECTURE.md](nix/ARCHITECTURE.md).
+Desktop migration plan: [nix/NIX_DESKTOP_PLAN.md](nix/NIX_DESKTOP_PLAN.md).

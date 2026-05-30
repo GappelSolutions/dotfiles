@@ -18,9 +18,19 @@
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    caelestia-shell = {
+      url = "github:caelestia-dots/shell";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    zen-browser = {
+      url = "github:youwen5/zen-browser-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = inputs@{ self, nixpkgs, nix-darwin, home-manager, agenix }:
+  outputs = inputs@{ self, nixpkgs, nix-darwin, home-manager, agenix, ... }:
     let
       darwinSystem = "aarch64-darwin";
       linuxSystem = "x86_64-linux";
@@ -63,6 +73,27 @@
               useUserPackages = true;
               backupFileExtension = "hm-backup";
               users.cgpp = import ./hosts/dev/home.nix;
+            };
+          }
+        ];
+      };
+
+      nixosConfigurations.cgpp-t14-nix = nixpkgs.lib.nixosSystem {
+        system = linuxSystem;
+        specialArgs = { inherit inputs; };
+        modules = [
+          ./hosts/desktop/cgpp-t14/configuration.nix
+          home-manager.nixosModules.home-manager
+          {
+            home-manager = {
+              useGlobalPkgs = true;
+              useUserPackages = true;
+              backupFileExtension = "hm-backup";
+              extraSpecialArgs = { inherit inputs; };
+              sharedModules = [
+                inputs.caelestia-shell.homeManagerModules.default
+              ];
+              users.cgpp = import ./hosts/desktop/cgpp-t14/home.nix;
             };
           }
         ];
