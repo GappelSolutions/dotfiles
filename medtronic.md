@@ -51,7 +51,24 @@ Actual file on the host:
 /home/cgpp/.config/windows/docker-compose.yml
 ```
 
+Repo-managed source for the NixOS desktop host:
+
+```text
+windows/.config/windows/docker-compose.yml
+nix/modules/desktop/windows-vm.nix
+nix/modules/desktop/home-windows-vm.nix
+```
+
 This is restart-persistent because it is in Docker Compose. The adapter must exist as `/dev/ttyUSB0` before the VM starts.
+
+On NixOS, set the password in an untracked env file before starting:
+
+```sh
+cp ~/dev/misc/dotfiles/windows/.config/windows/.env.example ~/.config/windows/.env
+nvim ~/.config/windows/.env
+chmod 600 ~/.config/windows/.env
+winup
+```
 
 ## Why This Works
 

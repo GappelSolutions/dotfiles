@@ -9,6 +9,13 @@ The repo is moving toward host-specific entrypoints over shared modules.
   tool paths.
 - `hosts/dev`: clean NixOS VM. It should stay server/thin-client friendly:
   SSH, Tailscale, CLI tools, shell, editor, and shared dotfiles only.
+- `hosts/desktop`: future NixOS desktop host family. It should be a real
+  laptop/desktop system, not a thin client: Hyprland, Caelestia shell,
+  NetworkManager, Bluetooth, printing, PipeWire, power/battery, Lenovo laptop
+  keys, clipboard history, keyboard layouts, monitor support, Codex CLI, and a
+  browser for auth. It may also carry explicit desktop workloads that are
+  already required, such as the Dockur Windows/CareLink VM. Keep it minimal and
+  declarative; do not copy Omarchy's package opinions.
 - `hosts/windows`: future Windows setup should be separate. Prefer a small
   bootstrap script for Windows Terminal, winget, PowerShell, WSL, and SSH
   rather than forcing Windows into the Nix module shape.
@@ -58,4 +65,6 @@ hardcoded in Lua. Examples: `DOTNET_ROOT`, `NETCOREDBG_PATH`, and shell paths.
 2. Make the dev VM reproducible from `nixosConfigurations.dev`.
 3. Move Mac GUI/workaround pieces into Darwin-only modules.
 4. Extract more shared CLI and dotfiles from the Mac modules when stable.
-5. Add Windows as a separate bootstrap path later.
+5. Add the desktop host as a separate NixOS host family, reusing shared CLI
+   modules but keeping graphical/session services in desktop-specific modules.
+6. Add Windows as a separate bootstrap path later.
