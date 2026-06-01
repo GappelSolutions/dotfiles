@@ -167,6 +167,7 @@ in
         lockBeforeSleep = false;
         timeouts = [ ];
       };
+      launcher.useFuzzy.apps = true;
       services.useTwelveHourClock = false;
     };
     cli = {

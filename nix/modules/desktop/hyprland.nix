@@ -67,9 +67,13 @@ in
 
   xdg.portal = {
     enable = true;
-    config.common.default = [ "hyprland" "gtk" ];
+    config.common = {
+      default = [ "hyprland" "gtk" ];
+      "org.freedesktop.impl.portal.FileChooser" = [ "termfilechooser" ];
+    };
     extraPortals = with pkgs; [
       xdg-desktop-portal-hyprland
+      xdg-desktop-portal-termfilechooser
       xdg-desktop-portal-gtk
     ];
   };
@@ -86,6 +90,7 @@ in
     catppuccin-cursors.mochaSky
     xdg-utils
     xdg-desktop-portal
+    xdg-desktop-portal-termfilechooser
     qt6.qtwayland
     libsForQt5.qt5.qtwayland
     glib

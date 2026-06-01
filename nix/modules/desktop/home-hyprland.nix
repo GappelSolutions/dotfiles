@@ -3,10 +3,6 @@
 let
   cursorName = "catppuccin-mocha-sky-cursors";
   cursorSize = 24;
-  nixosLogo = pkgs.fetchurl {
-    url = "https://brand.nixos.org/logos/nixos-logo-default-gradient-black-regular-horizontal-recommended.svg";
-    sha256 = "0lfjb39as2rppbpmdmki9wb862m9aq0pkyd76x0x89w8r7zx63ig";
-  };
   desktopIconOverrides = pkgs.runCommand "desktop-icon-overrides" { } ''
     install -D -m 0644 \
       ${pkgs.networkmanagerapplet}/share/icons/hicolor/scalable/apps/nm-device-wired.svg \
@@ -24,6 +20,7 @@ in
     catppuccin-cursors.mochaSky
     cliphist
     flameshot
+    hyprpicker
     hyprsunset
     libreoffice-fresh
     localsend
@@ -77,7 +74,9 @@ in
       decoration.rounding = 8;
 
       windowrule = [
-        "match:class ^(org.omarchy.screensaver)$, float 1, fullscreen 1, pin 1, no_anim 1"
+        "fullscreen on, match:class org.omarchy.screensaver"
+        "float on, match:class org.omarchy.screensaver"
+        "animation slide, match:class org.omarchy.screensaver"
         "match:class ^(ueberzugpp_.*)$, float 1, no_focus 1, no_initial_focus 1, no_anim 1"
       ];
 
@@ -196,48 +195,161 @@ in
     x11.enable = true;
   };
 
+  home.file.".local/bin/omarchy-launch-screensaver" = {
+    executable = true;
+    text = ''
+      #!${pkgs.bash}/bin/bash
+      set -euo pipefail
+
+      log_dir="''${XDG_STATE_HOME:-$HOME/.local/state}"
+      mkdir -p "$log_dir"
+      log_file="$log_dir/omarchy-screensaver.log"
+      log() { printf '%s launcher: %s\n' "$(${pkgs.coreutils}/bin/date -Is)" "$*" >> "$log_file"; }
+
+      log "requested"
+
+      if ${pkgs.hyprland}/bin/hyprctl clients -j | ${pkgs.jq}/bin/jq -e '.[] | select(.class == "org.omarchy.screensaver")' >/dev/null; then
+        log "already running"
+        exit 0
+      fi
+
+      log "dispatch alacritty"
+      ${pkgs.hyprland}/bin/hyprctl dispatch exec -- ${pkgs.alacritty}/bin/alacritty \
+        --class org.omarchy.screensaver \
+        --option 'window.decorations="None"' \
+        --option 'window.startup_mode="Fullscreen"' \
+        --option 'cursor.style.shape="Beam"' \
+        -e ${config.home.homeDirectory}/.local/bin/omarchy-screensaver >> "$log_file" 2>&1
+      log "dispatch returned"
+    '';
+  };
+
   home.file.".local/bin/omarchy-screensaver" = {
     executable = true;
     text = ''
       #!${pkgs.bash}/bin/bash
       set -euo pipefail
 
-      if ${pkgs.procps}/bin/pgrep -u "$USER" -f "org.omarchy.screensaver" >/dev/null; then
-        exit 0
-      fi
+      log_dir="''${XDG_STATE_HOME:-$HOME/.local/state}"
+      mkdir -p "$log_dir"
+      log_file="$log_dir/omarchy-screensaver.log"
+      log() { printf '%s screensaver[%s]: %s\n' "$(${pkgs.coreutils}/bin/date -Is)" "$$" "$*" >> "$log_file"; }
 
-      ${pkgs.alacritty}/bin/alacritty \
-        --class org.omarchy.screensaver \
-        --option 'window.decorations="None"' \
-        --option 'window.startup_mode="Fullscreen"' \
-        --option 'cursor.style.shape="Beam"' \
-        -e ${pkgs.bash}/bin/bash -lc '
-          trap "exit 0" INT TERM
-          printf "\033[?25l"
-          while true; do
-            clear
-            cols="$(${pkgs.ncurses}/bin/tput cols 2>/dev/null || printf 100)"
-            rows="$(${pkgs.ncurses}/bin/tput lines 2>/dev/null || printf 30)"
-            height=$((rows > 4 ? rows - 4 : rows))
-            ${pkgs.chafa}/bin/chafa \
-              --align center \
-              --valign center \
-              --size "''${cols}x''${height}" \
-              --symbols block \
-              --fill space \
-              ${nixosLogo} \
-              | ${pkgs.terminaltexteffects}/bin/tte \
-                  --canvas-width 0 \
-                  --canvas-height 0 \
-                  --anchor-canvas c \
-                  --anchor-text c \
-                  --frame-rate 30 \
-                  beams \
-                  --final-gradient-stops 84A0C6 89B8C2 B4BE82 \
-                  --final-gradient-direction horizontal
-            sleep 1
-          done
-        ' &
+      screensaver_in_focus() {
+        ${pkgs.hyprland}/bin/hyprctl activewindow -j | ${pkgs.jq}/bin/jq -e '.class == "org.omarchy.screensaver"' >/dev/null 2>&1
+      }
+
+      exit_screensaver() {
+        log "exit"
+        ${pkgs.hyprland}/bin/hyprctl keyword cursor:invisible false >/dev/null 2>&1 || true
+        ${pkgs.procps}/bin/pkill -P "$$" 2>/dev/null || true
+        ${pkgs.procps}/bin/pkill -u "$USER" -f "[.]tte-wrapped|[t]erminaltexteffects" 2>/dev/null || true
+        ${pkgs.procps}/bin/pkill -u "$USER" -f "[o]rg.omarchy.screensaver" 2>/dev/null || true
+        exit 0
+      }
+
+      trap exit_screensaver SIGINT SIGTERM SIGHUP SIGQUIT
+      printf '\033]11;rgb:00/00/00\007'
+      ${pkgs.hyprland}/bin/hyprctl keyword cursor:invisible true >/dev/null 2>&1 || true
+
+      input_file="$XDG_RUNTIME_DIR/omarchy-screensaver.txt"
+      ascii_source="${config.home.homeDirectory}/.local/share/omarchy-screensaver/nixos-ascii.txt"
+      tty_name="$(tty 2>/dev/null)"
+      started_at="$(${pkgs.coreutils}/bin/date +%s)"
+      log "started tty=$tty_name"
+
+      while true; do
+        cols="$(${pkgs.ncurses}/bin/tput cols 2>/dev/null || printf 100)"
+        rows="$(${pkgs.ncurses}/bin/tput lines 2>/dev/null || printf 30)"
+        log "prepare cols=$cols rows=$rows source=$ascii_source"
+
+        if [ ! -s "$ascii_source" ]; then
+          printf 'Missing %s\n' "$ascii_source" > "$input_file"
+        else
+          ${pkgs.gawk}/bin/awk -v cols="$cols" -v rows="$rows" '
+            {
+              sub(/[[:space:]]+$/, "")
+              lines[NR] = $0
+              if ($0 != "") {
+                match($0, /[^ ]/)
+                if (RSTART > 0 && (min == "" || RSTART - 1 < min))
+                  min = RSTART - 1
+              }
+            }
+            END {
+              if (min == "")
+                min = 0
+
+              for (i = 1; i <= NR; i++)
+                print substr(lines[i], min + 1)
+            }
+          ' "$ascii_source" > "$input_file"
+        fi
+
+        ${pkgs.terminaltexteffects}/bin/tte \
+          -i "$input_file" \
+          --frame-rate 120 \
+          --canvas-width 0 \
+          --canvas-height 0 \
+          --reuse-canvas \
+          --anchor-canvas c \
+          --anchor-text c \
+          --random-effect \
+          --no-eol \
+          --no-restore-cursor 2>/dev/null &
+        tte_pid="$!"
+        log "tte started pid=$tte_pid"
+
+        while ${pkgs.coreutils}/bin/kill -0 "$tte_pid" 2>/dev/null; do
+          now="$(${pkgs.coreutils}/bin/date +%s)"
+          if read -n1 -t 1; then
+            log "input received"
+            exit_screensaver
+          fi
+          if (( now - started_at > 3 )) && ! screensaver_in_focus; then
+            log "lost focus"
+            exit_screensaver
+          fi
+        done
+        wait "$tte_pid" 2>/dev/null || true
+        log "tte exited"
+      done
+    '';
+  };
+
+  home.file.".local/bin/omarchy-stop-screensaver" = {
+    executable = true;
+    text = ''
+      #!${pkgs.bash}/bin/bash
+      set -euo pipefail
+
+      log_dir="''${XDG_STATE_HOME:-$HOME/.local/state}"
+      mkdir -p "$log_dir"
+      log_file="$log_dir/omarchy-screensaver.log"
+      printf '%s stop: requested\n' "$(${pkgs.coreutils}/bin/date -Is)" >> "$log_file"
+
+      ${pkgs.hyprland}/bin/hyprctl keyword cursor:invisible false >/dev/null 2>&1 || true
+      ${pkgs.procps}/bin/pkill -u "$USER" -f "[.]tte-wrapped|[t]erminaltexteffects" 2>/dev/null || true
+
+      pids="$(${pkgs.hyprland}/bin/hyprctl clients -j | ${pkgs.jq}/bin/jq -r '.[] | select(.class == "org.omarchy.screensaver") | .pid')"
+      for pid in $pids; do
+        kill "$pid" 2>/dev/null || true
+      done
+    '';
+  };
+
+  home.file.".local/share/omarchy-screensaver/nixos-ascii.txt".source =
+    ../../assets/screensaver/nixos-ascii.txt;
+
+  home.file.".local/bin/pick-color" = {
+    executable = true;
+    text = ''
+      #!${pkgs.bash}/bin/bash
+      set -euo pipefail
+
+      color="$(${pkgs.hyprpicker}/bin/hyprpicker --format hex)"
+      printf '%s' "$color" | ${pkgs.wl-clipboard}/bin/wl-copy
+      ${pkgs.libnotify}/bin/notify-send "Color copied" "$color"
     '';
   };
 
@@ -248,9 +360,9 @@ in
     }
 
     listener {
-      timeout = 300
-      on-timeout = ${config.home.homeDirectory}/.local/bin/omarchy-screensaver
-      on-resume = ${pkgs.procps}/bin/pkill -u $USER -f "[o]rg.omarchy.screensaver" || true
+      timeout = 120
+      on-timeout = ${config.home.homeDirectory}/.local/bin/omarchy-launch-screensaver
+      on-resume = ${config.home.homeDirectory}/.local/bin/omarchy-stop-screensaver
     }
   '';
 
@@ -282,59 +394,95 @@ in
     MimeType=inode/directory;
   '';
 
-  xdg.desktopEntries.color-picker = {
-    name = "Color Picker";
-    genericName = "Screen Color Picker";
-    comment = "Pick a screen color and copy it to the clipboard";
-    exec = "caelestia shell picker openClip";
-    terminal = false;
-    categories = [ "Utility" "Graphics" ];
-  };
+  xdg.dataFile."applications/omarchy-screensaver.desktop".text = ''
+    [Desktop Entry]
+    Type=Application
+    Name=Screensaver
+    GenericName=Terminal Screensaver
+    Comment=Start the Omarchy-style screensaver
+    Icon=cgpp-screensaver
+    Exec=${config.home.homeDirectory}/.local/bin/omarchy-launch-screensaver
+    Terminal=false
+    Categories=Utility;System;
+  '';
 
-  xdg.desktopEntries.lock-session = {
-    name = "Lock";
-    genericName = "Lock Session";
-    comment = "Lock the current session";
-    exec = "caelestia shell lock lock";
-    terminal = false;
-    categories = [ "System" ];
-  };
+  xdg.dataFile."applications/color-picker.desktop".text = ''
+    [Desktop Entry]
+    Type=Application
+    Name=Color Picker
+    GenericName=Screen Color Picker
+    Comment=Pick a screen color and copy it to the clipboard
+    Icon=color-picker
+    Exec=${config.home.homeDirectory}/.local/bin/pick-color
+    Terminal=false
+    Categories=Utility;Graphics;
+    Keywords=color;picker;eyedropper;
+  '';
 
-  xdg.desktopEntries.logout-session = {
-    name = "Log Out";
-    genericName = "End Session";
-    comment = "Log out of Hyprland";
-    exec = "${pkgs.hyprland}/bin/hyprctl dispatch exit";
-    terminal = false;
-    categories = [ "System" ];
-  };
+  xdg.dataFile."applications/lock-session.desktop".text = ''
+    [Desktop Entry]
+    Type=Application
+    Name=Lock
+    GenericName=Lock Session
+    Comment=Lock the current session
+    Icon=cgpp-lock
+    Exec=caelestia shell lock lock
+    Terminal=false
+    Categories=System;
+    Keywords=lock;screen;session;
+  '';
 
-  xdg.desktopEntries.suspend-system = {
-    name = "Suspend";
-    genericName = "Suspend System";
-    comment = "Suspend the computer";
-    exec = "${pkgs.systemd}/bin/systemctl suspend";
-    terminal = false;
-    categories = [ "System" ];
-  };
+  xdg.dataFile."applications/logout-session.desktop".text = ''
+    [Desktop Entry]
+    Type=Application
+    Name=Log Out
+    GenericName=End Session
+    Comment=Log out of Hyprland
+    Icon=cgpp-logout
+    Exec=${pkgs.hyprland}/bin/hyprctl dispatch exit
+    Terminal=false
+    Categories=System;
+    Keywords=logout;log out;session;exit;
+  '';
 
-  xdg.desktopEntries.restart-system = {
-    name = "Restart";
-    genericName = "Restart System";
-    comment = "Restart the computer";
-    exec = "${pkgs.systemd}/bin/systemctl reboot";
-    terminal = false;
-    categories = [ "System" ];
-  };
+  xdg.dataFile."applications/suspend-system.desktop".text = ''
+    [Desktop Entry]
+    Type=Application
+    Name=Suspend
+    GenericName=Suspend System
+    Comment=Suspend the computer
+    Icon=cgpp-suspend
+    Exec=${pkgs.systemd}/bin/systemctl suspend
+    Terminal=false
+    Categories=System;
+    Keywords=suspend;sleep;
+  '';
 
-  xdg.desktopEntries.shutdown-system = {
-    name = "Shut Down";
-    genericName = "Power Off";
-    comment = "Shut down the computer";
-    exec = "${pkgs.systemd}/bin/systemctl poweroff";
-    terminal = false;
-    categories = [ "System" ];
-  };
+  xdg.dataFile."applications/restart-system.desktop".text = ''
+    [Desktop Entry]
+    Type=Application
+    Name=Restart
+    GenericName=Restart System
+    Comment=Restart the computer
+    Icon=cgpp-restart
+    Exec=${pkgs.systemd}/bin/systemctl reboot
+    Terminal=false
+    Categories=System;
+    Keywords=restart;reboot;
+  '';
+
+  xdg.dataFile."applications/shutdown-system.desktop".text = ''
+    [Desktop Entry]
+    Type=Application
+    Name=Shut Down
+    GenericName=Power Off
+    Comment=Shut down the computer
+    Icon=cgpp-shutdown
+    Exec=${pkgs.systemd}/bin/systemctl poweroff
+    Terminal=false
+    Categories=System;
+    Keywords=shutdown;shut down;poweroff;power off;
+  '';
 
   xdg.dataFile."icons/hicolor/scalable/apps/preferences-system-network.svg".source =
     "${pkgs.networkmanagerapplet}/share/icons/hicolor/scalable/apps/nm-device-wired.svg";
@@ -342,10 +490,86 @@ in
   xdg.dataFile."icons/hicolor/256x256/apps/yazi.png".source =
     "${pkgs.yazi}/share/pixmaps/yazi.png";
 
+  xdg.dataFile."icons/hicolor/scalable/apps/color-picker.svg".text = ''
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+      <defs>
+        <linearGradient id="handle" x1="18" y1="46" x2="50" y2="14" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#84a0c6"/>
+          <stop offset="1" stop-color="#89b8c2"/>
+        </linearGradient>
+      </defs>
+      <path fill="#c6c8d1" d="M47.7 5.2a7.7 7.7 0 0 0-5.5 2.3l-4.6 4.6-2.1-2.1a3.4 3.4 0 0 0-4.8 4.8l18.5 18.5a3.4 3.4 0 1 0 4.8-4.8l-2.1-2.1 4.6-4.6A7.8 7.8 0 0 0 47.7 5.2Z"/>
+      <path fill="url(#handle)" d="M35.5 18.5 13.3 40.7a8 8 0 0 0-2 3.3L8.7 54.4a1.8 1.8 0 0 0 2.1 2.1l10.4-2.6a8 8 0 0 0 3.3-2l22.2-22.2-11.2-11.2Z"/>
+      <path fill="#161821" fill-opacity=".55" d="m17.7 45.1 21.2-21.2 3.2 3.2-21.2 21.2a3.4 3.4 0 0 1-1.4.8l-4.1 1 1-4.1a3.4 3.4 0 0 1 1.3-.9Z"/>
+      <path fill="#e27878" d="M9.8 54.3c4.1-1.2 7.4-.5 9.8 2.1H10.3a1.8 1.8 0 0 1-.5-2.1Z"/>
+    </svg>
+  '';
+
+  xdg.dataFile."icons/hicolor/scalable/apps/cgpp-shutdown.svg".text = ''
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+      <circle cx="32" cy="32" r="26" fill="#1e2132"/>
+      <path fill="none" stroke="#e27878" stroke-linecap="round" stroke-width="7" d="M32 12v21"/>
+      <path fill="none" stroke="#c6c8d1" stroke-linecap="round" stroke-width="6" d="M21.3 20.7a18 18 0 1 0 21.4 0"/>
+    </svg>
+  '';
+
+  xdg.dataFile."icons/hicolor/scalable/apps/cgpp-restart.svg".text = ''
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+      <circle cx="32" cy="32" r="26" fill="#1e2132"/>
+      <path fill="none" stroke="#84a0c6" stroke-linecap="round" stroke-linejoin="round" stroke-width="6" d="M47 24a17 17 0 1 0 1.7 13"/>
+      <path fill="#84a0c6" d="M47 11v15H32z"/>
+    </svg>
+  '';
+
+  xdg.dataFile."icons/hicolor/scalable/apps/cgpp-logout.svg".text = ''
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+      <rect width="42" height="42" x="9" y="11" fill="#1e2132" rx="8"/>
+      <path fill="none" stroke="#c6c8d1" stroke-linecap="round" stroke-linejoin="round" stroke-width="5" d="M31 21h11v22H31"/>
+      <path fill="none" stroke="#e2a478" stroke-linecap="round" stroke-linejoin="round" stroke-width="6" d="M12 32h24"/>
+      <path fill="#e2a478" d="m33 20 13 12-13 12z"/>
+    </svg>
+  '';
+
+  xdg.dataFile."icons/hicolor/scalable/apps/cgpp-suspend.svg".text = ''
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+      <circle cx="32" cy="32" r="26" fill="#1e2132"/>
+      <path fill="#89b8c2" d="M24 14h8L21 32h12L20 52h-8l11-17H11z"/>
+      <path fill="#c6c8d1" d="M38 18h15L39 41h15v6H28l14-23H38z"/>
+    </svg>
+  '';
+
+  xdg.dataFile."icons/hicolor/scalable/apps/cgpp-lock.svg".text = ''
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+      <rect width="42" height="32" x="11" y="26" fill="#1e2132" rx="7"/>
+      <path fill="none" stroke="#84a0c6" stroke-linecap="round" stroke-width="6" d="M20 27v-7a12 12 0 0 1 24 0v7"/>
+      <circle cx="32" cy="40" r="5" fill="#c6c8d1"/>
+      <path fill="#c6c8d1" d="M30 42h4l2 10h-8z"/>
+    </svg>
+  '';
+
+  xdg.dataFile."icons/hicolor/scalable/apps/cgpp-screensaver.svg".text = ''
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+      <rect width="50" height="34" x="7" y="10" fill="#1e2132" rx="6"/>
+      <path fill="#89b8c2" d="M22 19h20v4H22zM17 28h30v4H17zM25 37h14v4H25z"/>
+      <path fill="none" stroke="#c6c8d1" stroke-linecap="round" stroke-width="5" d="M24 53h16"/>
+      <path fill="none" stroke="#c6c8d1" stroke-linecap="round" stroke-width="4" d="M32 44v9"/>
+    </svg>
+  '';
+
   xdg.mimeApps = {
     enable = true;
     defaultApplications."inode/directory" = [ "yazi.desktop" ];
   };
+
+  xdg.configFile."xdg-desktop-portal-termfilechooser/config".text = ''
+    [filechooser]
+    cmd=yazi-wrapper.sh
+    create_help_file=0
+    default_dir=$HOME
+    env=TERMCMD=${pkgs.alacritty}/bin/alacritty --title 'Yazi File Picker' -e
+    open_mode=suggested
+    save_mode=suggested
+  '';
 
   xdg.configFile."flameshot/flameshot.ini".text = ''
     [General]
