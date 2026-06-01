@@ -2,10 +2,8 @@
 
 {
   xdg.configFile = {
-    "nvim".source =
-      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dev/misc/dotfiles/nvim/.config/nvim";
-    "lazygit".source =
-      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dev/misc/dotfiles/lazygit/.config/lazygit";
+    "nvim".source = ../../../nvim/.config/nvim;
+    "lazygit".source = ../../../lazygit/.config/lazygit;
     "yazi".source = ../../../yazi/.config/yazi;
     "zellij".source = ../../../zellij/.config/zellij;
   };

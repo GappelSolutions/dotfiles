@@ -12,6 +12,16 @@ let
       ${pkgs.yazi}/share/pixmaps/yazi.png \
       $out/share/icons/hicolor/256x256/apps/yazi.png
   '';
+  recordScreenIconSvg = pkgs.writeText "cgpp-record-screen.svg" ''
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+      <rect width="50" height="34" x="7" y="13" fill="#1e2132" rx="7"/>
+      <path fill="none" stroke="#c6c8d1" stroke-width="4" d="M13 19h38v22H13z"/>
+      <circle cx="25" cy="30" r="7" fill="#e27878"/>
+      <path fill="#84a0c6" d="m33 25 13-7v24l-13-7z"/>
+      <path fill="none" stroke="#c6c8d1" stroke-linecap="round" stroke-width="5" d="M24 55h16"/>
+      <path fill="none" stroke="#c6c8d1" stroke-linecap="round" stroke-width="4" d="M32 47v8"/>
+    </svg>
+  '';
 in
 {
   home.packages = with pkgs; [
@@ -29,8 +39,11 @@ in
     pavucontrol
     spotify
     terminaltexteffects
+    wf-recorder
     wl-clipboard
     wtype
+    xdg-desktop-portal-gtk
+    xdg-desktop-portal-termfilechooser
   ];
 
   wayland.windowManager.hyprland = {
@@ -77,6 +90,7 @@ in
         "fullscreen on, match:class org.omarchy.screensaver"
         "float on, match:class org.omarchy.screensaver"
         "animation slide, match:class org.omarchy.screensaver"
+        "float on, match:title YaziFilePicker"
         "match:class ^(ueberzugpp_.*)$, float 1, no_focus 1, no_initial_focus 1, no_anim 1"
       ];
 
@@ -118,7 +132,7 @@ in
         "$mod CTRL, code:45, exec, hyprctl switchxkblayout all next"
         "$mod, T, exec, alacritty"
         "$mod, M, exec, ~/.local/bin/wife-help"
-        "$mod, S, exec, zen"
+        "$mod, S, exec, env GTK_USE_PORTAL=1 /run/current-system/sw/bin/zen"
         "$mod, E, exec, alacritty -e yazi"
         "$mod, N, exec, pgrep -x hyprsunset && pkill -x hyprsunset || hyprsunset -t 4000"
         "$mod, B, exec, systemctl suspend"
@@ -184,6 +198,11 @@ in
         ",Menu, exec, env QT_QPA_PLATFORM=wayland flameshot gui"
       ];
 
+      bindm = [
+        "$mod, mouse:272, movewindow"
+        "$mod, mouse:273, resizewindow"
+      ];
+
     };
   };
 
@@ -204,9 +223,11 @@ in
       log_dir="''${XDG_STATE_HOME:-$HOME/.local/state}"
       mkdir -p "$log_dir"
       log_file="$log_dir/omarchy-screensaver.log"
+      launch_file="$log_dir/omarchy-screensaver-launch"
       log() { printf '%s launcher: %s\n' "$(${pkgs.coreutils}/bin/date -Is)" "$*" >> "$log_file"; }
 
       log "requested"
+      ${pkgs.coreutils}/bin/date +%s > "$launch_file"
 
       if ${pkgs.hyprland}/bin/hyprctl clients -j | ${pkgs.jq}/bin/jq -e '.[] | select(.class == "org.omarchy.screensaver")' >/dev/null; then
         log "already running"
@@ -326,7 +347,17 @@ in
       log_dir="''${XDG_STATE_HOME:-$HOME/.local/state}"
       mkdir -p "$log_dir"
       log_file="$log_dir/omarchy-screensaver.log"
+      launch_file="$log_dir/omarchy-screensaver-launch"
       printf '%s stop: requested\n' "$(${pkgs.coreutils}/bin/date -Is)" >> "$log_file"
+
+      if [ -r "$launch_file" ]; then
+        launch_at="$(cat "$launch_file" 2>/dev/null || printf 0)"
+        now="$(${pkgs.coreutils}/bin/date +%s)"
+        if [ "$launch_at" -gt 0 ] 2>/dev/null && (( now - launch_at < 5 )); then
+          printf '%s stop: ignored during launch grace\n' "$(${pkgs.coreutils}/bin/date -Is)" >> "$log_file"
+          exit 0
+        fi
+      fi
 
       ${pkgs.hyprland}/bin/hyprctl keyword cursor:invisible false >/dev/null 2>&1 || true
       ${pkgs.procps}/bin/pkill -u "$USER" -f "[.]tte-wrapped|[t]erminaltexteffects" 2>/dev/null || true
@@ -352,6 +383,49 @@ in
       ${pkgs.libnotify}/bin/notify-send "Color copied" "$color"
     '';
   };
+
+  home.file.".local/bin/record-screen" = {
+    executable = true;
+    text = ''
+      #!${pkgs.bash}/bin/bash
+      set -euo pipefail
+
+      state_dir="''${XDG_STATE_HOME:-$HOME/.local/state}"
+      video_dir="''${XDG_VIDEOS_DIR:-$HOME/Videos}/Screen Recordings"
+      pid_file="$state_dir/wf-recorder.pid"
+      mkdir -p "$state_dir" "$video_dir"
+
+      if [ -r "$pid_file" ]; then
+        pid="$(cat "$pid_file" 2>/dev/null || true)"
+        if [ -n "$pid" ] && ${pkgs.procps}/bin/ps -p "$pid" -o comm= 2>/dev/null | ${pkgs.gnugrep}/bin/grep -q '^wf-recorder$'; then
+          ${pkgs.coreutils}/bin/kill -INT "$pid" 2>/dev/null || true
+          ${pkgs.coreutils}/bin/rm -f "$pid_file"
+          ${pkgs.libnotify}/bin/notify-send "Screen recording stopped" "Saved in $video_dir"
+          exit 0
+        fi
+      fi
+
+      output="$video_dir/screen-$(${pkgs.coreutils}/bin/date +%Y-%m-%d-%H%M%S).mkv"
+      ${pkgs.wf-recorder}/bin/wf-recorder -f "$output" >/dev/null 2>&1 &
+      printf '%s\n' "$!" > "$pid_file"
+      ${pkgs.libnotify}/bin/notify-send "Screen recording started" "$output"
+    '';
+  };
+
+  home.file.".local/bin/zen" = {
+    executable = true;
+    text = ''
+      #!${pkgs.bash}/bin/bash
+      export GTK_USE_PORTAL=1
+      exec /run/current-system/sw/bin/zen "$@"
+    '';
+  };
+
+  xdg.dataFile."xdg-desktop-portal/hyprland-portals.conf".text = ''
+    [preferred]
+    default=hyprland;gtk
+    org.freedesktop.impl.portal.FileChooser=termfilechooser
+  '';
 
   xdg.configFile."hypr/hypridle.conf".text = ''
     general {
@@ -431,6 +505,19 @@ in
     Terminal=false
     Categories=Utility;Graphics;
     Keywords=color;picker;eyedropper;
+  '';
+
+  xdg.dataFile."applications/record-screen.desktop".text = ''
+    [Desktop Entry]
+    Type=Application
+    Name=Record Screen
+    GenericName=Screen Recorder
+    Comment=Start or stop screen recording
+    Icon=${config.home.homeDirectory}/.local/share/icons/hicolor/256x256/apps/cgpp-record-screen.png
+    Exec=${config.home.homeDirectory}/.local/bin/record-screen
+    Terminal=false
+    Categories=Utility;AudioVideo;Recorder;
+    Keywords=record;screen;video;capture;stop;
   '';
 
   xdg.dataFile."applications/lock-session.desktop".text = ''
@@ -519,6 +606,17 @@ in
     </svg>
   '';
 
+  xdg.dataFile."icons/hicolor/scalable/apps/cgpp-record-screen.svg".source =
+    recordScreenIconSvg;
+
+  xdg.dataFile."icons/hicolor/256x256/apps/cgpp-record-screen.png".source =
+    pkgs.runCommand "cgpp-record-screen.png" { } ''
+      ${pkgs.imagemagick}/bin/magick -background none \
+        ${recordScreenIconSvg} \
+        -resize 256x256 \
+        $out
+    '';
+
   xdg.dataFile."icons/hicolor/scalable/apps/cgpp-shutdown.svg".text = ''
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
       <circle cx="32" cy="32" r="26" fill="#1e2132"/>
@@ -577,13 +675,20 @@ in
 
   xdg.configFile."xdg-desktop-portal-termfilechooser/config".text = ''
     [filechooser]
-    cmd=yazi-wrapper.sh
+    cmd=${pkgs.xdg-desktop-portal-termfilechooser}/share/xdg-desktop-portal-termfilechooser/yazi-wrapper.sh
     create_help_file=0
     default_dir=$HOME
-    env=TERMCMD=${pkgs.alacritty}/bin/alacritty --title 'Yazi File Picker' -e
+    env=TERMCMD=${pkgs.alacritty}/bin/alacritty --title YaziFilePicker -e
     open_mode=suggested
     save_mode=suggested
   '';
+
+  xdg.configFile."zen/e5hj9krg.Default Profile/user.js" = {
+    force = true;
+    text = ''
+      user_pref("widget.use-xdg-desktop-portal.file-picker", 1);
+    '';
+  };
 
   xdg.configFile."flameshot/flameshot.ini".text = ''
     [General]

@@ -71,6 +71,12 @@ Start with CareLink serial passthrough only after the adapter exists as `/dev/tt
 winusb
 ```
 
+Start with CareLink serial passthrough and open RDP:
+
+```sh
+winrdp-usb
+```
+
 On NixOS, the Home Manager module creates an untracked env file on first activation:
 
 ```sh
@@ -115,7 +121,7 @@ If CareLink stops finding the adapter:
 windown
 ls -l /dev/ttyUSB* /dev/serial/by-id/*
 lsusb | rg '10c4|ea60|Silicon'
-winusb
+winrdp-usb
 ```
 
 If `/dev/ttyUSB0` is missing, unplug and replug the Blue Adapter, then start the VM again.
