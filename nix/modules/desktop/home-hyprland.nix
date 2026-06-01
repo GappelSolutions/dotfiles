@@ -71,6 +71,30 @@ in
 
       decoration.rounding = 8;
 
+      windowrule = [
+        "match:class ^(ueberzugpp_.*)$, float 1, no_focus 1, no_initial_focus 1, no_anim 1"
+      ];
+
+      animations = {
+        enabled = true;
+        bezier = [
+          "snappy, 0.15, 0.85, 0.25, 1.0"
+          "quickExit, 0.30, 0.00, 0.60, 1.00"
+        ];
+        animation = [
+          "global, 1, 4.5, snappy"
+          "windows, 1, 4, snappy, popin 88%"
+          "windowsOut, 1, 2.5, quickExit, popin 92%"
+          "windowsMove, 1, 3.5, snappy"
+          "fade, 1, 3, quickExit"
+          "fadeOut, 1, 2, quickExit"
+          "fadeLayersOut, 1, 2, quickExit"
+          "workspaces, 1, 4.5, snappy"
+          "workspacesOut, 1, 3, snappy"
+          "specialWorkspaceOut, 1, 3, snappy"
+        ];
+      };
+
       exec-once = [
         "hyprctl setcursor ${cursorName} ${toString cursorSize}"
         "wl-paste --type text --watch cliphist store"
@@ -96,6 +120,7 @@ in
         "$mod, O, exec, obsidian"
         "$mod, P, exec, xdg-open https://www.perplexity.ai/"
         "$mod, A, exec, xdg-open https://t3.chat/"
+        "$mod, V, exec, caelestia clipboard"
         "$mod, Q, killactive"
         "$mod, F, fullscreen, 0"
         "$mod, W, togglefloating"
@@ -177,6 +202,60 @@ in
     Categories=System;FileManager;
     MimeType=inode/directory;
   '';
+
+  xdg.desktopEntries.color-picker = {
+    name = "Color Picker";
+    genericName = "Screen Color Picker";
+    comment = "Pick a screen color and copy it to the clipboard";
+    exec = "caelestia shell picker openClip";
+    terminal = false;
+    categories = [ "Utility" "Graphics" ];
+  };
+
+  xdg.desktopEntries.lock-session = {
+    name = "Lock";
+    genericName = "Lock Session";
+    comment = "Lock the current session";
+    exec = "caelestia shell lock lock";
+    terminal = false;
+    categories = [ "System" ];
+  };
+
+  xdg.desktopEntries.logout-session = {
+    name = "Log Out";
+    genericName = "End Session";
+    comment = "Log out of Hyprland";
+    exec = "${pkgs.hyprland}/bin/hyprctl dispatch exit";
+    terminal = false;
+    categories = [ "System" ];
+  };
+
+  xdg.desktopEntries.suspend-system = {
+    name = "Suspend";
+    genericName = "Suspend System";
+    comment = "Suspend the computer";
+    exec = "${pkgs.systemd}/bin/systemctl suspend";
+    terminal = false;
+    categories = [ "System" ];
+  };
+
+  xdg.desktopEntries.restart-system = {
+    name = "Restart";
+    genericName = "Restart System";
+    comment = "Restart the computer";
+    exec = "${pkgs.systemd}/bin/systemctl reboot";
+    terminal = false;
+    categories = [ "System" ];
+  };
+
+  xdg.desktopEntries.shutdown-system = {
+    name = "Shut Down";
+    genericName = "Power Off";
+    comment = "Shut down the computer";
+    exec = "${pkgs.systemd}/bin/systemctl poweroff";
+    terminal = false;
+    categories = [ "System" ];
+  };
 
   xdg.dataFile."icons/hicolor/scalable/apps/preferences-system-network.svg".source =
     "${pkgs.networkmanagerapplet}/share/icons/hicolor/scalable/apps/nm-device-wired.svg";

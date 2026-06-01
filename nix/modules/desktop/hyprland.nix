@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ lib, pkgs, ... }:
 
 let
   sddmIcebergTheme = pkgs.stdenvNoCC.mkDerivation {
@@ -13,6 +13,8 @@ let
       runHook postInstall
     '';
   };
+
+  cursorName = "catppuccin-mocha-sky-cursors";
 
   sddmWithGreeterAlias = pkgs.kdePackages.sddm.overrideAttrs (old: {
     buildCommand = old.buildCommand + ''
@@ -37,12 +39,20 @@ in
         compositor = "kwin";
       };
       settings = {
+        General = {
+          GreeterEnvironment = lib.mkForce "QT_WAYLAND_SHELL_INTEGRATION=layer-shell,QML_DISABLE_DISK_CACHE=1";
+        };
+        Theme = {
+          CursorTheme = cursorName;
+          CursorSize = 24;
+        };
         Users = {
           RememberLastUser = true;
           RememberLastSession = true;
         };
       };
       extraPackages = with pkgs.kdePackages; [
+        pkgs.catppuccin-cursors.mochaSky
         qtsvg
       ];
     };
@@ -73,6 +83,7 @@ in
 
   environment.systemPackages = with pkgs; [
     sddmIcebergTheme
+    catppuccin-cursors.mochaSky
     xdg-utils
     xdg-desktop-portal
     qt6.qtwayland
