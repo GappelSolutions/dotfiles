@@ -1,13 +1,14 @@
 { pkgs, ... }:
 
 {
-  networking.networkmanager = {
-    enable = true;
-    wifi.backend = "iwd";
+  networking = {
+    networkmanager = {
+      enable = true;
+      wifi.backend = "iwd";
+    };
+    wireless.iwd.enable = true;
+    firewall.checkReversePath = "loose";
   };
-
-  networking.wireless.iwd.enable = true;
-  networking.firewall.checkReversePath = "loose";
 
   environment.systemPackages = with pkgs; [
     networkmanager

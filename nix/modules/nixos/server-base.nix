@@ -8,47 +8,53 @@ in
   i18n.defaultLocale = "en_US.UTF-8";
   i18n.extraLocaleSettings.LC_CTYPE = "en_US.UTF-8";
 
-  networking.useDHCP = lib.mkDefault true;
-  networking.firewall.checkReversePath = "loose";
-  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 445 ];
-
-  services.openssh = {
-    enable = true;
-    settings = {
-      PasswordAuthentication = false;
-      KbdInteractiveAuthentication = false;
-      PermitRootLogin = "no";
+  networking = {
+    useDHCP = lib.mkDefault true;
+    firewall = {
+      checkReversePath = "loose";
+      interfaces.tailscale0.allowedTCPPorts = [ 445 ];
     };
   };
 
-  services.tailscale.enable = true;
+  services = {
+    openssh = {
+      enable = true;
+      settings = {
+        PasswordAuthentication = false;
+        KbdInteractiveAuthentication = false;
+        PermitRootLogin = "no";
+      };
+    };
+
+    tailscale.enable = true;
+
+    samba = {
+      enable = true;
+      openFirewall = false;
+      settings = {
+        global = {
+          workgroup = "WORKGROUP";
+          security = "user";
+          "map to guest" = "Bad User";
+          "server min protocol" = "SMB3";
+        };
+        dev = {
+          path = "/home/cgpp/dev";
+          browseable = "yes";
+          writeable = "yes";
+          "guest ok" = "yes";
+          "force user" = "cgpp";
+          "create mask" = "0644";
+          "directory mask" = "0755";
+        };
+      };
+    };
+  };
 
   virtualisation.podman = {
     enable = true;
     dockerCompat = true;
     defaultNetwork.settings.dns_enabled = true;
-  };
-
-  services.samba = {
-    enable = true;
-    openFirewall = false;
-    settings = {
-      global = {
-        workgroup = "WORKGROUP";
-        security = "user";
-        "map to guest" = "Bad User";
-        "server min protocol" = "SMB3";
-      };
-      dev = {
-        path = "/home/cgpp/dev";
-        browseable = "yes";
-        writeable = "yes";
-        "guest ok" = "yes";
-        "force user" = "cgpp";
-        "create mask" = "0644";
-        "directory mask" = "0755";
-      };
-    };
   };
 
   users.users.cgpp = {

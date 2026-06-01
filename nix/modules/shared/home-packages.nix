@@ -6,13 +6,8 @@ in
 {
   home.packages = [
     zellij-welcome
-    pkgs.codex
-    pkgs.godot_4-mono
   ] ++ (with pkgs; [
     git
-    age
-    stow
-
     zoxide
     fzf
     eza
@@ -20,38 +15,34 @@ in
     fd
     bat
     delta
-
     yazi
+    ueberzugpp
+    chafa
+    imagemagick
+    ffmpegthumbnailer
+    poppler-utils
     lazygit
+    lazydocker
     btop
     bottom
-    lazydocker
-
     zellij
     tmux
-    neovim
-
     nodejs
     bun
-    bruno
+    dotnet-sdk
+    gcc
+    gnumake
+    cmake
+    pkg-config
     gh
-    sops
-
-    typst
-    qpdf
-
     jq
-    nerdfetch
-    unar
+    unzip
     zip
-    socat
-    rclone
     wget
     pandoc
     ffmpeg
-    luarocks
     rustup
-    pipx
     sshpass
+    neovim
   ]);
 }
