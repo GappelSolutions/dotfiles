@@ -1,8 +1,12 @@
-{ enableCaelestia ? true, lib, pkgs, ... }:
+{ config, enableCaelestia ? true, lib, pkgs, ... }:
 
 let
   cursorName = "catppuccin-mocha-sky-cursors";
   cursorSize = 24;
+  nixosLogo = pkgs.fetchurl {
+    url = "https://brand.nixos.org/logos/nixos-logo-default-gradient-black-regular-horizontal-recommended.svg";
+    sha256 = "0lfjb39as2rppbpmdmki9wb862m9aq0pkyd76x0x89w8r7zx63ig";
+  };
   desktopIconOverrides = pkgs.runCommand "desktop-icon-overrides" { } ''
     install -D -m 0644 \
       ${pkgs.networkmanagerapplet}/share/icons/hicolor/scalable/apps/nm-device-wired.svg \
@@ -27,6 +31,7 @@ in
     obsidian
     pavucontrol
     spotify
+    terminaltexteffects
     wl-clipboard
     wtype
   ];
@@ -72,6 +77,7 @@ in
       decoration.rounding = 8;
 
       windowrule = [
+        "match:class ^(org.omarchy.screensaver)$, float 1, fullscreen 1, pin 1, no_anim 1"
         "match:class ^(ueberzugpp_.*)$, float 1, no_focus 1, no_initial_focus 1, no_anim 1"
       ];
 
@@ -188,6 +194,79 @@ in
     size = cursorSize;
     gtk.enable = true;
     x11.enable = true;
+  };
+
+  home.file.".local/bin/omarchy-screensaver" = {
+    executable = true;
+    text = ''
+      #!${pkgs.bash}/bin/bash
+      set -euo pipefail
+
+      if ${pkgs.procps}/bin/pgrep -u "$USER" -f "org.omarchy.screensaver" >/dev/null; then
+        exit 0
+      fi
+
+      ${pkgs.alacritty}/bin/alacritty \
+        --class org.omarchy.screensaver \
+        --option 'window.decorations="None"' \
+        --option 'window.startup_mode="Fullscreen"' \
+        --option 'cursor.style.shape="Beam"' \
+        -e ${pkgs.bash}/bin/bash -lc '
+          trap "exit 0" INT TERM
+          printf "\033[?25l"
+          while true; do
+            clear
+            cols="$(${pkgs.ncurses}/bin/tput cols 2>/dev/null || printf 100)"
+            rows="$(${pkgs.ncurses}/bin/tput lines 2>/dev/null || printf 30)"
+            height=$((rows > 4 ? rows - 4 : rows))
+            ${pkgs.chafa}/bin/chafa \
+              --align center \
+              --valign center \
+              --size "''${cols}x''${height}" \
+              --symbols block \
+              --fill space \
+              ${nixosLogo} \
+              | ${pkgs.terminaltexteffects}/bin/tte \
+                  --canvas-width 0 \
+                  --canvas-height 0 \
+                  --anchor-canvas c \
+                  --anchor-text c \
+                  --frame-rate 30 \
+                  beams \
+                  --final-gradient-stops 84A0C6 89B8C2 B4BE82 \
+                  --final-gradient-direction horizontal
+            sleep 1
+          done
+        ' &
+    '';
+  };
+
+  xdg.configFile."hypr/hypridle.conf".text = ''
+    general {
+      ignore_dbus_inhibit = false
+      ignore_systemd_inhibit = false
+    }
+
+    listener {
+      timeout = 300
+      on-timeout = ${config.home.homeDirectory}/.local/bin/omarchy-screensaver
+      on-resume = ${pkgs.procps}/bin/pkill -u $USER -f "[o]rg.omarchy.screensaver" || true
+    }
+  '';
+
+  systemd.user.services.hypridle = {
+    Unit = {
+      Description = "Hyprland idle screensaver";
+      Documentation = "https://wiki.hyprland.org/Hypr-Ecosystem/hypridle";
+      PartOf = [ "hyprland-session.target" ];
+      After = [ "hyprland-session.target" ];
+      ConditionEnvironment = "WAYLAND_DISPLAY";
+    };
+    Service = {
+      ExecStart = "${pkgs.hypridle}/bin/hypridle -c ${config.xdg.configHome}/hypr/hypridle.conf";
+      Restart = "on-failure";
+    };
+    Install.WantedBy = [ "hyprland-session.target" ];
   };
 
   xdg.dataFile."applications/yazi.desktop".text = ''

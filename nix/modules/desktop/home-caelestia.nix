@@ -163,6 +163,10 @@ in
       paths.mediaGif = "${config.home.homeDirectory}/.local/share/caelestia/media-headbang.gif";
       paths.sessionGif = "${config.home.homeDirectory}/.local/share/caelestia/session-power.gif";
       paths.wallpaperDir = "~/Pictures/Wallpapers";
+      general.idle = {
+        lockBeforeSleep = false;
+        timeouts = [ ];
+      };
       services.useTwelveHourClock = false;
     };
     cli = {
