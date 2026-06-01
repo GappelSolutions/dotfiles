@@ -22,3 +22,11 @@ ueberzug_offset = [0, 0, 0, 0]
 edit = [
 	{ run = 'nvim "$@"', block = true },
 ]
+play = [
+	{ run = 'ffplay -autoexit "$1"', desc = "Play video", orphan = true },
+]
+
+[open]
+prepend_rules = [
+	{ mime = "video/*", use = "play" },
+]

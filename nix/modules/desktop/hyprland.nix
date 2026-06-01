@@ -67,7 +67,7 @@ in
 
   xdg.portal = {
     enable = true;
-    config.common = {
+    config.hyprland = {
       default = [ "hyprland" "gtk" ];
       "org.freedesktop.impl.portal.FileChooser" = [ "termfilechooser" ];
     };
@@ -83,6 +83,7 @@ in
     XDG_CURRENT_DESKTOP = "Hyprland";
     XDG_SESSION_DESKTOP = "Hyprland";
     XDG_SESSION_TYPE = "wayland";
+    GTK_USE_PORTAL = "1";
   };
 
   environment.systemPackages = with pkgs; [

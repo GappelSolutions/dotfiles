@@ -64,7 +64,10 @@
                 sharedModules = nixpkgs.lib.optionals enableCaelestia [
                   inputs.caelestia-shell.homeManagerModules.default
                 ];
-                users.cgpp = import ./hosts/desktop/cgpp-t14/home.nix;
+                users = {
+                  cgpp = import ./hosts/desktop/cgpp-t14/home.nix;
+                  wife = import ./hosts/desktop/cgpp-t14/home-wife.nix;
+                };
               };
             }
           ];

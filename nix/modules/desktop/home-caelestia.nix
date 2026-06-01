@@ -168,6 +168,8 @@ in
         timeouts = [ ];
       };
       launcher.useFuzzy.apps = true;
+      services.useFahrenheit = false;
+      services.useFahrenheitPerformance = false;
       services.useTwelveHourClock = false;
     };
     cli = {
@@ -177,10 +179,10 @@ in
   };
 
   home.file.".local/share/caelestia/session-power.gif".source =
-    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dev/misc/dotfiles/nix/assets/caelestia/session-power.gif";
+    ../../assets/caelestia/session-power.gif;
 
   home.file.".local/share/caelestia/media-headbang.gif".source =
-    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dev/misc/dotfiles/nix/assets/caelestia/media-headbang.gif";
+    ../../assets/caelestia/media-headbang.gif;
 
   home.activation.caelestiaIcebergScheme =
     lib.hm.dag.entryAfter [ "writeBoundary" ] ''
