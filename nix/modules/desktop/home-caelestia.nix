@@ -5,6 +5,12 @@ let
     patches = (old.patches or [ ]) ++ [
       ./patches/caelestia-clock-calendar-popout.patch
     ];
+    postPatch = (old.postPatch or "") + ''
+      substituteInPlace modules/drawers/ContentWindow.qml \
+        --replace-fail 'monitor?.lastIpcObject.specialWorkspace?.name || monitor?.activeWorkspace.lastIpcObject.windows > 0' 'monitor?.lastIpcObject?.specialWorkspace?.name || (monitor?.activeWorkspace?.lastIpcObject?.windows ?? 0) > 0' \
+        --replace-fail 'monitor?.lastIpcObject.specialWorkspace?.name' 'monitor?.lastIpcObject?.specialWorkspace?.name' \
+        --replace-fail 't.lastIpcObject.fullscreen > 1' '(t.lastIpcObject?.fullscreen ?? 0) > 1'
+    '';
   });
 
   icebergScheme = {
