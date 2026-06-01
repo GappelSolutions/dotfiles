@@ -37,7 +37,7 @@
       darwinSystem = "aarch64-darwin";
       linuxSystem = "x86_64-linux";
       hostname = "Christians-MacBook-Pro";
-      codexOverlay = final: prev: {
+      codexOverlay = final: _prev: {
         codex = final.callPackage ./pkgs/codex/package.nix { };
       };
 

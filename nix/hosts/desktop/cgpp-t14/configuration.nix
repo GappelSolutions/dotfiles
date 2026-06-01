@@ -73,7 +73,6 @@ in
     wget
     vim
     neovim
-    networkmanager
     pciutils
     usbutils
   ]);

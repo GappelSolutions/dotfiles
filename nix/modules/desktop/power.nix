@@ -1,9 +1,11 @@
 { pkgs, ... }:
 
 {
-  services.upower.enable = true;
-  services.power-profiles-daemon.enable = true;
-  services.fwupd.enable = true;
+  services = {
+    upower.enable = true;
+    power-profiles-daemon.enable = true;
+    fwupd.enable = true;
+  };
 
   environment.systemPackages = with pkgs; [
     brightnessctl

@@ -1,24 +1,29 @@
 # Dotfiles Architecture
 
-The repo is moving toward host-specific entrypoints over shared modules.
+The repo is moving toward host-specific entrypoints over shared
+  modules.## Hosts
 
-## Hosts
-
-- `hosts/macbook`: full macOS workstation. It may contain GUI apps, Homebrew,
-  launchd agents, macOS defaults, quarantine workarounds, and private local
-  tool paths.
+  - `hosts/macbook`: full
+  macOS
+  workstation.It
+  may
+  contain
+  GUI
+  apps, Homebrew,
+launchd agents, macOS defaults, quarantine workarounds, and private local
+tool paths.
 - `hosts/dev`: clean NixOS VM. It should stay server/thin-client friendly:
-  SSH, Tailscale, CLI tools, shell, editor, and shared dotfiles only.
+SSH, Tailscale, CLI tools, shell, editor, and shared dotfiles only.
 - `hosts/desktop`: future NixOS desktop host family. It should be a real
-  laptop/desktop system, not a thin client: Hyprland, Caelestia shell,
-  NetworkManager, Bluetooth, printing, PipeWire, power/battery, Lenovo laptop
-  keys, clipboard history, keyboard layouts, monitor support, Codex CLI, and a
-  browser for auth. It may also carry explicit desktop workloads that are
-  already required, such as the Dockur Windows/CareLink VM. Keep it minimal and
-  declarative; do not copy Omarchy's package opinions.
+laptop/desktop system, not a thin client: Hyprland, Caelestia shell,
+NetworkManager, Bluetooth, printing, PipeWire, power/battery, Lenovo laptop
+keys, clipboard history, keyboard layouts, monitor support, Codex CLI, and a
+browser for auth. It may also carry explicit desktop workloads that are
+already required, such as the Dockur Windows/CareLink VM. Keep it minimal and
+declarative; do not copy Omarchy's package opinions.
 - `hosts/windows`: future Windows setup should be separate. Prefer a small
-  bootstrap script for Windows Terminal, winget, PowerShell, WSL, and SSH
-  rather than forcing Windows into the Nix module shape.
+bootstrap script for Windows Terminal, winget, PowerShell, WSL, and SSH
+rather than forcing Windows into the Nix module shape.
 
 ## Shared Modules
 
@@ -39,15 +44,15 @@ Use host modules to provide platform-specific environment values and packages.
 The Mac Home Manager setup is split by responsibility:
 
 - `modules/darwin/home-packages.nix`: Mac workstation packages and custom
-  local packages.
+local packages.
 - `modules/darwin/home-shell.nix`: zsh, path, aliases, prompt, editor helpers,
-  and interactive shell glue.
+and interactive shell glue.
 - `modules/darwin/home-programs.nix`: declarative CLI program config such as
-  git, ssh, direnv, bat, and lazygit.
+git, ssh, direnv, bat, and lazygit.
 - `modules/darwin/home-launchd.nix`: user launch agents and Mac background
-  workarounds.
+workarounds.
 - `modules/darwin/home-files.nix`: linked dotfiles, scripts, and created
-  directories.
+directories.
 
 The root `home.nix` is now a compatibility wrapper for the Mac host.
 
@@ -66,5 +71,31 @@ hardcoded in Lua. Examples: `DOTNET_ROOT`, `NETCOREDBG_PATH`, and shell paths.
 3. Move Mac GUI/workaround pieces into Darwin-only modules.
 4. Extract more shared CLI and dotfiles from the Mac modules when stable.
 5. Add the desktop host as a separate NixOS host family, reusing shared CLI
-   modules but keeping graphical/session services in desktop-specific modules.
+modules but keeping graphical/session services in desktop-specific modules.
 6. Add Windows as a separate bootstrap path later.
+
+## Current Audit
+
+The broad architecture is in place:
+
+- `hosts/*` are thin entrypoints.
+- NixOS server/dev logic is separate from desktop logic.
+- Desktop system modules are split by responsibility: base, boot, networking,
+  Hyprland/session, audio, Bluetooth, printing, power, Lenovo hardware, and the
+  Windows VM.
+- Desktop Home Manager modules are separate from system modules: Hyprland user
+  config, Caelestia, ownCloud, shortcuts, and Windows VM helpers.
+
+Known gaps to clean up after the login/welcome work:
+
+- Darwin does not yet reuse the shared CLI module. It intentionally has its own
+  packages, shell, and program modules, but there is duplicated Git, direnv,
+  fzf, bat, package, prompt, and Zellij logic that should be reconciled.
+- Shared CLI is now split into session, packages, program config, Bash, and Zsh
+  modules. The next refinement is to split `home-zsh.nix` into aliases, prompt,
+  navigation helpers, and Zellij helpers after the welcome flow is stable.
+- `modules/desktop/home-caelestia.nix` contains a large inline color scheme.
+  Move theme data to a data file or dedicated theme module if it grows further.
+- `modules/desktop/home-hyprland.nix` is the largest desktop behavior module.
+  It is still cohesive enough for now, but keybindings and app integrations are
+  good future split points.
