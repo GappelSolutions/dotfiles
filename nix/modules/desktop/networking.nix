@@ -10,7 +10,9 @@
   networking.firewall.checkReversePath = "loose";
 
   environment.systemPackages = with pkgs; [
+    networkmanager
     networkmanagerapplet
+    iwd
     iw
     wirelesstools
   ];

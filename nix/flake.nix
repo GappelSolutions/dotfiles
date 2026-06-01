@@ -17,6 +17,8 @@
     agenix = {
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
+      inputs.home-manager.follows = "home-manager";
+      inputs.darwin.follows = "nix-darwin";
     };
 
     caelestia-shell = {
@@ -35,17 +37,45 @@
       darwinSystem = "aarch64-darwin";
       linuxSystem = "x86_64-linux";
       hostname = "Christians-MacBook-Pro";
+      codexOverlay = final: prev: {
+        codex = final.callPackage ./pkgs/codex/package.nix { };
+      };
 
       darwinPkgs = import nixpkgs {
         system = darwinSystem;
         config.allowUnfree = true;
+        overlays = [ codexOverlay ];
       };
+
+      desktopSystem = { enableCaelestia ? true }:
+        nixpkgs.lib.nixosSystem {
+          system = linuxSystem;
+          specialArgs = { inherit inputs; };
+          modules = [
+            { nixpkgs.overlays = [ codexOverlay ]; }
+            ./hosts/desktop/cgpp-t14/configuration.nix
+            home-manager.nixosModules.home-manager
+            {
+              home-manager = {
+                useGlobalPkgs = true;
+                useUserPackages = true;
+                backupFileExtension = "hm-backup";
+                extraSpecialArgs = { inherit inputs enableCaelestia; };
+                sharedModules = nixpkgs.lib.optionals enableCaelestia [
+                  inputs.caelestia-shell.homeManagerModules.default
+                ];
+                users.cgpp = import ./hosts/desktop/cgpp-t14/home.nix;
+              };
+            }
+          ];
+        };
     in
     {
       darwinConfigurations.${hostname} = nix-darwin.lib.darwinSystem {
         system = darwinSystem;
         specialArgs = { inherit inputs; };
         modules = [
+          { nixpkgs.overlays = [ codexOverlay ]; }
           ./hosts/macbook/darwin.nix
           agenix.darwinModules.default
           home-manager.darwinModules.home-manager
@@ -65,6 +95,7 @@
         system = linuxSystem;
         specialArgs = { inherit inputs; };
         modules = [
+          { nixpkgs.overlays = [ codexOverlay ]; }
           ./hosts/dev/configuration.nix
           home-manager.nixosModules.home-manager
           {
@@ -78,26 +109,9 @@
         ];
       };
 
-      nixosConfigurations.cgpp-t14-nix = nixpkgs.lib.nixosSystem {
-        system = linuxSystem;
-        specialArgs = { inherit inputs; };
-        modules = [
-          ./hosts/desktop/cgpp-t14/configuration.nix
-          home-manager.nixosModules.home-manager
-          {
-            home-manager = {
-              useGlobalPkgs = true;
-              useUserPackages = true;
-              backupFileExtension = "hm-backup";
-              extraSpecialArgs = { inherit inputs; };
-              sharedModules = [
-                inputs.caelestia-shell.homeManagerModules.default
-              ];
-              users.cgpp = import ./hosts/desktop/cgpp-t14/home.nix;
-            };
-          }
-        ];
-      };
+      nixosConfigurations.cgpp-t14-nix = desktopSystem { };
+      nixosConfigurations.cgpp-t14-nix-lite =
+        desktopSystem { enableCaelestia = false; };
 
       # Convenience alias for rebuild
       # Usage: nix run .#rb

@@ -59,16 +59,25 @@ nix/modules/desktop/windows-vm.nix
 nix/modules/desktop/home-windows-vm.nix
 ```
 
-This is restart-persistent because it is in Docker Compose. The adapter must exist as `/dev/ttyUSB0` before the VM starts.
-
-On NixOS, set the password in an untracked env file before starting:
+The base Windows VM starts without the adapter:
 
 ```sh
-cp ~/dev/misc/dotfiles/windows/.config/windows/.env.example ~/.config/windows/.env
-nvim ~/.config/windows/.env
-chmod 600 ~/.config/windows/.env
 winup
 ```
+
+Start with CareLink serial passthrough only after the adapter exists as `/dev/ttyUSB0`:
+
+```sh
+winusb
+```
+
+On NixOS, the Home Manager module creates an untracked env file on first activation:
+
+```sh
+~/.config/windows/.env
+```
+
+The default file only sets `WINDOWS_USERNAME=cgpp`. If `WINDOWS_PASSWORD` is omitted, Dockurr uses its built-in initial password behavior.
 
 ## Why This Works
 
@@ -103,10 +112,10 @@ COM5 OPEN ok
 If CareLink stops finding the adapter:
 
 ```sh
-omarchy-windows-vm stop
+windown
 ls -l /dev/ttyUSB* /dev/serial/by-id/*
 lsusb | rg '10c4|ea60|Silicon'
-omarchy-windows-vm start
+winusb
 ```
 
 If `/dev/ttyUSB0` is missing, unplug and replug the Blue Adapter, then start the VM again.
