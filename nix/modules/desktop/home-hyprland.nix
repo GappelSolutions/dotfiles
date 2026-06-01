@@ -381,6 +381,20 @@ in
     Install.WantedBy = [ "hyprland-session.target" ];
   };
 
+  systemd.user.services.huioncore = {
+    Unit = {
+      Description = "Huion tablet core driver";
+      PartOf = [ "hyprland-session.target" ];
+      After = [ "hyprland-session.target" ];
+    };
+    Service = {
+      ExecStart = "/run/current-system/sw/bin/huioncore";
+      Restart = "always";
+      RestartSec = 5;
+    };
+    Install.WantedBy = [ "hyprland-session.target" ];
+  };
+
   xdg.dataFile."applications/yazi.desktop".text = ''
     [Desktop Entry]
     Type=Application
