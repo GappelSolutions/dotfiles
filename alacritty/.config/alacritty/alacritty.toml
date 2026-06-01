@@ -40,7 +40,7 @@ VISUAL = "nvim"
 ZELLIJ_SOCKET_DIR = "/tmp/zellij"
 
 [font]
-size = 16.0
+size = 14.0
 
 [font.bold]
 style = "auto"
@@ -57,7 +57,10 @@ style = "Medium"
 
 [scrolling]
 history = 2000
-multiplier = 1
+multiplier = 4
+
+[selection]
+save_to_clipboard = true
 
 [window]
 opacity = 0.8

@@ -18,6 +18,11 @@
   services.udisks2.enable = true;
   services.gvfs.enable = true;
 
+  fonts.packages = [
+    pkgs.inter
+    pkgs.nerd-fonts.fira-code
+  ];
+
   environment.systemPackages = with pkgs; [
     home-manager
     man-pages

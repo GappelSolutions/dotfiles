@@ -1,0 +1,6 @@
+services:
+  windows:
+    environment:
+      ARGUMENTS: "-rtc base=localtime,clock=host,driftfix=slew -chardev serial,id=medtronic,path=/dev/ttyUSB0 -device usb-serial,chardev=medtronic,serial=fa245e596e45ec11ad72d7e6461fcfc8"
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0

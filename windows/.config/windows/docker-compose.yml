@@ -8,13 +8,10 @@ services:
       CPU_CORES: "2"
       DISK_SIZE: "64G"
       USERNAME: "${WINDOWS_USERNAME:-cgpp}"
-      PASSWORD: "${WINDOWS_PASSWORD:?set WINDOWS_PASSWORD in ~/.config/windows/.env}"
       TZ: "Europe/Berlin"
-      ARGUMENTS: "-rtc base=localtime,clock=host,driftfix=slew -chardev serial,id=medtronic,path=/dev/ttyUSB0 -device usb-serial,chardev=medtronic,serial=fa245e596e45ec11ad72d7e6461fcfc8"
     devices:
       - /dev/kvm
       - /dev/net/tun
-      - /dev/ttyUSB0:/dev/ttyUSB0
     cap_add:
       - NET_ADMIN
     ports:

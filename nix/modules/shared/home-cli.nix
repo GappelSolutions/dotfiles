@@ -6,6 +6,8 @@ in
 {
   home.stateVersion = "24.05";
 
+  manual.manpages.enable = false;
+
   home.sessionVariables = {
     ZELLIJ_SOCKET_DIR = "/tmp/zellij";
     BUN_INSTALL = "${config.home.homeDirectory}/.bun";
@@ -31,6 +33,11 @@ in
     bat
     delta
     yazi
+    ueberzugpp
+    chafa
+    imagemagick
+    ffmpegthumbnailer
+    poppler-utils
     lazygit
     lazydocker
     btop
@@ -86,20 +93,6 @@ in
     config.theme = "TwoDark";
   };
 
-  programs.lazygit = {
-    enable = true;
-    settings = {
-      gui.mainPanelSplitMode = "horizontal";
-      git.pagers = [
-        {
-          colorArg = "always";
-          pager = "delta --dark --paging=never --syntax-theme base16-256 -s";
-        }
-      ];
-      os.edit = "nvim --server $NVIM --remote-tab {{filename}}";
-    };
-  };
-
   programs.bash = {
     enable = true;
     shellAliases = {
@@ -115,7 +108,9 @@ in
       dcd = "podman-compose down";
       ld = "lazydocker";
       vi = "nvim";
-      rb = "sudo nixos-rebuild switch";
+      ai = "codex --dangerously-bypass-approvals-and-sandbox";
+      rb = "sudo nixos-rebuild switch --flake ~/dev/misc/dotfiles/nix#cgpp-t14-nix";
+      rbl = "sudo nixos-rebuild switch --flake ~/dev/misc/dotfiles/nix#cgpp-t14-nix-lite";
       sz = "source ~/.bashrc";
       zel = "zellij attach welcome || zellij --session welcome --new-session-with-layout welcome-custom";
     };
@@ -149,11 +144,14 @@ in
       dcu = "podman-compose up -d --build";
       dcd = "podman-compose down";
       ld = "lazydocker";
+      ai = "codex --dangerously-bypass-approvals-and-sandbox";
       vi = "nvim";
       vim = "nvim";
       py = "python3";
       pip = "pip3";
-      rb = "sudo nixos-rebuild switch";
+      nerdfetch = "$HOME/.local/bin/nerdfetch";
+      rb = "sudo nixos-rebuild switch --flake ~/dev/misc/dotfiles/nix#cgpp-t14-nix";
+      rbl = "sudo nixos-rebuild switch --flake ~/dev/misc/dotfiles/nix#cgpp-t14-nix-lite";
       sz = "source ~/.zshrc";
       zr = "zellij run -i --";
     };
@@ -235,9 +233,9 @@ in
         local layout="$1"
         local existing=$(zellij list-sessions 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' | grep "^$layout-" | grep -v "EXITED" | awk '{print $1}' | head -1)
         if [[ -n "$existing" ]]; then
-          zellij pipe --plugin "file:$HOME/dev/misc/dotfiles/zellij/.config/zellij/plugins/zellij-switch.wasm" -- "-s $existing"
+          zellij action switch-session "$existing"
         else
-          zellij pipe --plugin "file:$HOME/dev/misc/dotfiles/zellij/.config/zellij/plugins/zellij-switch.wasm" -- "-s $layout-$(date +%Y%m%d-%H%M%S) -l $layout"
+          zellij action switch-session "$layout-$(date +%Y%m%d-%H%M%S)" -l "$layout"
         fi
       }
       zeb() { _zj energyboard; }
@@ -265,6 +263,10 @@ in
         fi
         rm -f -- "$tmp"
       }
+
+      clear
+      $HOME/.local/bin/nerdfetch
+      echo "\n"
     '';
   };
 }

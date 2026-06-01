@@ -22,6 +22,7 @@ in
 
   users.users.cgpp = {
     isNormalUser = true;
+    initialPassword = "ASDQWEasdqweASDQWE123";
     extraGroups = [
       "wheel"
       "networkmanager"
@@ -37,8 +38,30 @@ in
     openssh.authorizedKeys.keys = sshKeys.cgpp;
   };
 
+  users.users.wife = {
+    isNormalUser = true;
+    description = "Wife";
+    initialPassword = "ASDQWEasdqweASDQWE123";
+    extraGroups = [
+      "networkmanager"
+      "audio"
+      "video"
+      "input"
+      "lp"
+      "scanner"
+    ];
+    shell = pkgs.zsh;
+  };
+
   security.sudo.wheelNeedsPassword = false;
   programs.zsh.enable = true;
+
+  services.xserver.xkb = {
+    layout = "de,us";
+    options = "grp:alts_toggle";
+  };
+
+  console.keyMap = "de";
 
   environment.systemPackages = [
     inputs.zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default

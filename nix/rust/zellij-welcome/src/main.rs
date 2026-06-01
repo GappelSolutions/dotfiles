@@ -694,12 +694,6 @@ fn launch_session(layout: &str) -> Result<()> {
     writeln!(log_file, "\n=== {} ===", Local::now().format("%Y-%m-%d %H:%M:%S"))?;
     writeln!(log_file, "Layout requested: {}", layout)?;
 
-    let plugin_path = format!(
-        "{}/dev/misc/dotfiles/zellij/.config/zellij/plugins/zellij-switch.wasm",
-        home
-    );
-    writeln!(log_file, "Plugin path: {}", plugin_path)?;
-
     // Get existing active session (non-EXITED)
     let output = Command::new("zellij")
         .args(["list-sessions"])
@@ -725,28 +719,30 @@ fn launch_session(layout: &str) -> Result<()> {
     writeln!(log_file, "Looking for prefix: {}", prefix)?;
     writeln!(log_file, "Found existing: {:?}", existing)?;
 
-    let session_arg = if let Some(existing_name) = existing {
-        // Attach to existing
-        format!("-s {}", existing_name)
+    let mut switch_args = vec![
+        "action".to_string(),
+        "switch-session".to_string(),
+    ];
+
+    let mut is_new_session = false;
+    let target_session = if let Some(existing_name) = existing.as_ref() {
+        existing_name.clone()
     } else {
-        // Create new with timestamp
+        is_new_session = true;
         let timestamp = Local::now().format("%Y%m%d-%H%M%S");
-        let new_name = format!("{}-{}", layout, timestamp);
-        format!("-s {} -l {}", new_name, layout)
+        format!("{}-{}", layout, timestamp)
     };
 
-    writeln!(log_file, "Session arg: {}", session_arg)?;
+    switch_args.push(target_session.clone());
+    if is_new_session {
+        switch_args.push("-l".to_string());
+        switch_args.push(layout.to_string());
+    }
 
-    let full_cmd = format!(
-        "zellij pipe --plugin file:{} -- {}",
-        plugin_path, session_arg
-    );
-    writeln!(log_file, "Full command: {}", full_cmd)?;
+    writeln!(log_file, "Target session: {}", target_session)?;
+    writeln!(log_file, "Full command: zellij {}", switch_args.join(" "))?;
 
-    // Launch via zellij pipe
-    let result = Command::new("zellij")
-        .args(["pipe", "--plugin", &format!("file:{}", plugin_path), "--", &session_arg])
-        .output();
+    let result = Command::new("zellij").args(&switch_args).output();
 
     match &result {
         Ok(output) => {

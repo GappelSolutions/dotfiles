@@ -1,0 +1,9 @@
+[SddmGreeterTheme]
+Name=Iceberg Minimal
+Description=Minimal Iceberg themed SDDM login
+Type=sddm-theme
+Version=1.0
+MainScript=Main.qml
+ConfigFile=theme.conf
+Theme-Id=iceberg-minimal
+Theme-API=2.0

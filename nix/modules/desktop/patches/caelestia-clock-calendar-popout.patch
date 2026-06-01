@@ -1,0 +1,255 @@
+diff --git a/modules/bar/Bar.qml b/modules/bar/Bar.qml
+index 61c09e0..f19a60e 100644
+--- a/modules/bar/Bar.qml
++++ b/modules/bar/Bar.qml
+@@ -69,6 +69,10 @@ ColumnLayout {
+             } else {
+                 popouts.hasCurrent = false;
+             }
++        } else if (id === "clock") {
++            popouts.currentName = "clock";
++            popouts.currentCenter = (ch.item as Item).mapToItem(root, 0, (ch.item as Item).implicitHeight / 2).y ?? 0;
++            popouts.hasCurrent = true;
+         } else if (id === "activeWindow" && Config.bar.popouts.activeWindow && Config.bar.activeWindow.showOnHover) {
+             popouts.currentName = id.toLowerCase();
+             popouts.currentCenter = (ch.item as Item).mapToItem(root, 0, (ch.item as Item).implicitHeight / 2).y ?? 0;
+diff --git a/modules/bar/popouts/CalendarClock.qml b/modules/bar/popouts/CalendarClock.qml
+new file mode 100644
+index 0000000..c458d45
+--- /dev/null
++++ b/modules/bar/popouts/CalendarClock.qml
+@@ -0,0 +1,218 @@
++pragma ComponentBehavior: Bound
++
++import QtQuick
++import QtQuick.Controls
++import QtQuick.Layouts
++import Caelestia.Config
++import qs.components
++import qs.components.controls
++import qs.services
++
++ColumnLayout {
++    id: root
++
++    property date visibleDate: new Date(Time.date.getFullYear(), Time.date.getMonth(), 1)
++    readonly property int currentMonth: visibleDate.getMonth()
++    readonly property int currentYear: visibleDate.getFullYear()
++    readonly property bool showingCurrentMonth: currentMonth === Time.date.getMonth() && currentYear === Time.date.getFullYear()
++
++    function shiftMonth(delta: int): void {
++        visibleDate = new Date(currentYear, currentMonth + delta, 1);
++    }
++
++    function resetMonth(): void {
++        visibleDate = new Date(Time.date.getFullYear(), Time.date.getMonth(), 1);
++    }
++
++    width: 292
++    spacing: Tokens.spacing.normal
++
++    StyledRect {
++        Layout.fillWidth: true
++        implicitHeight: clockLayout.implicitHeight + Tokens.padding.normal * 2
++
++        color: Colours.tPalette.m3surfaceContainer
++        radius: Tokens.rounding.normal
++
++        ColumnLayout {
++            id: clockLayout
++
++            anchors.fill: parent
++            anchors.margins: Tokens.padding.normal
++            spacing: Tokens.spacing.small
++
++            StyledText {
++                Layout.alignment: Qt.AlignHCenter
++
++                text: Time.format(GlobalConfig.services.useTwelveHourClock ? "hh:mm:ss A" : "hh:mm:ss")
++                color: Colours.palette.m3primary
++                font.pointSize: Tokens.font.size.extraLarge
++                font.family: Tokens.font.family.clock
++                font.weight: 600
++            }
++
++            StyledText {
++                Layout.alignment: Qt.AlignHCenter
++
++                text: Time.format("dddd, MMMM d, yyyy")
++                color: Colours.palette.m3onSurfaceVariant
++                font.pointSize: Tokens.font.size.small
++                font.weight: 500
++            }
++        }
++    }
++
++    StyledRect {
++        Layout.fillWidth: true
++        implicitHeight: calendarLayout.implicitHeight + Tokens.padding.normal * 2
++
++        color: Colours.tPalette.m3surfaceContainer
++        radius: Tokens.rounding.normal
++
++        ColumnLayout {
++            id: calendarLayout
++
++            anchors.fill: parent
++            anchors.margins: Tokens.padding.normal
++            spacing: Tokens.spacing.small
++
++            RowLayout {
++                Layout.fillWidth: true
++                spacing: Tokens.spacing.small
++
++                NavButton {
++                    icon: "chevron_left"
++                    onClicked: root.shiftMonth(-1)
++                }
++
++                Item {
++                    Layout.fillWidth: true
++                    implicitHeight: monthYear.implicitHeight + Tokens.padding.small * 2
++
++                    StateLayer {
++                        anchors.fill: monthYear
++                        anchors.margins: -Tokens.padding.small
++                        anchors.leftMargin: -Tokens.padding.normal
++                        anchors.rightMargin: -Tokens.padding.normal
++
++                        radius: Tokens.rounding.full
++                        disabled: root.showingCurrentMonth
++                        onClicked: root.resetMonth()
++                    }
++
++                    StyledText {
++                        id: monthYear
++
++                        anchors.centerIn: parent
++
++                        text: grid.title
++                        color: Colours.palette.m3primary
++                        font.pointSize: Tokens.font.size.normal
++                        font.weight: 600
++                        font.capitalization: Font.Capitalize
++                    }
++                }
++
++                NavButton {
++                    icon: "chevron_right"
++                    onClicked: root.shiftMonth(1)
++                }
++            }
++
++            DayOfWeekRow {
++                id: daysRow
++
++                Layout.fillWidth: true
++                locale: grid.locale
++
++                delegate: StyledText {
++                    required property var model
++
++                    horizontalAlignment: Text.AlignHCenter
++                    text: model.shortName
++                    color: (model.day === 0 || model.day === 6) ? Colours.palette.m3secondary : Colours.palette.m3onSurfaceVariant
++                    font.pointSize: Tokens.font.size.small
++                    font.weight: 600
++                }
++            }
++
++            MonthGrid {
++                id: grid
++
++                Layout.fillWidth: true
++
++                month: root.currentMonth
++                year: root.currentYear
++                locale: Qt.locale()
++                spacing: 3
++
++                delegate: Item {
++                    id: dayItem
++
++                    required property var model
++                    readonly property bool isToday: model.today
++                    readonly property bool isCurrentMonth: model.month === grid.month
++                    readonly property int dayOfWeek: model.date.getUTCDay()
++
++                    implicitWidth: implicitHeight
++                    implicitHeight: dayNumber.implicitHeight + Tokens.padding.small * 2
++
++                    StyledRect {
++                        anchors.centerIn: parent
++
++                        implicitWidth: parent.implicitHeight
++                        implicitHeight: parent.implicitHeight
++                        radius: Tokens.rounding.full
++                        color: Colours.palette.m3primary
++                        opacity: dayItem.isToday ? 1 : 0
++                    }
++
++                    StyledText {
++                        id: dayNumber
++
++                        anchors.centerIn: parent
++
++                        horizontalAlignment: Text.AlignHCenter
++                        text: grid.locale.toString(dayItem.model.day)
++                        color: {
++                            if (dayItem.isToday)
++                                return Colours.palette.m3onPrimary;
++                            if (dayItem.dayOfWeek === 0 || dayItem.dayOfWeek === 6)
++                                return Colours.palette.m3secondary;
++                            return Colours.palette.m3onSurface;
++                        }
++                        opacity: dayItem.isCurrentMonth || dayItem.isToday ? 1 : 0.38
++                        font.pointSize: Tokens.font.size.normal
++                        font.weight: dayItem.isToday ? 700 : 500
++                    }
++                }
++            }
++        }
++    }
++
++    component NavButton: Item {
++        id: buttonRoot
++
++        signal clicked
++        required property string icon
++
++        implicitWidth: implicitHeight
++        implicitHeight: iconText.implicitHeight + Tokens.padding.small * 2
++
++        StateLayer {
++            radius: Tokens.rounding.full
++            onClicked: buttonRoot.clicked()
++        }
++
++        MaterialIcon {
++            id: iconText
++
++            anchors.centerIn: parent
++
++            text: buttonRoot.icon
++            color: Colours.palette.m3tertiary
++            font.pointSize: Tokens.font.size.normal
++            font.weight: 700
++        }
++    }
++}
+diff --git a/modules/bar/popouts/Content.qml b/modules/bar/popouts/Content.qml
+index 723b75a..f183cc3 100644
+--- a/modules/bar/popouts/Content.qml
++++ b/modules/bar/popouts/Content.qml
+@@ -123,6 +123,11 @@ Item {
+             sourceComponent: LockStatus {}
+         }
+ 
++        Popout {
++            name: "clock"
++            sourceComponent: CalendarClock {}
++        }
++
+         Repeater {
+             model: ScriptModel {
+                 values: SystemTray.items.values.filter(i => !GlobalConfig.bar.tray.hiddenIcons.includes(i.id))

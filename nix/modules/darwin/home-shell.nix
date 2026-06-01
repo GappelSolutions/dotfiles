@@ -57,7 +57,7 @@
       godot = "godot-mono";
       godot4 = "godot-mono";
 
-      ai = "claude --dangerously-skip-permissions";
+      ai = "codex --dangerously-bypass-approvals-and-sandbox";
       sz = "source ~/.zshrc";
       zr = "zellij run -i --";
       vi = "nvim";
@@ -164,9 +164,9 @@
         local layout="$1"
         local existing=$(zellij list-sessions 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' | grep "^$layout-" | grep -v "EXITED" | awk '{print $1}' | head -1)
         if [[ -n "$existing" ]]; then
-          zellij pipe --plugin "file:$HOME/dev/misc/dotfiles/zellij/.config/zellij/plugins/zellij-switch.wasm" -- "-s $existing"
+          zellij action switch-session "$existing"
         else
-          zellij pipe --plugin "file:$HOME/dev/misc/dotfiles/zellij/.config/zellij/plugins/zellij-switch.wasm" -- "-s $layout-$(date +%Y%m%d-%H%M%S) -l $layout"
+          zellij action switch-session "$layout-$(date +%Y%m%d-%H%M%S)" -l "$layout"
         fi
       }
       zeb() { _zj energyboard; }

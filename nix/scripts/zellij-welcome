@@ -42,9 +42,6 @@ selected=$(echo "$SESSIONS" | fzf \
   --no-scrollbar \
   2>/dev/null)
 
-# Plugin path
-PLUGIN="file:$HOME/dev/misc/dotfiles/zellij/.config/zellij/plugins/zellij-switch.wasm"
-
 # Handle selection
 if [[ -z "$selected" ]]; then
   zellij action launch-or-focus-plugin "session-manager" --floating
@@ -54,7 +51,7 @@ fi
 case "$selected" in
   "new")
     session_name="new-$(date +%Y%m%d-%H%M%S)"
-    zellij pipe --plugin "$PLUGIN" -- "-s $session_name -l new"
+    zellij action switch-session "$session_name" -l new
     exit 0
     ;;
   "welcome")
@@ -69,8 +66,8 @@ layout="$selected"
 existing=$(zellij list-sessions 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' | grep "^$layout-" | grep -v "EXITED" | awk '{print $1}' | head -1)
 
 if [[ -n "$existing" ]]; then
-  zellij pipe --plugin "$PLUGIN" -- "-s $existing"
+  zellij action switch-session "$existing"
 else
   session_name="$layout-$(date +%Y%m%d-%H%M%S)"
-  zellij pipe --plugin "$PLUGIN" -- "-s $session_name -l $layout"
+  zellij action switch-session "$session_name" -l "$layout"
 fi

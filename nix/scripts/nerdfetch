@@ -210,7 +210,21 @@ emerge) packages="$(qlist -I | wc -l)" ;;
 pkg) packages="$(pkg info | wc -l | tr -d ' ')" ;;
 cave) packages="$(cave show installed-slots | wc -l)" ;;
 xbps-query) packages="$(xbps-query -l | wc -l)" ;;
-nix-env) packages="$(nix-store -q --requisites /run/current-system/sw | wc -l)" ;;
+nix-env)
+	case $ostype in
+	*"Linux"*)
+		nix_sys_count="$(nix-store -q --requisites /run/current-system/sw 2>/dev/null | wc -l | tr -d ' ')"
+		nix_hm_count="$(nix-store -q --requisites /etc/profiles/per-user/"$USER" 2>/dev/null | wc -l | tr -d ' ')"
+		[ -n "$nix_hm_count" ] || nix_hm_count="$(nix-store -q --requisites ~/.nix-profile 2>/dev/null | wc -l | tr -d ' ')"
+		packages="${nix_sys_count:-0} system"
+		if [ -n "$nix_hm_count" ] && [ "$nix_hm_count" -gt 0 ]; then
+			packages="${packages}, ${nix_hm_count} home"
+		fi
+		manager="nix"
+		;;
+	*) packages="$(nix-store -q --requisites /run/current-system/sw | wc -l)" ;;
+	esac
+	;;
 apk) packages="$(apk list --installed | wc -l)" ;;
 pmm) packages="$(/bedrock/libexec/pmm pacman pmm -Q 2>/dev/null | wc -l)" ;;
 opkg) packages="$(opkg list-installed | wc -l)" ;;
@@ -245,14 +259,54 @@ manager=${manager%-query}
 nix_sys=$(nix-store -q --requisites /run/current-system/sw 2>/dev/null | wc -l | tr -d ' ')
 nix_hm=$(nix-store -q --requisites ~/.nix-profile 2>/dev/null | wc -l | tr -d ' ')
 if [ -n "$nix_sys" ] && [ "$nix_sys" -gt 0 ]; then
-	nixpkgs="${nix_sys} (nix-darwin)"
-	if [ -n "$nix_hm" ] && [ "$nix_hm" -gt 0 ]; then
-		nixpkgs="${nixpkgs} + ${nix_hm} (hm)"
-	fi
+	case $ostype in
+	*"Linux"*)
+		nix_generation="$(readlink /nix/var/nix/profiles/system 2>/dev/null)"
+		nix_generation="${nix_generation#system-}"
+		nix_generation="${nix_generation%-link}"
+		nix_version="$(nixos-version 2>/dev/null)"
+		if [ -n "$nix_generation" ] && [ -n "$nix_version" ]; then
+			nixpkgs="gen ${nix_generation} · ${nix_version}"
+		elif [ -n "$nix_version" ]; then
+			nixpkgs="${nix_version}"
+		else
+			nixpkgs="${nix_sys} (NixOS)"
+		fi
+		;;
+	*)
+		nixpkgs="${nix_sys} (nix-darwin)"
+		if [ -n "$nix_hm" ] && [ "$nix_hm" -gt 0 ]; then
+			nixpkgs="${nixpkgs} + ${nix_hm} (hm)"
+		fi
+		;;
+	esac
 else
-	nixpkgs=""
+nixpkgs=""
 fi
 ni="󱄅"
+
+## HARDWARE DETECTION
+
+case $ostype in
+*"Linux"*)
+	cpu="$(lscpu 2>/dev/null | awk -F: '/^Model name:/ { sub(/^[ \t]+/, "", $2); print $2; exit }')"
+	[ -n "$cpu" ] || cpu="$(awk -F: '/model name/ { sub(/^[ \t]+/, "", $2); print $2; exit }' /proc/cpuinfo 2>/dev/null)"
+	gpu="$(lspci 2>/dev/null | awk -F': ' '/VGA compatible controller|3D controller|Display controller/ { print $2; exit }')"
+	;;
+*"Darwin"*)
+	cpu="$(sysctl -n machdep.cpu.brand_string 2>/dev/null)"
+	gpu="$(system_profiler SPDisplaysDataType 2>/dev/null | awk -F: '/Chipset Model:/ { sub(/^[ \t]+/, "", $2); print $2; exit }')"
+	;;
+*)
+	cpu=""
+	gpu=""
+	;;
+esac
+
+cpu="$(printf '%s' "$cpu" | sed 's/(R)//g; s/(TM)//g; s/  */ /g; s/ CPU @ / @ /; s/ with .*//')"
+gpu="$(printf '%s' "$gpu" | sed 's/ Corporation//g; s/ Integrated Graphics Controller//g; s/ (rev ..)//g')"
+[ -n "$cpu" ] || cpu="unknown"
+[ -n "$gpu" ] || gpu="unknown"
 
 ## UPTIME DETECTION
 
@@ -376,10 +430,10 @@ cat <<EOF
 ${c0}    **   ${c1}##   ##
 ${c0}     **   ${c1}## ##       ${nc}${USER}${red}@${reset}${hn}${host}${reset}
 ${c0}  *********${c1}###  ${c0}**    ${lc}${osi}  ${ic}${os}${reset}
-${c1}     ##     ## ${c0}**     ${lc}${ki}  ${ic}${kernel}${reset}
-${c1}######       #${c0}**      ${lc}${ri}  ${ic}${memstat} ${mempercent}
-${c1}   ##${c0}*       ******${reset}   ${lc}${pi}  ${ic}${packages} (${manager})${reset}
-${c1}  ## ${c0}**     **        ${lc}${ni}  ${ic}${nixpkgs}${reset}
+${c1}     ##     ## ${c0}**     ${lc}${pi}  ${ic}${packages} (${manager})${reset}
+${c1}######       #${c0}**      ${lc}󰻠  ${ic}${cpu}${reset}
+${c1}   ##${c0}*       ******${reset}   ${lc}󰢮  ${ic}${gpu}${reset}
+${c1}  ## ${c0}**     **        ${lc}${ri}  ${ic}${memstat} ${mempercent}${reset}
 ${c1} ##  ${c0}***${c1}#########     ${lc}${ui}  ${ic}${uptime}${reset}
 ${c0}    ** **   ${c1}##        ${lc}${ci}  ${red}███${green}███${yellow}███${blue}███${magenta}███${cyan}███${reset}
 ${c0}   **   **   ${c1}##${reset}

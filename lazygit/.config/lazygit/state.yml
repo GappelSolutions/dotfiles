@@ -1,9 +1,9 @@
 lastupdatecheck: 0
 recentrepos:
-    - /Users/cgpp/dev/dotfiles
-    - /Users/cgpp/dev/gappel-cloud
+    - /home/cgpp/dev/misc/dotfiles
 startuppopupversion: 5
 didshowhunkstaginghint: true
-lastversion: 0.54.0
+lastversion: 0.61.1
 customcommandshistory: []
 hidecommandlog: false
+githubPullRequests: {}
