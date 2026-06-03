@@ -15,8 +15,23 @@
   libglvnd,
   libgpg-error,
   libusb1,
+  libx11,
+  libxau,
+  libxcb,
+  libxcb-image,
+  libxcb-keysyms,
+  libxcb-render-util,
+  libxcb-util,
+  libxcb-wm,
+  libxdmcp,
+  libxext,
+  libxi,
+  libxinerama,
   libxkbcommon,
-  xorg,
+  libxrandr,
+  libxrender,
+  libxtst,
+  xmodmap,
   zlib,
 }:
 
@@ -42,21 +57,21 @@ stdenv.mkDerivation rec {
     libgpg-error
     libusb1
     libxkbcommon
-    xorg.libX11
-    xorg.libXau
-    xorg.libXdmcp
-    xorg.libXext
-    xorg.libXi
-    xorg.libXrandr
-    xorg.libXrender
-    xorg.libXtst
-    xorg.libXinerama
-    xorg.libxcb
-    xorg.xcbutil
-    xorg.xcbutilimage
-    xorg.xcbutilkeysyms
-    xorg.xcbutilrenderutil
-    xorg.xcbutilwm
+    libx11
+    libxau
+    libxdmcp
+    libxext
+    libxi
+    libxrandr
+    libxrender
+    libxtst
+    libxinerama
+    libxcb
+    libxcb-util
+    libxcb-image
+    libxcb-keysyms
+    libxcb-render-util
+    libxcb-wm
     zlib
   ];
 
@@ -87,7 +102,7 @@ stdenv.mkDerivation rec {
       gnugrep
       gnused
       procps
-      xorg.xmodmap
+      xmodmap
     ]}:\$PATH"
 
     runtime="\''${XDG_DATA_HOME:-\$HOME/.local/share}/huiontablet"
@@ -116,7 +131,7 @@ stdenv.mkDerivation rec {
       gnugrep
       gnused
       procps
-      xorg.xmodmap
+      xmodmap
     ]}:\$PATH"
 
     runtime="\''${XDG_DATA_HOME:-\$HOME/.local/share}/huiontablet"

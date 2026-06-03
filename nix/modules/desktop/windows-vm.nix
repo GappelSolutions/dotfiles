@@ -1,6 +1,27 @@
 { pkgs, ... }:
 
 let
+  cgppWindows = pkgs.writeShellApplication {
+    name = "cgpp-windows";
+    runtimeInputs = with pkgs; [
+      bash
+      coreutils
+      docker
+      findutils
+      freerdp
+      gawk
+      gnugrep
+      gnused
+      gum
+      jq
+      nix
+      rsync
+      util-linux
+      xdg-utils
+    ];
+    text = builtins.readFile ../../scripts/cgpp-windows;
+  };
+
   windowsRdp = pkgs.writeShellScriptBin "windows-rdp" ''
     set -euo pipefail
 
@@ -211,6 +232,7 @@ in
 
   environment.systemPackages = with pkgs; [
     docker-compose
+    cgppWindows
     freerdp
     windowsRdp
     winrdp
