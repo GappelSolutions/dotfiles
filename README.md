@@ -54,14 +54,31 @@ sudo nixos-rebuild switch --flake .#cgpp-t14-nix
 The recovery USB and Windows VM restore runbook is in
 [nix/NIX_DESKTOP_PLAN.md](nix/NIX_DESKTOP_PLAN.md).
 
-Build the recovery ISO:
+Fast path from the published release:
+
+```bash
+gh release download cgpp-recovery-2026-06-03 \
+  --repo GappelSolutions/dotfiles \
+  --pattern 'cgpp-recovery-2026-06-03*'
+
+cat cgpp-recovery-2026-06-03.iso.part-00.bin \
+  cgpp-recovery-2026-06-03.iso.part-01.bin \
+  > cgpp-recovery-2026-06-03.iso
+
+sha256sum -c cgpp-recovery-2026-06-03.sha256
+sudo dd if=cgpp-recovery-2026-06-03.iso of=/dev/sdX bs=4M status=progress conv=fsync
+```
+
+Replace `/dev/sdX` with the USB device, not a partition such as `/dev/sdX1`.
+
+Or build the recovery ISO locally:
 
 ```bash
 cd ~/dev/misc/dotfiles/nix
 nix build .#nixosConfigurations.cgpp-recovery-iso.config.system.build.isoImage
 ```
 
-From the recovery environment:
+Boot the USB and run:
 
 ```bash
 sudo cgpp-install tui
