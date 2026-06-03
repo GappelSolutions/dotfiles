@@ -162,7 +162,7 @@ in
       border.rounding = 12;
       paths.mediaGif = "${config.home.homeDirectory}/.local/share/caelestia/media-headbang.gif";
       paths.sessionGif = "${config.home.homeDirectory}/.local/share/caelestia/session-power.gif";
-      paths.wallpaperDir = "~/Pictures/Wallpapers";
+      paths.wallpaperDir = "${config.home.homeDirectory}/.local/share/caelestia/wallpapers";
       general.idle = {
         lockBeforeSleep = false;
         timeouts = [ ];
@@ -184,9 +184,16 @@ in
   home.file.".local/share/caelestia/media-headbang.gif".source =
     ../../assets/caelestia/media-headbang.gif;
 
+  home.file.".local/share/caelestia/wallpapers/background.png".source =
+    ../../assets/sddm/iceberg/background.png;
+
   home.activation.caelestiaIcebergScheme =
     lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      wallpaper_path='${config.home.homeDirectory}/.local/share/caelestia/wallpapers/background.png'
       mkdir -p ${config.home.homeDirectory}/.local/state/caelestia
+      mkdir -p ${config.home.homeDirectory}/.local/state/caelestia/wallpaper
+      printf '%s\n' "$wallpaper_path" > ${config.home.homeDirectory}/.local/state/caelestia/wallpaper/path.txt
+      ln -sfn "$wallpaper_path" ${config.home.homeDirectory}/.local/state/caelestia/wallpaper/current
       printf '%s\n' '${builtins.toJSON icebergScheme}' > ${config.home.homeDirectory}/.local/state/caelestia/scheme.json
     '';
 }
