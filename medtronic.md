@@ -1,8 +1,8 @@
-# Medtronic CareLink in Omarchy Windows VM
+# Medtronic CareLink in the NixOS Windows VM
 
-Working setup for the MiniMed/CareLink Blue Adapter inside the Dockur Windows VM on Omarchy.
+Working setup for the MiniMed/CareLink Blue Adapter inside the Dockur Windows VM on NixOS.
 
-## Omarchy Windows SSH
+## Windows SSH
 
 Windows must have OpenSSH Server installed and running:
 
@@ -63,18 +63,24 @@ The base Windows VM starts without the adapter:
 
 ```sh
 winup
+# or
+cgpp-windows start --no-rdp
 ```
 
 Start with CareLink serial passthrough only after the adapter exists as `/dev/ttyUSB0`:
 
 ```sh
 winusb
+# or
+cgpp-windows start --usb --no-rdp
 ```
 
 Start with CareLink serial passthrough and open RDP:
 
 ```sh
 winrdp-usb
+# or
+cgpp-windows start --usb
 ```
 
 On NixOS, the Home Manager module creates an untracked env file on first activation:
@@ -84,6 +90,19 @@ On NixOS, the Home Manager module creates an untracked env file on first activat
 ```
 
 The default file only sets `WINDOWS_USERNAME=cgpp`. If `WINDOWS_PASSWORD` is omitted, Dockurr uses its built-in initial password behavior.
+
+## Restored Windows Images
+
+The recovery flow restores the Windows VM from a backed-up `data.img`:
+
+```sh
+cgpp-windows restore --image /path/to/data.img
+cgpp-windows start --usb
+```
+
+Do not symlink `~/.windows/data.img`. Dockur/QEMU can treat the symlink itself
+as the disk image. Use the restore command so the active image is a real file:
+hard link when possible, otherwise sparse/reflink copy or rsync.
 
 ## Why This Works
 

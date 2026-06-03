@@ -1,10 +1,11 @@
-# Nix Darwin Configuration
+# Nix Configuration
 
-Declarative macOS configuration using nix-darwin, home-manager, and agenix.
+Declarative macOS and NixOS configuration using nix-darwin, NixOS,
+Home Manager, Disko, and agenix.
 
 ## The "Nuke and Pave" Promise
 
-Lost your laptop? New machine? One command:
+Lost your Mac? New Mac? One command:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/GappelSolutions/dotfiles/main/nix/bootstrap.sh | bash
@@ -23,8 +24,13 @@ The script will:
 ```
 nix/
 ├── flake.nix                 # Entry point, declares inputs
-├── darwin-configuration.nix  # System-level: macOS defaults, Homebrew casks, agenix
-├── home.nix                  # User-level: packages, shell, dotfiles
+├── hosts/
+│   ├── macbook/              # macOS host
+│   ├── dev/                  # thin NixOS dev host
+│   └── desktop/cgpp-t14/     # ThinkPad desktop + recovery install host
+├── modules/                  # Darwin, NixOS, desktop, and shared modules
+├── disko/                    # Fresh-install disk layouts
+├── scripts/                  # Recovery and Windows VM automation
 ├── secrets/
 │   ├── secrets.nix           # Declares which keys can decrypt which secrets
 │   ├── ssh-github-personal.age
@@ -33,6 +39,27 @@ nix/
 ├── bootstrap.sh              # Fresh machine setup script
 └── README.md                 # You are here
 ```
+
+## ThinkPad Recovery USB
+
+Build the recovery ISO:
+
+```bash
+cd ~/dev/misc/dotfiles/nix
+nix build .#nixosConfigurations.cgpp-recovery-iso.config.system.build.isoImage
+```
+
+Boot the ISO and run:
+
+```bash
+sudo cgpp-install tui
+```
+
+The TUI installs `.#cgpp-t14-recovery` with Disko, restores the Windows
+`data.img`, writes the Dockur boot marker, and keeps CareLink USB passthrough
+available through `cgpp-windows start --usb`.
+
+Full runbook: [NIX_DESKTOP_PLAN.md](NIX_DESKTOP_PLAN.md).
 
 ## How It Works
 

@@ -14,16 +14,18 @@ launchd agents, macOS defaults, quarantine workarounds, and private local
 tool paths.
 - `hosts/dev`: clean NixOS VM. It should stay server/thin-client friendly:
 SSH, Tailscale, CLI tools, shell, editor, and shared dotfiles only.
-- `hosts/desktop`: future NixOS desktop host family. It should be a real
+- `hosts/desktop`: current NixOS desktop host family. It is a real
 laptop/desktop system, not a thin client: Hyprland, Caelestia shell,
 NetworkManager, Bluetooth, printing, PipeWire, power/battery, Lenovo laptop
 keys, clipboard history, keyboard layouts, monitor support, Codex CLI, and a
 browser for auth. It may also carry explicit desktop workloads that are
 already required, such as the Dockur Windows/CareLink VM. Keep it minimal and
-declarative; do not copy Omarchy's package opinions.
-- `hosts/windows`: future Windows setup should be separate. Prefer a small
-bootstrap script for Windows Terminal, winget, PowerShell, WSL, and SSH
-rather than forcing Windows into the Nix module shape.
+declarative.
+- `hosts/desktop/cgpp-t14/recovery-configuration.nix`: fresh-install variant
+used by the recovery USB. It avoids generated UUID hardware config and is
+paired with the Disko layout in `disko/cgpp-t14.nix`.
+- Windows is a VM workload on the NixOS desktop, not a native partition. The
+restore/start automation lives in `scripts/cgpp-windows`.
 
 ## Shared Modules
 
@@ -70,9 +72,9 @@ hardcoded in Lua. Examples: `DOTNET_ROOT`, `NETCOREDBG_PATH`, and shell paths.
 2. Make the dev VM reproducible from `nixosConfigurations.dev`.
 3. Move Mac GUI/workaround pieces into Darwin-only modules.
 4. Extract more shared CLI and dotfiles from the Mac modules when stable.
-5. Add the desktop host as a separate NixOS host family, reusing shared CLI
+5. Keep the desktop host as a separate NixOS host family, reusing shared CLI
 modules but keeping graphical/session services in desktop-specific modules.
-6. Add Windows as a separate bootstrap path later.
+6. Keep Windows restore as a Dockur VM workflow managed by `cgpp-windows`.
 
 ## Current Audit
 
@@ -85,6 +87,9 @@ The broad architecture is in place:
   Windows VM.
 - Desktop Home Manager modules are separate from system modules: Hyprland user
   config, Caelestia, ownCloud, shortcuts, and Windows VM helpers.
+- The recovery path is declarative: `cgpp-recovery-iso` boots the installer,
+  `cgpp-t14-recovery` installs the host with Disko, and `cgpp-windows` restores
+  the Windows VM image without using symlinks for `data.img`.
 
 Known gaps to clean up after the login/welcome work:
 

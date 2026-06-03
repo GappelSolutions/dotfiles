@@ -1,0 +1,216 @@
+set -euo pipefail
+
+APP=${0##*/}
+FLAKE=${CGPP_FLAKE:-}
+
+usage() {
+  cat <<'EOF'
+Usage:
+  cgpp-install tui
+  cgpp-install scan
+  cgpp-install mount-usb
+  cgpp-install install --disk /dev/nvme0n1 [--image /path/data.img]
+  cgpp-install restore --image /path/data.img [--target-root /mnt]
+
+Environment:
+  CGPP_FLAKE=/path/to/cgpp-recovery   Override flake path.
+  CGPP_YES=1                          Skip typed destructive confirmation.
+
+The install command repartitions the selected disk. The script refuses to do
+that unless you type the exact target disk path, or set CGPP_YES=1.
+EOF
+}
+
+die() {
+  printf '%s: %s\n' "$APP" "$*" >&2
+  exit 1
+}
+
+log() {
+  printf '[%s] %s\n' "$(date +%H:%M:%S)" "$*"
+}
+
+need_root() {
+  [ "$(id -u)" = 0 ] || die "run this command as root"
+}
+
+need() {
+  command -v "$1" >/dev/null 2>&1 || die "missing command: $1"
+}
+
+resolve_flake() {
+  if [ -n "$FLAKE" ]; then
+    printf '%s\n' "$FLAKE"
+    return
+  fi
+  if [ -f ./flake.nix ]; then
+    pwd
+    return
+  fi
+  if [ -f /etc/cgpp-recovery/flake.nix ]; then
+    printf '%s\n' /etc/cgpp-recovery
+    return
+  fi
+  if [ -f /run/media/nixos/CGPP_USB/cgpp-recovery/flake.nix ]; then
+    printf '%s\n' /run/media/nixos/CGPP_USB/cgpp-recovery
+    return
+  fi
+  die "cannot find cgpp-recovery flake; set CGPP_FLAKE=/path/to/cgpp-recovery"
+}
+
+scan() {
+  log "block devices"
+  lsblk -o NAME,PATH,SIZE,TYPE,FSTYPE,LABEL,MODEL,MOUNTPOINTS
+  printf '\n'
+  log "candidate Windows VM images"
+  find /run/media /media /mnt /home -xdev -type f -name data.img -size +10G -printf '%s %p\n' 2>/dev/null | sort -n || true
+}
+
+mount_usb() {
+  need_root
+  local dev label target
+  dev=${1:-}
+  if [ -z "$dev" ]; then
+    dev=$(lsblk -rpno PATH,TYPE,FSTYPE,LABEL | awk '$2 == "part" && ($3 == "exfat" || $3 == "vfat" || $3 == "ntfs") && $4 ~ /CGPP|USB|WIN|BACKUP/ { print $1; exit }')
+  fi
+  [ -n "$dev" ] || die "no likely USB partition found"
+  label=$(lsblk -no LABEL "$dev" | tr -cd '[:alnum:]_.-')
+  [ -n "$label" ] || label=$(basename "$dev")
+  target="/mnt/$label"
+  install -d "$target"
+  if findmnt -rn "$target" >/dev/null 2>&1; then
+    log "$dev already mounted at $target"
+  else
+    mount -o uid=1000,gid=100,umask=022 "$dev" "$target"
+    log "mounted $dev at $target"
+  fi
+  find "$target" -maxdepth 5 -type f -name data.img -size +10G -printf '%s %p\n' 2>/dev/null | sort -n || true
+}
+
+confirm_wipe() {
+  local disk answer
+  disk=$1
+  [ -b "$disk" ] || die "target disk is not a block device: $disk"
+  if [ "${CGPP_YES:-0}" = 1 ]; then
+    return
+  fi
+  printf '\nTarget disk contents:\n'
+  lsblk -o NAME,PATH,SIZE,TYPE,FSTYPE,LABEL,MODEL,MOUNTPOINTS "$disk"
+  printf '\nThis will erase and repartition %s.\nType exactly "%s" to continue: ' "$disk" "$disk"
+  read -r answer
+  [ "$answer" = "$disk" ] || die "confirmation did not match; aborting"
+}
+
+install_system() {
+  need_root
+  need nix
+
+  local disk="" image="" arg flake
+  while [ $# -gt 0 ]; do
+    arg=$1
+    case "$arg" in
+      --disk)
+        disk=${2:-}
+        [ -n "$disk" ] || die "--disk needs a path"
+        shift 2
+        ;;
+      --image)
+        image=${2:-}
+        [ -n "$image" ] || die "--image needs a path"
+        shift 2
+        ;;
+      *)
+        die "unknown install option: $arg"
+        ;;
+    esac
+  done
+  [ -n "$disk" ] || die "install requires --disk /dev/..."
+  flake=$(resolve_flake)
+
+  confirm_wipe "$disk"
+  log "installing NixOS from $flake to $disk"
+  nix --experimental-features "nix-command flakes" run github:nix-community/disko#disko-install -- \
+    --flake "$flake#cgpp-t14" \
+    --disk main "$disk"
+
+  if [ -n "$image" ]; then
+    log "restoring Windows image into installed system"
+    nix --experimental-features "nix-command flakes" run "$flake#cgpp-windows" -- restore --image "$image" --target-root /mnt
+  fi
+
+  log "installation complete; reboot after verifying /mnt"
+}
+
+restore_only() {
+  local image="" target="/mnt" arg flake
+  while [ $# -gt 0 ]; do
+    arg=$1
+    case "$arg" in
+      --image)
+        image=${2:-}
+        shift 2
+        ;;
+      --target-root)
+        target=${2:-}
+        shift 2
+        ;;
+      *)
+        die "unknown restore option: $arg"
+        ;;
+    esac
+  done
+  [ -n "$image" ] || die "restore requires --image PATH"
+  flake=$(resolve_flake)
+  nix --experimental-features "nix-command flakes" run "$flake#cgpp-windows" -- restore --image "$image" --target-root "$target"
+}
+
+choose_disk() {
+  lsblk -dpno PATH,SIZE,MODEL,TYPE | awk '$4 == "disk" { print $1 "  " $2 "  " $3 }' | gum choose --header "Target disk to erase/install"
+}
+
+choose_image() {
+  find /run/media /media /mnt /home -xdev -type f -name data.img -size +10G 2>/dev/null | sort | gum choose --header "Windows data.img"
+}
+
+tui() {
+  need gum
+  local choice disk_line disk image
+  choice=$(gum choose \
+    "Scan disks/images" \
+    "Mount USB" \
+    "Install NixOS and restore Windows" \
+    "Restore Windows into /mnt only" \
+    "Start restored Windows on this boot")
+  case "$choice" in
+    "Scan disks/images")
+      scan
+      ;;
+    "Mount USB")
+      mount_usb
+      ;;
+    "Install NixOS and restore Windows")
+      disk_line=$(choose_disk)
+      disk=${disk_line%% *}
+      image=$(choose_image)
+      install_system --disk "$disk" --image "$image"
+      ;;
+    "Restore Windows into /mnt only")
+      image=$(choose_image)
+      restore_only --image "$image" --target-root /mnt
+      ;;
+    "Start restored Windows on this boot")
+      cgpp-windows tui
+      ;;
+  esac
+}
+
+cmd=${1:-}
+case "$cmd" in
+  tui) shift; tui "$@" ;;
+  scan) shift; scan "$@" ;;
+  mount-usb) shift; mount_usb "$@" ;;
+  install) shift; install_system "$@" ;;
+  restore) shift; restore_only "$@" ;;
+  ""|-h|--help|help) usage ;;
+  *) die "unknown command: $cmd" ;;
+esac
