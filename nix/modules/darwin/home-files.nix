@@ -4,6 +4,11 @@ let
   repo = ../../..;
 in
 {
+  imports = [
+    ../shared/home-agent-tools.nix
+    ../shared/home-omp-caveman.nix
+  ];
+
   xdg.configFile = {
     "nvim".source = repo + /nvim/.config/nvim;
     "alacritty".source = repo + /alacritty/.config/alacritty;
