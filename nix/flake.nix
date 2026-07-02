@@ -3,6 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+  nixos-wsl.url = "github:nix-community/NixOS-WSL"; nixos-wsl.inputs.nixpkgs.follows = "nixpkgs";
 
     nix-darwin = {
       url = "github:LnL7/nix-darwin";
@@ -228,6 +229,20 @@
           darwin-rebuild switch --flake ${self}#${hostname}
         '');
         meta.description = "Rebuild the Darwin host";
+      };
+
+      nixosConfigurations.wsl = nixpkgs.lib.nixosSystem {
+        system = linuxSystem;
+        specialArgs = { inherit inputs; };
+        modules = [
+          { nixpkgs.overlays = [ codexOverlay ]; }
+          inputs.nixos-wsl.nixosModules.default
+          ./hosts/wsl/configuration.nix
+          home-manager.nixosModules.home-manager
+          {
+            home-manager.users.cgpp = import ./hosts/dev/home.nix;
+          }
+        ];
       };
     };
 }

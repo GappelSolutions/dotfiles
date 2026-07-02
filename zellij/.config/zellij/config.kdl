@@ -137,49 +137,49 @@ keybinds clear-defaults=true {
         }
     }
     shared_among "normal" "locked" {
-        bind "Alt left" { MoveFocusOrTab "left"; }
-        bind "Alt down" { MoveFocus "down"; }
-        bind "Alt up" { MoveFocus "up"; }
-        bind "Alt right" { MoveFocusOrTab "right"; }
-        bind "Alt +" { Resize "Increase"; }
-        bind "Alt -" { Resize "Decrease"; }
-        bind "Alt =" { Resize "Increase"; }
-        bind "Alt [" { PreviousSwapLayout; }
-        bind "Alt ]" { NextSwapLayout; }
+        bind "Alt Ctrl left" { MoveFocusOrTab "left"; }
+        bind "Alt Ctrl down" { MoveFocus "down"; }
+        bind "Alt Ctrl up" { MoveFocus "up"; }
+        bind "Alt Ctrl right" { MoveFocusOrTab "right"; }
+        bind "Alt Ctrl +" { Resize "Increase"; }
+        bind "Alt Ctrl -" { Resize "Decrease"; }
+        bind "Alt Ctrl =" { Resize "Increase"; }
+        bind "Alt Ctrl [" { PreviousSwapLayout; }
+        bind "Alt Ctrl ]" { NextSwapLayout; }
         // Cmd shortcuts (passed through from Alacritty as Alt escape sequences)
-        bind "Alt w" { ToggleFloatingPanes; }
-        bind "Alt h" { MoveFocusOrTab "left"; }
-        bind "Alt j" { MoveFocus "down"; }
-        bind "Alt k" { MoveFocus "up"; }
-        bind "Alt l" { MoveFocusOrTab "right"; }
-        bind "Alt n" { NewPane; }
-        bind "Alt a" { NewPane "right"; }
-        bind "Alt d" { NewPane "down"; }
-        bind "Alt f" { ToggleFocusFullscreen; }
+        bind "Alt Ctrl w" { ToggleFloatingPanes; }
+        bind "Alt Ctrl h" { MoveFocusOrTab "left"; }
+        bind "Alt Ctrl j" { MoveFocus "down"; }
+        bind "Alt Ctrl k" { MoveFocus "up"; }
+        bind "Alt Ctrl l" { MoveFocusOrTab "right"; }
+        bind "Alt Ctrl n" { NewPane; }
+        bind "Alt Ctrl a" { NewPane "right"; }
+        bind "Alt Ctrl d" { NewPane "down"; }
+        bind "Alt Ctrl f" { ToggleFocusFullscreen; }
         // Close pane (Alt+x / Cmd+x)
-        bind "Alt x" { CloseFocus; }
+        bind "Alt Ctrl x" { CloseFocus; }
         // Session picker (Alt+m / Cmd+m)
-        bind "Alt m" {
+        bind "Alt Ctrl m" {
             Run "bash" "-lc" "zellij-welcome" {
                 floating true
                 close_on_exit true
             }
         }
-        bind "Alt H" { MovePane "left"; }
-        bind "Alt J" { MovePane "down"; }
-        bind "Alt K" { MovePane "up"; }
-        bind "Alt L" { MovePane "right"; }
+        bind "Alt Ctrl H" { MovePane "left"; }
+        bind "Alt Ctrl J" { MovePane "down"; }
+        bind "Alt Ctrl K" { MovePane "up"; }
+        bind "Alt Ctrl L" { MovePane "right"; }
         // Tab switching (Cmd+1-9 from Alacritty)
-        bind "Alt 1" { GoToTab 1; }
-        bind "Alt 2" { GoToTab 2; }
-        bind "Alt 3" { GoToTab 3; }
-        bind "Alt 4" { GoToTab 4; }
-        bind "Alt 5" { GoToTab 5; }
-        bind "Alt 6" { GoToTab 6; }
-        bind "Alt 7" { GoToTab 7; }
-        bind "Alt 8" { GoToTab 8; }
-        bind "Alt 9" { GoToTab 9; }
-        bind "Alt 0" { GoToTab 10; }
+        bind "Alt Ctrl 1" { GoToTab 1; }
+        bind "Alt Ctrl 2" { GoToTab 2; }
+        bind "Alt Ctrl 3" { GoToTab 3; }
+        bind "Alt Ctrl 4" { GoToTab 4; }
+        bind "Alt Ctrl 5" { GoToTab 5; }
+        bind "Alt Ctrl 6" { GoToTab 6; }
+        bind "Alt Ctrl 7" { GoToTab 7; }
+        bind "Alt Ctrl 8" { GoToTab 8; }
+        bind "Alt Ctrl 9" { GoToTab 9; }
+        bind "Alt Ctrl 0" { GoToTab 10; }
     }
     shared_except "locked" "renametab" "renamepane" {
         bind "Ctrl a" { SwitchToMode "locked"; }
@@ -364,7 +364,7 @@ default_mode "locked"
 // copy_command "wl-copy"                    // wayland
 // copy_command "pbcopy"                     // osx
 // 
-copy_command "wl-copy"
+copy_command "/mnt/c/Windows/System32/clip.exe"
  
 // Choose the destination for copied text
 // Allows using the primary selection buffer (on x11/wayland) instead of the system clipboard.
