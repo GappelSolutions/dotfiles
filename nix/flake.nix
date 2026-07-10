@@ -36,6 +36,11 @@
       url = "github:youwen5/zen-browser-flake";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    lazyops = {
+      url = "github:GappelSolutions/lazyops";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs@{ self, nixpkgs, nix-darwin, home-manager, agenix, disko, ... }:
@@ -193,6 +198,40 @@
         ];
       };
 
+      nixosConfigurations.minix = nixpkgs.lib.nixosSystem {
+        system = linuxSystem;
+        specialArgs = { inherit inputs; };
+        modules = [
+          ./hosts/minix/configuration.nix
+          home-manager.nixosModules.home-manager
+          {
+            home-manager = {
+              useGlobalPkgs = true;
+              useUserPackages = true;
+              backupFileExtension = "hm-backup";
+              users.cga = import ./hosts/minix/home.nix;
+            };
+          }
+        ];
+      };
+
+      nixosConfigurations.minix-iso = nixpkgs.lib.nixosSystem {
+        system = linuxSystem;
+        specialArgs = { inherit inputs; };
+        modules = [
+          ./hosts/minix/iso.nix
+          home-manager.nixosModules.home-manager
+          {
+            home-manager = {
+              useGlobalPkgs = true;
+              useUserPackages = true;
+              backupFileExtension = "hm-backup";
+              users.cga = import ./hosts/minix/home.nix;
+            };
+          }
+        ];
+      };
+
       nixosConfigurations.cgpp-t14-nix = desktopSystem { };
       nixosConfigurations.cgpp-t14-nix-lite =
         desktopSystem { enableCaelestia = false; };
@@ -240,7 +279,13 @@
           ./hosts/wsl/configuration.nix
           home-manager.nixosModules.home-manager
           {
-            home-manager.users.cgpp = import ./hosts/dev/home.nix;
+            home-manager = {
+              useGlobalPkgs = true;
+              useUserPackages = true;
+              backupFileExtension = "hm-backup";
+              extraSpecialArgs = { inherit inputs; };
+              users.cgpp = import ./hosts/dev/home.nix;
+            };
           }
         ];
       };
