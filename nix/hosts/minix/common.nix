@@ -33,7 +33,9 @@ in
     isNormalUser = true;
     extraGroups = [ "wheel" "podman" ];
     shell = pkgs.zsh;
-    openssh.authorizedKeys.keys = sshKeys.cgpp;
+    openssh.authorizedKeys.keys = sshKeys.cgpp ++ [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHflEu2znFC9TVaJ4dfVGzNZF0k/qmFWgJMYaIVCBe3r cgpp@wsl-box"
+    ];
     initialPassword = "docker";
   };
 
