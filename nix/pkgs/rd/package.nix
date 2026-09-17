@@ -7,7 +7,7 @@ writeShellApplication {
     git
     jujutsu
     revdiff
-  ] ++ lib.optionals stdenv.isLinux [
+  ] ++ lib.optionals stdenv.hostPlatform.isLinux [
     wl-clipboard
   ];
   text = ''

@@ -11,6 +11,9 @@
       lla = "eza -al --icons";
       lta = "eza -a --tree --level=1 --icons";
       lg = "lazygit";
+      t3c = "t3-connect connect";
+      t3d = "t3-connect disconnect";
+      t3s = "t3-connect status";
       docker = "podman";
       dcu = "podman-compose up -d --build";
       dcd = "podman-compose down";

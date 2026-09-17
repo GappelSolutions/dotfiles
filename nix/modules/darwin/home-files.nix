@@ -7,6 +7,8 @@ in
   imports = [
     ../shared/home-agent-tools.nix
     ../shared/home-omp-caveman.nix
+    ../shared/home-claude-config.nix
+    ../shared/home-codex-config.nix
   ];
 
   xdg.configFile = {
@@ -30,25 +32,6 @@ in
     </dict>
     </plist>
   '';
-
-  home.file.".claude/CLAUDE.md".source = repo + /claude/.claude/CLAUDE.md;
-  home.file.".claude/settings.json".source = repo + /claude/.claude/settings.json;
-  home.file.".claude/commands".source = pkgs.runCommand "claude-commands" {} ''
-    mkdir -p $out/cl
-    for f in ${repo}/claude/.claude/commands/*.md; do
-      cp "$f" $out/
-    done
-    for f in ${repo}/claude/.claude/commands/cl/*.md; do
-      cp "$f" $out/cl/
-    done
-  '';
-  home.file.".claude/statusline-command.sh".source = repo + /claude/.claude/statusline-command.sh;
-
-  home.file.".codex/AGENTS.md".source = repo + /codex/.codex/AGENTS.md;
-  home.file.".codex/skills/pr-ready" = {
-    source = repo + /codex/.codex/skills/pr-ready;
-    force = true;
-  };
 
   home.file.".local/bin/nerdfetch" = {
     source = ../../scripts/nerdfetch;

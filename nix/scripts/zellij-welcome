@@ -20,8 +20,6 @@ cleanup_sessions
 
 # Session options
 SESSIONS="energyboard
-backoffice
-easyasset
 elixir
 gappel-solutions
 decon

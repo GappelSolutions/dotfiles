@@ -6,8 +6,8 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use fuzzy_matcher::FuzzyMatcher;
 use fuzzy_matcher::skim::SkimMatcherV2;
+use fuzzy_matcher::FuzzyMatcher;
 use ratatui::{
     backend::CrosstermBackend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -54,18 +54,13 @@ impl App {
     fn new(minimal: bool) -> Self {
         let sessions = vec![
             Session::new("new", "Start a new session"),
-            Session::new("energyboard", "Energy management portal"),
-            Session::new("easyasset", "Asset tracking platform"),
+            Session::new("mmgdm", "Modular Monolith GDM"),
+            Session::new("iggy", "Iggy POC"),
+            Session::new("watcher", "GDM Watcher"),
             Session::new("colony", "Multi-agent dev environments"),
-            Session::new("backoffice", "Admin backend systems"),
             Session::new("gappel-solutions", "Company solutions"),
             Session::new("decon", "Decon project"),
-            Session::new("screensaver", "Screensaver development"),
-            Session::new("lazychat", "Lazychat TUI for Claude sessions"),
             Session::new("elixir", "Elixir projects"),
-            Session::new("msp", "Smartpower MSP platform"),
-            Session::new("smartflex", "SMARTFLEX foundation system"),
-            Session::new("lazylink", "TUI task board + agent coordination"),
             Session::new("welcome", "Return to this screen"),
         ];
 
@@ -116,11 +111,13 @@ impl App {
             self.filtered_indices = (0..self.sessions.len()).collect();
         } else {
             let matcher = SkimMatcherV2::default();
-            let mut matches: Vec<(usize, i64)> = self.sessions
+            let mut matches: Vec<(usize, i64)> = self
+                .sessions
                 .iter()
                 .enumerate()
                 .filter_map(|(i, session)| {
-                    matcher.fuzzy_match(&session.name, &self.search_query)
+                    matcher
+                        .fuzzy_match(&session.name, &self.search_query)
                         .map(|score| (i, score))
                 })
                 .collect();
@@ -234,9 +231,9 @@ fn render_minimal_ui(f: &mut Frame, app: &App, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(3),  // Search input
-            Constraint::Min(1),     // Session list
-            Constraint::Length(3),  // Footer
+            Constraint::Length(3), // Search input
+            Constraint::Min(1),    // Session list
+            Constraint::Length(3), // Footer
         ])
         .split(area);
 
@@ -253,14 +250,17 @@ fn render_minimal_ui(f: &mut Frame, app: &App, area: Rect) {
         ])
     };
 
-    let search_widget = Paragraph::new(search_text)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::Blue))
-                .title(" Search ")
-                .title_style(Style::default().fg(Color::Blue).add_modifier(Modifier::BOLD)),
-        );
+    let search_widget = Paragraph::new(search_text).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::Blue))
+            .title(" Search ")
+            .title_style(
+                Style::default()
+                    .fg(Color::Blue)
+                    .add_modifier(Modifier::BOLD),
+            ),
+    );
 
     f.render_widget(search_widget, chunks[0]);
 
@@ -289,8 +289,16 @@ fn render_minimal_ui(f: &mut Frame, app: &App, area: Rect) {
         Block::default()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(Color::DarkGray))
-            .title(format!(" Zellij Sessions ({}/{}) ", app.filtered_indices.len(), app.sessions.len()))
-            .title_style(Style::default().fg(Color::Blue).add_modifier(Modifier::BOLD)),
+            .title(format!(
+                " Zellij Sessions ({}/{}) ",
+                app.filtered_indices.len(),
+                app.sessions.len()
+            ))
+            .title_style(
+                Style::default()
+                    .fg(Color::Blue)
+                    .add_modifier(Modifier::BOLD),
+            ),
     );
 
     f.render_widget(list, chunks[1]);
@@ -323,18 +331,18 @@ fn render_full_ui_tall(f: &mut Frame, app: &App, area: Rect, session_list_height
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(1),                    // Top padding
-            Constraint::Length(6),                    // Logo
-            Constraint::Length(1),                    // Spacing
-            Constraint::Length(2),                    // Time/Date
-            Constraint::Length(1),                    // Spacing
-            Constraint::Length(3),                    // Search input with box
-            Constraint::Length(1),                    // Spacing
+            Constraint::Length(1),                   // Top padding
+            Constraint::Length(6),                   // Logo
+            Constraint::Length(1),                   // Spacing
+            Constraint::Length(2),                   // Time/Date
+            Constraint::Length(1),                   // Spacing
+            Constraint::Length(3),                   // Search input with box
+            Constraint::Length(1),                   // Spacing
             Constraint::Length(session_list_height), // Session list (dynamic)
-            Constraint::Min(1),                       // Flexible space
-            Constraint::Length(1),                    // Quote
-            Constraint::Length(1),                    // Spacing
-            Constraint::Length(1),                    // Help line
+            Constraint::Min(1),                      // Flexible space
+            Constraint::Length(1),                   // Quote
+            Constraint::Length(1),                   // Spacing
+            Constraint::Length(1),                   // Help line
         ])
         .split(area);
 
@@ -379,25 +387,30 @@ fn render_full_ui_tall(f: &mut Frame, app: &App, area: Rect, session_list_height
 
     // Search input with box
     let search_text = if app.search_query.is_empty() {
-        Line::from(vec![
-            Span::styled(" Type to search...", Style::default().fg(Color::DarkGray)),
-        ])
+        Line::from(vec![Span::styled(
+            " Type to search...",
+            Style::default().fg(Color::DarkGray),
+        )])
     } else {
         Line::from(vec![
             Span::styled(" ", Style::default()),
             Span::styled(&app.search_query, Style::default().fg(Color::White)),
-            Span::styled("_", Style::default().fg(Color::Blue).add_modifier(Modifier::SLOW_BLINK)),
+            Span::styled(
+                "_",
+                Style::default()
+                    .fg(Color::Blue)
+                    .add_modifier(Modifier::SLOW_BLINK),
+            ),
         ])
     };
 
-    let search_widget = Paragraph::new(search_text)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::DarkGray))
-                .title(" Search ")
-                .title_style(Style::default().fg(Color::Blue)),
-        );
+    let search_widget = Paragraph::new(search_text).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::DarkGray))
+            .title(" Search ")
+            .title_style(Style::default().fg(Color::Blue)),
+    );
 
     f.render_widget(search_widget, chunks[5]);
 
@@ -417,16 +430,15 @@ fn render_full_ui_tall(f: &mut Frame, app: &App, area: Rect, session_list_height
                         .add_modifier(Modifier::BOLD),
                 )
             } else {
-                (
-                    "  ",
-                    Style::default().fg(Color::White),
-                )
+                ("  ", Style::default().fg(Color::White))
             };
 
             let name_style = if display_idx == app.selected {
                 style
             } else {
-                Style::default().fg(Color::Blue).add_modifier(Modifier::BOLD)
+                Style::default()
+                    .fg(Color::Blue)
+                    .add_modifier(Modifier::BOLD)
             };
 
             let desc_style = if display_idx == app.selected {
@@ -449,8 +461,16 @@ fn render_full_ui_tall(f: &mut Frame, app: &App, area: Rect, session_list_height
         Block::default()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(Color::Blue))
-            .title(format!(" Select a Session ({}/{}) ", app.filtered_indices.len(), app.sessions.len()))
-            .title_style(Style::default().fg(Color::Blue).add_modifier(Modifier::BOLD)),
+            .title(format!(
+                " Select a Session ({}/{}) ",
+                app.filtered_indices.len(),
+                app.sessions.len()
+            ))
+            .title_style(
+                Style::default()
+                    .fg(Color::Blue)
+                    .add_modifier(Modifier::BOLD),
+            ),
     );
 
     f.render_widget(list, chunks[7]);
@@ -469,7 +489,12 @@ fn render_full_ui_tall(f: &mut Frame, app: &App, area: Rect, session_list_height
 
     let quote_widget = Paragraph::new(Line::from(vec![
         Span::styled("« ", Style::default().fg(Color::DarkGray)),
-        Span::styled(quote, Style::default().fg(Color::Magenta).add_modifier(Modifier::ITALIC)),
+        Span::styled(
+            quote,
+            Style::default()
+                .fg(Color::Magenta)
+                .add_modifier(Modifier::ITALIC),
+        ),
         Span::styled(" »", Style::default().fg(Color::DarkGray)),
     ]))
     .alignment(Alignment::Center);
@@ -496,12 +521,12 @@ fn render_full_ui_short(f: &mut Frame, app: &App, area: Rect, session_list_heigh
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(1),                    // Top padding
-            Constraint::Length(2),                    // Time/Date
-            Constraint::Length(1),                    // Spacing
-            Constraint::Length(3),                    // Search input with box
+            Constraint::Length(1),                   // Top padding
+            Constraint::Length(2),                   // Time/Date
+            Constraint::Length(1),                   // Spacing
+            Constraint::Length(3),                   // Search input with box
             Constraint::Length(session_list_height), // Session list (dynamic)
-            Constraint::Min(0),                       // Remaining space
+            Constraint::Min(0),                      // Remaining space
         ])
         .split(area);
 
@@ -528,25 +553,30 @@ fn render_full_ui_short(f: &mut Frame, app: &App, area: Rect, session_list_heigh
 
     // Search input with box
     let search_text = if app.search_query.is_empty() {
-        Line::from(vec![
-            Span::styled(" Type to search...", Style::default().fg(Color::DarkGray)),
-        ])
+        Line::from(vec![Span::styled(
+            " Type to search...",
+            Style::default().fg(Color::DarkGray),
+        )])
     } else {
         Line::from(vec![
             Span::styled(" ", Style::default()),
             Span::styled(&app.search_query, Style::default().fg(Color::White)),
-            Span::styled("_", Style::default().fg(Color::Blue).add_modifier(Modifier::SLOW_BLINK)),
+            Span::styled(
+                "_",
+                Style::default()
+                    .fg(Color::Blue)
+                    .add_modifier(Modifier::SLOW_BLINK),
+            ),
         ])
     };
 
-    let search_widget = Paragraph::new(search_text)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::DarkGray))
-                .title(" Search ")
-                .title_style(Style::default().fg(Color::Blue)),
-        );
+    let search_widget = Paragraph::new(search_text).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::DarkGray))
+            .title(" Search ")
+            .title_style(Style::default().fg(Color::Blue)),
+    );
 
     f.render_widget(search_widget, chunks[3]);
 
@@ -566,16 +596,15 @@ fn render_full_ui_short(f: &mut Frame, app: &App, area: Rect, session_list_heigh
                         .add_modifier(Modifier::BOLD),
                 )
             } else {
-                (
-                    "  ",
-                    Style::default().fg(Color::White),
-                )
+                ("  ", Style::default().fg(Color::White))
             };
 
             let name_style = if display_idx == app.selected {
                 style
             } else {
-                Style::default().fg(Color::Blue).add_modifier(Modifier::BOLD)
+                Style::default()
+                    .fg(Color::Blue)
+                    .add_modifier(Modifier::BOLD)
             };
 
             let desc_style = if display_idx == app.selected {
@@ -598,8 +627,16 @@ fn render_full_ui_short(f: &mut Frame, app: &App, area: Rect, session_list_heigh
         Block::default()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(Color::Blue))
-            .title(format!(" Select a Session ({}/{}) ", app.filtered_indices.len(), app.sessions.len()))
-            .title_style(Style::default().fg(Color::Blue).add_modifier(Modifier::BOLD)),
+            .title(format!(
+                " Select a Session ({}/{}) ",
+                app.filtered_indices.len(),
+                app.sessions.len()
+            ))
+            .title_style(
+                Style::default()
+                    .fg(Color::Blue)
+                    .add_modifier(Modifier::BOLD),
+            ),
     );
 
     f.render_widget(list, chunks[4]);
@@ -631,6 +668,9 @@ fn cleanup_old_sessions() -> Result<()> {
         "msp-",
         "smartflex-",
         "lazylink-",
+        "watcher-",
+        "iggy-",
+        "mmgdm-",
         "dev",
         "new-",
     ];
@@ -647,7 +687,9 @@ fn cleanup_old_sessions() -> Result<()> {
         // Extract session name (first word)
         if let Some(session_name) = clean_line.split_whitespace().next() {
             // Check if it matches any valid prefix
-            let is_valid = valid_prefixes.iter().any(|&prefix| session_name.starts_with(prefix));
+            let is_valid = valid_prefixes
+                .iter()
+                .any(|&prefix| session_name.starts_with(prefix));
 
             if !is_valid {
                 // Kill session that doesn't match template
@@ -691,7 +733,11 @@ fn launch_session(layout: &str) -> Result<()> {
         .append(true)
         .open(&log_path)?;
 
-    writeln!(log_file, "\n=== {} ===", Local::now().format("%Y-%m-%d %H:%M:%S"))?;
+    writeln!(
+        log_file,
+        "\n=== {} ===",
+        Local::now().format("%Y-%m-%d %H:%M:%S")
+    )?;
     writeln!(log_file, "Layout requested: {}", layout)?;
 
     // Get existing active session (non-EXITED)
@@ -719,10 +765,7 @@ fn launch_session(layout: &str) -> Result<()> {
     writeln!(log_file, "Looking for prefix: {}", prefix)?;
     writeln!(log_file, "Found existing: {:?}", existing)?;
 
-    let mut switch_args = vec![
-        "action".to_string(),
-        "switch-session".to_string(),
-    ];
+    let mut switch_args = vec!["action".to_string(), "switch-session".to_string()];
 
     let mut is_new_session = false;
     let target_session = if let Some(existing_name) = existing.as_ref() {
@@ -747,8 +790,16 @@ fn launch_session(layout: &str) -> Result<()> {
     match &result {
         Ok(output) => {
             writeln!(log_file, "Command succeeded")?;
-            writeln!(log_file, "stdout: {}", String::from_utf8_lossy(&output.stdout))?;
-            writeln!(log_file, "stderr: {}", String::from_utf8_lossy(&output.stderr))?;
+            writeln!(
+                log_file,
+                "stdout: {}",
+                String::from_utf8_lossy(&output.stdout)
+            )?;
+            writeln!(
+                log_file,
+                "stderr: {}",
+                String::from_utf8_lossy(&output.stderr)
+            )?;
             writeln!(log_file, "status: {}", output.status)?;
         }
         Err(e) => {

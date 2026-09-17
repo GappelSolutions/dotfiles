@@ -325,6 +325,15 @@ print_step "Claude Code..."
 claude login
 print_success "Claude Code authenticated"
 
+# Claude Code plugins — ~/.claude/plugins is machine-local state, not nix-managed.
+# settings.json only *enables* plugins; the marketplace + install must exist too.
+print_step "Claude Code plugins..."
+claude plugin marketplace add anthropics/claude-plugins-official || true
+for p in typescript-lsp csharp-lsp frontend-design; do
+  claude plugin install "$p@claude-plugins-official" || true
+done
+print_success "Claude Code plugins installed"
+
 # =============================================================================
 # Done!
 # =============================================================================

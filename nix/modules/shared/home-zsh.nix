@@ -31,6 +31,9 @@
       lla = "eza -al --icons";
       lta = "eza -a --tree --level=1 --icons";
       lg = "lazygit";
+      t3c = "t3-connect connect";
+      t3d = "t3-connect disconnect";
+      t3s = "t3-connect status";
       docker = "podman";
       dcu = "podman-compose up -d --build";
       dcd = "podman-compose down";
@@ -52,10 +55,15 @@
       dr = "devenv tasks run";
     };
 
-    initContent = ''
+    # .zshenv: sourced by every zsh invocation, including non-interactive
+    # ones (agents, scripts). Keeping the PAT here means az never falls back
+    # to a cached az-login AAD token, which expires every ~week.
+    envExtra = ''
       # --- Secrets ---
       [[ -r ~/.azure-devops-pat ]] && export AZURE_DEVOPS_EXT_PAT="$(<~/.azure-devops-pat)"
+    '';
 
+    initContent = ''
       # --- Completion ---
       fpath=(~/.zsh/completions $fpath)
       zstyle ':completion:*' menu select

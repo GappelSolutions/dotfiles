@@ -60,6 +60,36 @@ format_duration() {
 
 DUR_FMT=$(format_duration $DURATION)
 
+# 5h / weekly usage % via OAuth usage API, cached to avoid a network call per render
+CACHE_FILE="/tmp/.claude-usage-cache-$(id -u)"
+CACHE_TTL=300
+USAGE_JSON=""
+if [ -f "$CACHE_FILE" ] && [ $(( $(date +%s) - $(stat -c %Y "$CACHE_FILE" 2>/dev/null || echo 0) )) -lt "$CACHE_TTL" ]; then
+    USAGE_JSON=$(cat "$CACHE_FILE")
+else
+    TOKEN=$(jq -r '.claudeAiOauth.accessToken // empty' ~/.claude/.credentials.json 2>/dev/null)
+    if [ -n "$TOKEN" ]; then
+        USAGE_JSON=$(curl -s --max-time 2 -H "Authorization: Bearer $TOKEN" -H "anthropic-beta: oauth-2025-04-20" "https://api.anthropic.com/api/oauth/usage" 2>/dev/null)
+        [ -n "$USAGE_JSON" ] && echo "$USAGE_JSON" > "$CACHE_FILE"
+    fi
+fi
+FIVE_H=$(echo "$USAGE_JSON" | jq -r '.five_hour.utilization // empty' 2>/dev/null)
+WEEK=$(echo "$USAGE_JSON" | jq -r '.seven_day.utilization // empty' 2>/dev/null)
+FIVE_H_RESET=$(echo "$USAGE_JSON" | jq -r '.five_hour.resets_at // empty' 2>/dev/null)
+FIVE_H_LEFT=""
+if [ -n "$FIVE_H_RESET" ]; then
+    RESET_EPOCH=$(date -d "$FIVE_H_RESET" +%s 2>/dev/null)
+    NOW_EPOCH=$(date +%s)
+    if [ -n "$RESET_EPOCH" ]; then
+        SECS_LEFT=$((RESET_EPOCH - NOW_EPOCH))
+        if [ "$SECS_LEFT" -gt 0 ]; then
+            H_LEFT=$((SECS_LEFT / 3600))
+            M_LEFT=$(((SECS_LEFT % 3600) / 60))
+            FIVE_H_LEFT=$(printf "%dh%02dm" $H_LEFT $M_LEFT)
+        fi
+    fi
+fi
+
 # Context color based on usage
 if [ "$PERCENT" -lt 60 ]; then
     CTX_COLOR="\033[32m"  # green
@@ -87,6 +117,13 @@ OUTPUT+="${GRAY} | ${RESET}"
 OUTPUT+="${CYAN}↑${IN_FMT}${RESET} ${MAGENTA}↓${OUT_FMT}${RESET}"
 OUTPUT+="${GRAY} | ${RESET}"
 OUTPUT+="${CTX_COLOR}${PERCENT}%${RESET}"
+if [ -n "$FIVE_H" ] || [ -n "$WEEK" ]; then
+    OUTPUT+="${GRAY} | ${RESET}"
+    [ -n "$FIVE_H" ] && OUTPUT+="${CYAN}5h:${FIVE_H%.*}%${RESET}"
+    [ -n "$FIVE_H_LEFT" ] && OUTPUT+="${GRAY}(${FIVE_H_LEFT})${RESET}"
+    [ -n "$FIVE_H" ] && [ -n "$WEEK" ] && OUTPUT+=" "
+    [ -n "$WEEK" ] && OUTPUT+="${MAGENTA}7d:${WEEK%.*}%${RESET}"
+fi
 OUTPUT+="${GRAY} | ${RESET}"
 OUTPUT+="${MAGENTA}${DUR_FMT}${RESET}"
 

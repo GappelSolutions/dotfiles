@@ -14,6 +14,13 @@ lsp.angularls.setup({
 lsp.ts_ls.setup({
 	on_attach = remove_formatter_on_attach,
 	capabilities = capabilities,
+	-- lspconfig's default root_dir stops at the nearest tsconfig.json, and Nx
+	-- workspaces have one per lib (e.g. libs/ersys/auth/feature-login/tsconfig.json).
+	-- That spins up a separate ts_ls instance per lib, so a buffer that sits
+	-- under several overlapping libs gets the same reference/diagnostic back
+	-- once per instance. Rooting at the Nx workspace instead gives one shared
+	-- ts_ls for the whole repo.
+	root_dir = require("lspconfig.util").root_pattern("nx.json", "tsconfig.base.json", ".git"),
 })
 
 lsp.lua_ls.setup({

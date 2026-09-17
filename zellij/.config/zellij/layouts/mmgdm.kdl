@@ -27,11 +27,12 @@ layout {
             }
 
             pane size="42%" split_direction="horizontal" {
-                pane focus=true command="devenv" cwd="src/ErsysCore" start_suspended=true {
-                    args "devenv" "tasks" "run" "ersys:dev"
+                pane focus=true command="devenv" cwd="src/GdmUi" start_suspended=true {
+                    args "devenv" "tasks" "run" "gdm-ui:dev"
                 }
 
-                pane cwd="src/ErsysCore"
+                pane cwd="src/GdmUi"
+                pane cwd="src/GdmUi"
             }
         }
     }

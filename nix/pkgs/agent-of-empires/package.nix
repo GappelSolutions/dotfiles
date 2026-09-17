@@ -18,30 +18,30 @@ let
       null;
   assets = {
     x86_64-linux = {
-      url = "https://github.com/agent-of-empires/agent-of-empires/releases/download/v1.10.1/aoe-linux-amd64.tar.gz";
-      hash = "sha256-bGVFqoPzqNxgNtv5Dmv9MTK28Fe5EORTlYku39NVmiM=";
+      url = "https://github.com/agent-of-empires/agent-of-empires/releases/download/v1.12.1/aoe-linux-amd64.tar.gz";
+      hash = "sha256-OSpK4fU+oEHt9RttEMoqtKxhkQO4Lm2LfjqBYiygrjk=";
       binary = "aoe-linux-amd64";
     };
     aarch64-linux = {
-      url = "https://github.com/agent-of-empires/agent-of-empires/releases/download/v1.10.1/aoe-linux-arm64.tar.gz";
-      hash = "sha256-sQgNwfKHgcyYCcu6TGoLvzSKQcU9s1pTY53mhATXA+4=";
+      url = "https://github.com/agent-of-empires/agent-of-empires/releases/download/v1.12.1/aoe-linux-arm64.tar.gz";
+      hash = "sha256-S4xg/C3MNRPYhOSTC1KOoIU64Q4XJMEActCQSRDSA5w=";
       binary = "aoe-linux-arm64";
     };
     x86_64-darwin = {
-      url = "https://github.com/agent-of-empires/agent-of-empires/releases/download/v1.10.1/aoe-darwin-amd64.tar.gz";
-      hash = "sha256-yeahiRDMXN5eiafZsKEpDnfjvUxuzASmfgzPjSGyoj8=";
+      url = "https://github.com/agent-of-empires/agent-of-empires/releases/download/v1.12.1/aoe-darwin-amd64.tar.gz";
+      hash = "sha256-yQj+yhsQ0CvysQggo2pwl6+LYRhyhUbAOxgu4xHigo0=";
       binary = "aoe-darwin-amd64";
     };
     aarch64-darwin = {
-      url = "https://github.com/agent-of-empires/agent-of-empires/releases/download/v1.10.1/aoe-darwin-arm64.tar.gz";
-      hash = "sha256-ogJah+e/GPaF1Pyk2Fq0ROgg+m+TEZMJKYQYhMhyUKA=";
+      url = "https://github.com/agent-of-empires/agent-of-empires/releases/download/v1.12.1/aoe-darwin-arm64.tar.gz";
+      hash = "sha256-rBYPzCq/49HtPtvN2zHk/twilZx1bR8x3kY7PEFJ/AQ=";
       binary = "aoe-darwin-arm64";
     };
   };
 in
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "agent-of-empires";
-  version = "1.10.1";
+  version = "1.12.1";
 
   src = fetchurl {
     inherit (assets.${stdenvNoCC.hostPlatform.system}) url hash;
