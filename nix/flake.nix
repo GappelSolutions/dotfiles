@@ -41,6 +41,11 @@
       url = "github:GappelSolutions/lazyops";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    claude-code-nix = {
+      url = "github:sadjow/claude-code-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs@{ self, nixpkgs, nix-darwin, home-manager, agenix, disko, ... }:
@@ -52,16 +57,20 @@
         codex = final.callPackage ./pkgs/codex/package.nix { };
       };
 
+      opencodeOverlay = final: _prev: {
+        opencode = final.callPackage ./pkgs/opencode/package.nix { };
+      };
+
       darwinPkgs = import nixpkgs {
         system = darwinSystem;
         config.allowUnfree = true;
-        overlays = [ codexOverlay ];
+        overlays = [ codexOverlay opencodeOverlay inputs.claude-code-nix.overlays.default ];
       };
 
       linuxPkgs = import nixpkgs {
         system = linuxSystem;
         config.allowUnfree = true;
-        overlays = [ codexOverlay ];
+        overlays = [ codexOverlay opencodeOverlay inputs.claude-code-nix.overlays.default ];
       };
 
       mkLinuxScript = name: path: linuxPkgs.writeShellApplication {
@@ -93,7 +102,7 @@
           system = linuxSystem;
           specialArgs = { inherit inputs; };
           modules = [
-            { nixpkgs.overlays = [ codexOverlay ]; }
+            { nixpkgs.overlays = [ codexOverlay opencodeOverlay inputs.claude-code-nix.overlays.default ]; }
             ./hosts/desktop/cgpp-t14/configuration.nix
             home-manager.nixosModules.home-manager
             {
@@ -119,7 +128,7 @@
           system = linuxSystem;
           specialArgs = { inherit inputs; };
           modules = [
-            { nixpkgs.overlays = [ codexOverlay ]; }
+            { nixpkgs.overlays = [ codexOverlay opencodeOverlay inputs.claude-code-nix.overlays.default ]; }
             disko.nixosModules.disko
             ./disko/cgpp-t14.nix
             ./hosts/desktop/cgpp-t14/recovery-configuration.nix
@@ -164,7 +173,7 @@
         system = darwinSystem;
         specialArgs = { inherit inputs; };
         modules = [
-          { nixpkgs.overlays = [ codexOverlay ]; }
+          { nixpkgs.overlays = [ codexOverlay opencodeOverlay inputs.claude-code-nix.overlays.default ]; }
           ./hosts/macbook/darwin.nix
           agenix.darwinModules.default
           home-manager.darwinModules.home-manager
@@ -184,7 +193,7 @@
         system = linuxSystem;
         specialArgs = { inherit inputs; };
         modules = [
-          { nixpkgs.overlays = [ codexOverlay ]; }
+          { nixpkgs.overlays = [ codexOverlay opencodeOverlay inputs.claude-code-nix.overlays.default ]; }
           ./hosts/dev/configuration.nix
           home-manager.nixosModules.home-manager
           {
@@ -202,6 +211,7 @@
         system = linuxSystem;
         specialArgs = { inherit inputs; };
         modules = [
+          { nixpkgs.overlays = [ inputs.claude-code-nix.overlays.default ]; }
           ./hosts/minix/configuration.nix
           home-manager.nixosModules.home-manager
           {
@@ -219,6 +229,7 @@
         system = linuxSystem;
         specialArgs = { inherit inputs; };
         modules = [
+          { nixpkgs.overlays = [ inputs.claude-code-nix.overlays.default ]; }
           ./hosts/minix/iso.nix
           home-manager.nixosModules.home-manager
           {
@@ -227,6 +238,24 @@
               useUserPackages = true;
               backupFileExtension = "hm-backup";
               users.cga = import ./hosts/minix/home.nix;
+            };
+          }
+        ];
+      };
+
+      nixosConfigurations.nix-cc = nixpkgs.lib.nixosSystem {
+        system = linuxSystem;
+        specialArgs = { inherit inputs; };
+        modules = [
+          { nixpkgs.overlays = [ inputs.claude-code-nix.overlays.default ]; }
+          ./hosts/nix-cc/configuration.nix
+          home-manager.nixosModules.home-manager
+          {
+            home-manager = {
+              useGlobalPkgs = true;
+              useUserPackages = true;
+              backupFileExtension = "hm-backup";
+              users.cga = import ./hosts/nix-cc/home.nix;
             };
           }
         ];
@@ -274,9 +303,11 @@
         system = linuxSystem;
         specialArgs = { inherit inputs; };
         modules = [
-          { nixpkgs.overlays = [ codexOverlay ]; }
+          { nixpkgs.overlays = [ codexOverlay opencodeOverlay inputs.claude-code-nix.overlays.default ]; }
           inputs.nixos-wsl.nixosModules.default
+          agenix.nixosModules.default
           ./hosts/wsl/configuration.nix
+          ./modules/nixos/secrets.nix
           home-manager.nixosModules.home-manager
           {
             home-manager = {

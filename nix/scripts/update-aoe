@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO="agent-of-empires/agent-of-empires"
+PKG_FILE="$HOME/dev/misc/dotfiles/nix/pkgs/agent-of-empires/package.nix"
+
+current_version=$(grep -m1 '^  version = ' "$PKG_FILE" | sed -E 's/.*"(.+)".*/\1/')
+latest_version=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" | grep -m1 '"tag_name"' | sed -E 's/.*"v?(.+)".*/\1/')
+
+if [[ "$current_version" == "$latest_version" ]]; then
+  echo "agent-of-empires: up to date ($current_version)"
+  exit 0
+fi
+
+echo "agent-of-empires: $current_version -> $latest_version"
+
+declare -A assets=(
+  [x86_64-linux]="aoe-linux-amd64"
+  [aarch64-linux]="aoe-linux-arm64"
+  [x86_64-darwin]="aoe-darwin-amd64"
+  [aarch64-darwin]="aoe-darwin-arm64"
+)
+
+tmp=$(mktemp)
+cp "$PKG_FILE" "$tmp"
+
+for system in "${!assets[@]}"; do
+  asset="${assets[$system]}"
+  url="https://github.com/$REPO/releases/download/v$latest_version/${asset}.tar.gz"
+  hash=$(nix-prefetch-url "$url" 2>/dev/null)
+  sri=$(nix hash convert --hash-algo sha256 --to sri "$hash")
+
+  awk -v system="$system" -v url="$url" -v sri="$sri" '
+    $0 ~ "^    " system " = \\{" { in_block=1 }
+    in_block && /url = / { sub(/url = ".*";/, "url = \"" url "\";") }
+    in_block && /hash = / { sub(/hash = ".*";/, "hash = \"" sri "\";"); in_block=0 }
+    { print }
+  ' "$tmp" > "$tmp.next" && mv "$tmp.next" "$tmp"
+done
+
+sed -i "s/version = \"$current_version\";/version = \"$latest_version\";/" "$tmp"
+cp "$tmp" "$PKG_FILE"
+rm -f "$tmp"
+
+echo "agent-of-empires: package.nix updated to $latest_version (uncommitted, review before rebuild)"

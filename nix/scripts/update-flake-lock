@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+FLAKE_DIR="$HOME/dev/misc/dotfiles/nix"
+FLAKE_ATTR="$(hostname)"
+
+cd "$FLAKE_DIR"
+
+before_hash=$(sha256sum flake.lock | cut -d' ' -f1)
+nix flake update
+after_hash=$(sha256sum flake.lock | cut -d' ' -f1)
+
+if [[ "$after_hash" == "$before_hash" ]]; then
+  echo "flake.lock: up to date"
+  exit 0
+fi
+
+echo "flake.lock: updated, building #$FLAKE_ATTR to validate before switching..."
+
+if ! nixos-rebuild build --flake ".#$FLAKE_ATTR"; then
+  echo "flake.lock: build failed, reverting lock (staying on current generation)" >&2
+  git checkout -- flake.lock
+  exit 1
+fi
+
+echo "flake.lock: build OK, switching to new generation..."
+sudo nixos-rebuild switch --flake ".#$FLAKE_ATTR"
+echo "flake.lock: switched $FLAKE_ATTR to updated generation. Roll back with: sudo nixos-rebuild switch --rollback"

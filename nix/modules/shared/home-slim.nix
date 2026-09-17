@@ -52,6 +52,8 @@
         py = "python3";
         pip = "pip3";
         btm = "bottom";
+        cc = "claude --dangerously-skip-permissions";
+        rollback = "sudo nixos-rebuild switch --rollback";
       };
 
       initContent = ''
