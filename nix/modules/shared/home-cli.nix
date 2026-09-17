@@ -11,5 +11,6 @@
     ./home-humanlayer.nix
     ./home-aoe-update.nix
     ./home-flake-update.nix
+    ./home-t3-connect.nix
   ];
 }

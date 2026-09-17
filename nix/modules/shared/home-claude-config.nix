@@ -7,6 +7,10 @@ in
   home.file.".claude/CLAUDE.md".source = repo + /claude/.claude/CLAUDE.md;
   home.file.".claude/settings.json".source = repo + /claude/.claude/settings.json;
   home.file.".claude/statusline-command.sh".source = repo + /claude/.claude/statusline-command.sh;
+  # Ruleset injected once per main session by the SessionStart hook in
+  # claude/.claude/settings.json. Standalone on purpose — no plugin, no skills,
+  # no commands, nothing to install or keep in sync.
+  home.file.".claude/caveman-ultra.md".source = repo + /claude/.claude/caveman-ultra.md;
   home.file.".claude/commands".source = pkgs.runCommand "claude-commands" {} ''
     mkdir -p $out/cl
     for f in ${repo}/claude/.claude/commands/*.md; do

@@ -52,7 +52,7 @@ style = "auto"
 style = "auto"
 
 [font.normal]
-family = "FiraCode Nerd Font"
+family = "FiraCode Nerd Font Mono"
 style = "Medium"
 
 [scrolling]
@@ -71,58 +71,146 @@ x = 4
 y = 4
 
 [terminal]
+osc52 = "OnlyCopy"
 
 [terminal.shell]
-program = "zsh"
-args = ["-l"]
+program = "wsl.exe"
+args = ["--cd", "~"]
 
 # Cmd+1-9 sends Alt+1-9 escape sequences for Zellij tab switching
 [[keyboard.bindings]]
-key = "Key1"
+key = "1"
 mods = "Command"
 chars = "\u001b1"
 
 [[keyboard.bindings]]
-key = "Key2"
+key = "2"
 mods = "Command"
 chars = "\u001b2"
 
 [[keyboard.bindings]]
-key = "Key3"
+key = "3"
 mods = "Command"
 chars = "\u001b3"
 
 [[keyboard.bindings]]
-key = "Key4"
+key = "4"
 mods = "Command"
 chars = "\u001b4"
 
 [[keyboard.bindings]]
-key = "Key5"
+key = "5"
 mods = "Command"
 chars = "\u001b5"
 
 [[keyboard.bindings]]
-key = "Key6"
+key = "6"
 mods = "Command"
 chars = "\u001b6"
 
 [[keyboard.bindings]]
-key = "Key7"
+key = "7"
 mods = "Command"
 chars = "\u001b7"
 
 [[keyboard.bindings]]
-key = "Key8"
+key = "8"
 mods = "Command"
 chars = "\u001b8"
 
 [[keyboard.bindings]]
-key = "Key9"
+key = "9"
 mods = "Command"
 chars = "\u001b9"
 
 [[keyboard.bindings]]
-key = "Key0"
+key = "0"
 mods = "Command"
+chars = "\u001b0"
+
+# WSL/ConPTY collapses extended Ctrl+Shift modifier reporting down to
+# plain Ctrl, so zellij never sees it as a distinct combo. Fake Alt
+# instead via raw ESC+char bytes (survives ConPTY untouched).
+[[keyboard.bindings]]
+key = "H"
+mods = "Control|Shift"
+chars = "\u001bh"
+
+[[keyboard.bindings]]
+key = "J"
+mods = "Control|Shift"
+chars = "\u001bj"
+
+[[keyboard.bindings]]
+key = "K"
+mods = "Control|Shift"
+chars = "\u001bk"
+
+[[keyboard.bindings]]
+key = "L"
+mods = "Control|Shift"
+chars = "\u001bl"
+
+[[keyboard.bindings]]
+key = "M"
+mods = "Control|Shift"
+chars = "\u001bm"
+
+# Ctrl+Shift+N -> new pane (Alt n in zellij). NOTE: Ctrl+Shift+X and
+# Ctrl+Shift+[ / ] get swallowed by a Windows-side global before Alacritty
+# sees them, so close-pane / swap-layout binds cannot work here.
+[[keyboard.bindings]]
+key = "N"
+mods = "Control|Shift"
+chars = "\u001bn"
+
+
+[[keyboard.bindings]]
+key = "!"
+mods = "Control|Shift"
+chars = "\u001b1"
+
+[[keyboard.bindings]]
+key = "@"
+mods = "Control|Shift"
+chars = "\u001b2"
+
+[[keyboard.bindings]]
+key = "#"
+mods = "Control|Shift"
+chars = "\u001b3"
+
+[[keyboard.bindings]]
+key = "$"
+mods = "Control|Shift"
+chars = "\u001b4"
+
+[[keyboard.bindings]]
+key = "%"
+mods = "Control|Shift"
+chars = "\u001b5"
+
+[[keyboard.bindings]]
+key = "^"
+mods = "Control|Shift"
+chars = "\u001b6"
+
+[[keyboard.bindings]]
+key = "&"
+mods = "Control|Shift"
+chars = "\u001b7"
+
+[[keyboard.bindings]]
+key = "*"
+mods = "Control|Shift"
+chars = "\u001b8"
+
+[[keyboard.bindings]]
+key = "("
+mods = "Control|Shift"
+chars = "\u001b9"
+
+[[keyboard.bindings]]
+key = ")"
+mods = "Control|Shift"
 chars = "\u001b0"

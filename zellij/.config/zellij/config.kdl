@@ -16,11 +16,13 @@ keybinds clear-defaults=true {
         bind "j" { MoveFocus "down"; }
         bind "k" { MoveFocus "up"; }
         bind "l" { MoveFocus "right"; }
-        bind "n" { NewPane; SwitchToMode "locked"; }
+        bind "[" { PreviousSwapLayout; }
+        bind "]" { NextSwapLayout; }
+        bind "n" { NewPane; }
         bind "p" { SwitchToMode "normal"; }
         bind "r" { NewPane "right"; SwitchToMode "locked"; }
         bind "w" { ToggleFloatingPanes; SwitchToMode "locked"; }
-        bind "x" { CloseFocus; SwitchToMode "locked"; }
+        bind "x" { CloseFocus; }
         bind "z" { TogglePaneFrames; SwitchToMode "locked"; }
         bind "tab" { SwitchFocus; }
     }
@@ -45,7 +47,15 @@ keybinds clear-defaults=true {
         bind "j" { GoToNextTab; }
         bind "k" { GoToPreviousTab; }
         bind "l" { GoToNextTab; }
-        bind "n" { NewTab; SwitchToMode "locked"; }
+        bind "n" {
+            Run "bash" "-c" "N=$(zellij action query-tab-names | wc -l); zellij action new-tab --name \"$((N+1))\"" {
+                floating true
+                close_on_exit true
+            }
+            SwitchToMode "locked"
+        }
+        bind "H" { MoveTab "left"; }
+        bind "L" { MoveTab "right"; }
         bind "r" { SwitchToMode "renametab"; TabNameInput 0; }
         bind "s" { ToggleActiveSyncTab; SwitchToMode "locked"; }
         bind "t" { SwitchToMode "normal"; }
@@ -137,6 +147,24 @@ keybinds clear-defaults=true {
         }
     }
     shared_among "normal" "locked" {
+        // Alt hjkl (mac) + Ctrl Shift hjkl (Windows: komorebi grabs raw Alt
+        // globally, so Alacritty remaps Ctrl+Shift+hjkl/[]/m into raw
+        // ESC+char bytes, which show up here as plain Alt binds)
+        bind "Alt h" { MoveFocusOrTab "left"; }
+        bind "Alt j" { MoveFocus "down"; }
+        bind "Alt k" { MoveFocus "up"; }
+        bind "Alt l" { MoveFocusOrTab "right"; }
+        bind "Alt [" { PreviousSwapLayout; }
+        bind "Alt ]" { NextSwapLayout; }
+        // Ctrl+Shift+N (WSL) / Cmd+N (mac) -> new pane. Ctrl+Shift+X and
+        // Ctrl+Shift+[ ] are eaten by a Windows-side global, so no WSL binds.
+        bind "Alt n" { NewPane; }
+        bind "Alt m" {
+            Run "bash" "-lc" "zellij-welcome" {
+                floating true
+                close_on_exit true
+            }
+        }
         bind "Alt Ctrl left" { MoveFocusOrTab "left"; }
         bind "Alt Ctrl down" { MoveFocus "down"; }
         bind "Alt Ctrl up" { MoveFocus "up"; }
@@ -159,7 +187,7 @@ keybinds clear-defaults=true {
         // Close pane (Alt+x / Cmd+x)
         bind "Alt Ctrl x" { CloseFocus; }
         // Session picker (Alt+m / Cmd+m)
-        bind "Alt Ctrl m" {
+        bind "Ctrl Shift o" {
             Run "bash" "-lc" "zellij-welcome" {
                 floating true
                 close_on_exit true
@@ -169,17 +197,18 @@ keybinds clear-defaults=true {
         bind "Alt Ctrl J" { MovePane "down"; }
         bind "Alt Ctrl K" { MovePane "up"; }
         bind "Alt Ctrl L" { MovePane "right"; }
-        // Tab switching (Cmd+1-9 from Alacritty)
-        bind "Alt Ctrl 1" { GoToTab 1; }
-        bind "Alt Ctrl 2" { GoToTab 2; }
-        bind "Alt Ctrl 3" { GoToTab 3; }
-        bind "Alt Ctrl 4" { GoToTab 4; }
-        bind "Alt Ctrl 5" { GoToTab 5; }
-        bind "Alt Ctrl 6" { GoToTab 6; }
-        bind "Alt Ctrl 7" { GoToTab 7; }
-        bind "Alt Ctrl 8" { GoToTab 8; }
-        bind "Alt Ctrl 9" { GoToTab 9; }
-        bind "Alt Ctrl 0" { GoToTab 10; }
+        // Tab switching (Cmd+1-9/0 on Mac, Ctrl+Shift+1-9/0 on Windows —
+        // both arrive here as plain Alt+digit via the Alacritty ESC fakeout)
+        bind "Alt 1" { GoToTab 1; }
+        bind "Alt 2" { GoToTab 2; }
+        bind "Alt 3" { GoToTab 3; }
+        bind "Alt 4" { GoToTab 4; }
+        bind "Alt 5" { GoToTab 5; }
+        bind "Alt 6" { GoToTab 6; }
+        bind "Alt 7" { GoToTab 7; }
+        bind "Alt 8" { GoToTab 8; }
+        bind "Alt 9" { GoToTab 9; }
+        bind "Alt 0" { GoToTab 10; }
     }
     shared_except "locked" "renametab" "renamepane" {
         bind "Ctrl a" { SwitchToMode "locked"; }
@@ -363,9 +392,9 @@ default_mode "locked"
 // copy_command "xclip -selection clipboard" // x11
 // copy_command "wl-copy"                    // wayland
 // copy_command "pbcopy"                     // osx
-// 
+//
 copy_command "/mnt/c/Windows/System32/clip.exe"
- 
+
 // Choose the destination for copied text
 // Allows using the primary selection buffer (on x11/wayland) instead of the system clipboard.
 // Does not apply when using copy_command.
@@ -446,7 +475,7 @@ scrollback_editor "nvim"
 // (Requires restart)
 // Default: true (if the host terminal supports it)
 // 
-// support_kitty_keyboard_protocol false
+support_kitty_keyboard_protocol false
  
 // Whether to stack panes when resizing beyond a certain size
 // Default: true

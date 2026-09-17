@@ -4,8 +4,10 @@
   xdg.configFile = {
     "nvim".source = ../../../nvim/.config/nvim;
     "lazygit/config.yml".source = ../../../lazygit/.config/lazygit/config.yml;
+    "k9s".source = ../../../k9s/.config/k9s;
     "yazi".source = ../../../yazi/.config/yazi;
     "zellij".source = ../../../zellij/.config/zellij;
+    "lazyops/config.toml".source = ../../../lazyops/.config/lazyops/config.toml;
   };
 
   home.file.".local/bin/nerdfetch" = {

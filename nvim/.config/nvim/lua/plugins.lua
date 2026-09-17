@@ -96,6 +96,18 @@ require("lazy").setup({
 	{
 		"MagicDuck/grug-far.nvim",
 		config = function()
+			-- grug-far only strips the trailing \r on Windows, so on a WSL/Linux
+			-- checkout of a CRLF repo every synced line is written back as
+			-- "...\r\r\n". That stray CR kills git's eol normalization and turns a
+			-- 1-line change into a whole-file diff. Strip it on every platform.
+			local grug_utils = require("grug-far.utils")
+			grug_utils.getLineWithoutCarriageReturn = function(line)
+				if type(line) == "string" and line:sub(-1) == "\r" then
+					return line:sub(1, -2)
+				end
+				return line
+			end
+
 			require("grug-far").setup({
 				openTargetWindow = { preferredLocation = "right" },
 			})
@@ -171,46 +183,63 @@ require("lazy").setup({
 			},
 		},
 		config = function()
-			local rzls_path = vim.fn.expand("$MASON/packages/rzls/libexec")
-			local dotnet_ls_path = vim.fn.expand("$MASON/packages/dotnet-language-server/libexec")
+			local rzls_path = vim.fn.expand("$MASON/packages/roslyn/libexec")
 			local cmd = {
-				"dotnet",
-				vim.fs.joinpath(dotnet_ls_path, "DotnetLanguageServer.dll"),
+				"roslyn",
 				"--stdio",
 				"--logLevel=Information",
 				"--extensionLogDirectory=" .. vim.fs.dirname(vim.lsp.get_log_path()),
-				"--razorSourceGenerator=" .. vim.fs.joinpath(rzls_path, "Microsoft.CodeAnalysis.Razor.Compiler.dll"),
-				"--razorDesignTimePath="
-					.. vim.fs.joinpath(rzls_path, "Targets", "Microsoft.NET.Sdk.Razor.DesignTime.targets"),
 				"--extension",
-				vim.fs.joinpath(rzls_path, "RazorExtension", "Microsoft.VisualStudioCode.RazorExtension.dll"),
+				vim.fs.joinpath(rzls_path, "Microsoft.VisualStudioCode.RazorExtension.dll"),
 			}
 
-			require("roslyn").setup({
+			-- nvim 0.12 moved diagnostic refresh from vim.lsp.util._refresh to vim.lsp.diagnostic._refresh;
+			-- roslyn.nvim's stock handler still calls the old path and errors, so override it here.
+			local handlers = vim.tbl_deep_extend("force", require("rzls.roslyn_handlers"), {
+				["workspace/projectInitializationComplete"] = function(_, _, ctx)
+					vim.notify("Roslyn project initialization complete", vim.log.levels.INFO, { title = "roslyn.nvim" })
+					vim.api.nvim_exec_autocmds("User", { pattern = "RoslynInitialized", modeline = false })
+					_G.roslyn_initialized = true
+					for _, buf in ipairs(vim.lsp.get_buffers_by_client_id(ctx.client_id)) do
+						vim.lsp.diagnostic._refresh(buf)
+					end
+				end,
+			})
+
+			vim.lsp.config("roslyn", {
 				cmd = cmd,
-				config = {
-					handlers = require("rzls.roslyn_handlers"),
-					settings = {
-						["csharp|inlay_hints"] = {
-							csharp_enable_inlay_hints_for_implicit_object_creation = true,
-							csharp_enable_inlay_hints_for_implicit_variable_types = true,
-							csharp_enable_inlay_hints_for_lambda_parameter_types = true,
-							csharp_enable_inlay_hints_for_types = true,
-							dotnet_enable_inlay_hints_for_indexer_parameters = true,
-							dotnet_enable_inlay_hints_for_literal_parameters = true,
-							dotnet_enable_inlay_hints_for_object_creation_parameters = true,
-							dotnet_enable_inlay_hints_for_other_parameters = true,
-							dotnet_enable_inlay_hints_for_parameters = true,
-							dotnet_suppress_inlay_hints_for_parameters_that_differ_only_by_suffix = true,
-							dotnet_suppress_inlay_hints_for_parameters_that_match_argument_name = true,
-							dotnet_suppress_inlay_hints_for_parameters_that_match_method_intent = true,
-						},
-						["csharp|code_lens"] = {
-							dotnet_enable_references_code_lens = true,
-						},
+				handlers = handlers,
+				settings = {
+					["csharp|inlay_hints"] = {
+						csharp_enable_inlay_hints_for_implicit_object_creation = true,
+						csharp_enable_inlay_hints_for_implicit_variable_types = true,
+						csharp_enable_inlay_hints_for_lambda_parameter_types = true,
+						csharp_enable_inlay_hints_for_types = true,
+						dotnet_enable_inlay_hints_for_indexer_parameters = true,
+						dotnet_enable_inlay_hints_for_literal_parameters = true,
+						dotnet_enable_inlay_hints_for_object_creation_parameters = true,
+						dotnet_enable_inlay_hints_for_other_parameters = true,
+						dotnet_enable_inlay_hints_for_parameters = true,
+						dotnet_suppress_inlay_hints_for_parameters_that_differ_only_by_suffix = true,
+						dotnet_suppress_inlay_hints_for_parameters_that_match_argument_name = true,
+						dotnet_suppress_inlay_hints_for_parameters_that_match_method_intent = true,
+					},
+					["csharp|code_lens"] = {
+						dotnet_enable_references_code_lens = true,
 					},
 				},
 			})
+
+			require("roslyn").setup({
+				-- Solution filters (.slnf) shouldn't count as separate targets; always
+				-- resolve to the real .slnx/.sln and remember that choice per project
+				-- so `:Roslyn target` doesn't get asked again on every window.
+				ignore_target = function(target)
+					return target:match("%.slnf$") ~= nil
+				end,
+				lock_target = true,
+			})
+			vim.lsp.enable("roslyn")
 		end,
 		init = function()
 			vim.filetype.add({
@@ -225,7 +254,14 @@ require("lazy").setup({
 		"GustavEikaas/easy-dotnet.nvim",
 		dependencies = { "nvim-lua/plenary.nvim", "nvim-telescope/telescope.nvim" },
 		config = function()
-			require("easy-dotnet").setup()
+			require("easy-dotnet").setup({
+				-- easy-dotnet ships its own bundled Roslyn LSP client ("easy_dotnet") that
+				-- runs *alongside* seblyng/roslyn.nvim's "roslyn" client above, and defaults
+				-- to on. Two Roslyn servers attached to the same C# buffers double up
+				-- codelens/references rendering (the stacked "0 references" lines) and
+				-- double the target-resolution churn. roslyn.nvim already owns the LSP here.
+				lsp = { enabled = false },
+			})
 		end,
 	},
 	{
@@ -238,6 +274,7 @@ require("lazy").setup({
 	},
 	{
 		"nvim-treesitter/nvim-treesitter",
+		lazy = false,
 		build = ":TSUpdate",
 	},
 	{
@@ -293,23 +330,10 @@ require("lazy").setup({
 
 	-- Others
 	{
-		"coffebar/neovim-project",
+		"folke/persistence.nvim",
+		event = "BufReadPre",
 		opts = {
-			projects = {
-				"~/dev/*/*",
-				vim.fn.expand("~/dev/private/gappel-cloud/src/backend/GappelCloud.Api"),
-				vim.fn.expand("~/dev/private/gappel-cloud/src/frontend"),
-			},
-			picker = {
-				type = "telescope",
-			},
+			branch = false,
 		},
-		dependencies = {
-			{ "nvim-lua/plenary.nvim" },
-			{ "nvim-telescope/telescope.nvim", tag = "0.1.4" },
-			{ "Shatur/neovim-session-manager" },
-		},
-		lazy = false,
-		priority = 100,
 	},
 })

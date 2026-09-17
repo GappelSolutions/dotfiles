@@ -49,6 +49,24 @@ if vim.env.SSH_TTY ~= nil then
 		},
 		cache_enabled = true,
 	}
+elseif vim.env.WSL_DISTRO_NAME ~= nil then
+	-- clip.exe/powershell.exe decode stdin using the Windows console's OEM
+	-- codepage (often 850, not UTF-8), which mangles multibyte glyphs like
+	-- nerd font icons and box-drawing characters. win32yank talks to the
+	-- Win32 clipboard API directly and handles UTF-8/UTF-16 conversion itself.
+	local win32yank = "/mnt/c/Program Files/Neovim/bin/win32yank.exe"
+	vim.g.clipboard = {
+		name = "wsl-clipboard",
+		copy = {
+			["+"] = { win32yank, "-i", "--crlf" },
+			["*"] = { win32yank, "-i", "--crlf" },
+		},
+		paste = {
+			["+"] = { win32yank, "-o", "--lf" },
+			["*"] = { win32yank, "-o", "--lf" },
+		},
+		cache_enabled = false,
+	}
 end
 vim.opt.backspace = "indent,eol,start"
 vim.opt.ignorecase = true
@@ -71,6 +89,11 @@ vim.opt.whichwrap:append("h,l")
 vim.opt.cursorline = true
 vim.o.termguicolors = true
 
+-- keep folds open on file open; still foldable manually (za/zc/zR/zM)
+vim.opt.foldenable = true
+vim.opt.foldlevel = 99
+vim.opt.foldlevelstart = 99
+
 vim.cmd([[
 augroup Indentation
   autocmd!
@@ -78,3 +101,4 @@ augroup Indentation
   autocmd FileType csharp,json setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
 augroup END
 ]])
+vim.opt.sessionoptions = { "buffers", "curdir", "tabpages", "winsize", "help", "globals", "skiprtp", "folds" }

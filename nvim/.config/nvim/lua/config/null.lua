@@ -30,11 +30,6 @@ null_ls.setup({
 	debug = true,
 	sources = {
 		null_ls.builtins.formatting.stylua,
-		null_ls.builtins.formatting.csharpier.with({
-			command = vim.fn.stdpath("data") .. "/mason/packages/csharpier/csharpier",
-			args = { "format", "--write-stdout" },
-			to_stdin = true,
-		}),
 		null_ls.builtins.formatting.prettierd.with({
 			cwd = function()
 				return vim.fn.getcwd()

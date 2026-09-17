@@ -1,4 +1,8 @@
+{ pkgs, ... }:
+
 {
+  home.packages = [ pkgs.git-credential-manager ];
+
   programs = {
     home-manager.enable = true;
 
@@ -10,6 +14,9 @@
         init.defaultBranch = "main";
         push.autoSetupRemote = true;
         pull.rebase = true;
+        credential.helper = "${pkgs.git-credential-manager}/bin/git-credential-manager";
+        credential."https://dev.azure.com".useHttpPath = true;
+        credential.credentialStore = "plaintext";
       };
     };
 
@@ -23,7 +30,10 @@
       nix-direnv.enable = true;
     };
 
-    fzf.enable = true;
+    fzf = {
+      enable = true;
+      historyWidget.command = "";
+    };
 
     bat = {
       enable = true;

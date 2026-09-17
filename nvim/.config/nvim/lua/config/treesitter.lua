@@ -1,13 +1,15 @@
-require("nvim-treesitter.configs").setup({
-	ensure_installed = { "lua", "javascript", "html", "typescript", "tsx", "css", "c_sharp", "dockerfile", "razor", "elixir", "heex", "eex" },
+local parsers = { "lua", "javascript", "html", "typescript", "tsx", "css", "c_sharp", "dockerfile", "razor", "elixir", "heex", "eex" }
 
-	highlight = {
-		enable = true,
-		additional_vim_regex_highlighting = false,
-	},
-	indent = {
-		enable = true,
-	},
+require("nvim-treesitter").install(parsers)
+
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = parsers,
+	callback = function()
+		vim.treesitter.start()
+		vim.wo[0][0].foldexpr = "v:lua.vim.treesitter.foldexpr()"
+		vim.wo[0][0].foldmethod = "expr"
+		vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+	end,
 })
 
 require("treesitter-context").setup({

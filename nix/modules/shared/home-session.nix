@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, lib, pkgs, ... }:
 
 {
   home = {
@@ -7,6 +7,8 @@
     sessionVariables = {
       ZELLIJ_SOCKET_DIR = "/tmp/zellij";
       BUN_INSTALL = "${config.home.homeDirectory}/.bun";
+    } // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
+      DOCKER_HOST = "unix://\${XDG_RUNTIME_DIR}/podman/podman.sock";
     };
 
     sessionPath = [

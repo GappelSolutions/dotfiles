@@ -4,6 +4,10 @@ let
   sshKeys = import ../shared/ssh-keys.nix;
 in
 {
+  nixpkgs.config.allowUnfree = true;
+
+  programs.nix-ld.enable = true;
+
   time.timeZone = "Europe/Zurich";
   i18n.defaultLocale = "en_US.UTF-8";
   i18n.extraLocaleSettings.LC_CTYPE = "en_US.UTF-8";
@@ -59,7 +63,7 @@ in
 
   users.users.cgpp = {
     isNormalUser = true;
-    extraGroups = [ "wheel" ];
+    extraGroups = [ "wheel" "podman" ];
     shell = pkgs.zsh;
     openssh.authorizedKeys.keys = sshKeys.cgpp;
   };

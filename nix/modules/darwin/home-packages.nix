@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 
 let
   zellij-welcome = pkgs.callPackage ../../rust/zellij-welcome { };
@@ -65,5 +65,13 @@ in
     rustup
     pipx
     sshpass
+    deploy-rs
   ]);
+
+  # claude-session-analyzer (csa): analyzes Claude Code session transcripts
+  # for token usage/cost/timing. Not packaged in nixpkgs; install/update it
+  # via pipx instead. Its bin dir (~/.local/bin) is on the default PATH.
+  home.activation.installClaudeSessionAnalyzer = config.lib.dag.entryAfter [ "writeBoundary" ] ''
+    ${pkgs.pipx}/bin/pipx install --force claude-session-analyzer >/dev/null 2>&1 || true
+  '';
 }
