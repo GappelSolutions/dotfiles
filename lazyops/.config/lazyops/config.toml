@@ -1,0 +1,14 @@
+default_project = "nova"
+
+[[projects]]
+name = "nova"
+organization = "https://dev.azure.com/SemaxAG"
+project = "NOVA"
+team = "NOVA Team"
+
+[theme]
+border = "#5c6370"
+border_active = "#61afef"
+selected_bg = "#1e3250"
+text = "#abb2bf"
+text_muted = "#5c6370"

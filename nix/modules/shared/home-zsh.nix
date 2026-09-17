@@ -1,6 +1,15 @@
 { pkgs, ... }:
 
 {
+  programs.atuin = {
+    enable = true;
+    enableZshIntegration = true;
+    settings = {
+      auto_sync = false;
+      update_check = false;
+    };
+  };
+
   programs.zsh = {
     enable = true;
     autosuggestion.enable = true;
@@ -26,6 +35,8 @@
       dcu = "podman-compose up -d --build";
       dcd = "podman-compose down";
       ld = "lazydocker";
+      lo = "lazyops";
+      ftp = "termscp";
       ai = "codex --dangerously-bypass-approvals-and-sandbox";
       vi = "nvim";
       vim = "nvim";
@@ -34,11 +45,17 @@
       nerdfetch = "$HOME/.local/bin/nerdfetch";
       rb = "sudo nixos-rebuild switch --flake ~/dev/misc/dotfiles/nix#cgpp-t14-nix";
       rbl = "sudo nixos-rebuild switch --flake ~/dev/misc/dotfiles/nix#cgpp-t14-nix-lite";
+      rbw = "sudo nixos-rebuild switch --flake ~/dev/misc/dotfiles/nix#wsl";
+      rollback = "sudo nixos-rebuild switch --rollback";
       sz = "source ~/.zshrc";
       zr = "zellij run -i --";
+      dr = "devenv tasks run";
     };
 
     initContent = ''
+      # --- Secrets ---
+      [[ -r ~/.azure-devops-pat ]] && export AZURE_DEVOPS_EXT_PAT="$(<~/.azure-devops-pat)"
+
       # --- Completion ---
       fpath=(~/.zsh/completions $fpath)
       zstyle ':completion:*' menu select
@@ -100,12 +117,16 @@
       bindkey '^M' _transient_accept_line
 
       setopt PROMPT_SUBST
-      PROMPT=$'\n %F{blue}''${_bubble_left}%K{blue}%F{black} ''${_host_icon}  %K{green}%F{blue}''${_bubble_right}%F{black}  %~ %f%k''${_git_info}\n %F{blue}╰─❯%f '
+      PROMPT=$'\n %F{blue}''${_bubble_left}%K{blue}%F{black} ''${_host_icon} %K{green}%F{blue}''${_bubble_right}%F{black}  %~ %f%k''${_git_info}\n %F{blue}╰─❯%f '
 
       # --- Tools ---
       eval "$(${pkgs.zoxide}/bin/zoxide init zsh)"
       setopt nocaseglob
       [[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
+
+      # devenv tasks/scripts + bun run/package.json scripts, tab-completable
+      command -v devenv >/dev/null && eval "$(COMPLETE=zsh devenv)"
+      command -v bun >/dev/null && source <(bun completions)
 
       export VISUAL="nvim"
       export EDITOR="nvim"
@@ -120,18 +141,13 @@
           zellij action switch-session "$layout-$(date +%Y%m%d-%H%M%S)" -l "$layout"
         fi
       }
-      zeb() { _zj energyboard; }
-      zbo() { _zj backoffice; }
-      zea() { _zj easyasset; }
       zex() { _zj elixir; }
       zgs() { _zj gappel-solutions; }
       zdc() { _zj decon; }
-      zsc() { _zj screensaver; }
-      zlc() { _zj lazychat; }
       zco() { _zj colony; }
-      zms() { _zj msp; }
-      zsf() { _zj smartflex; }
-      zll() { _zj lazylink; }
+      zig() { _zj iggy; }
+      zmm() { _zj mmgdm; }
+      zwa() { _zj watcher; }
 
       zel() {
         zellij attach welcome || zellij --session welcome --new-session-with-layout welcome-custom
@@ -145,6 +161,10 @@
         fi
         rm -f -- "$tmp"
       }
+
+      # if [[ -z "$ZELLIJ" ]]; then
+      #   zellij attach welcome || zellij --session welcome --new-session-with-layout welcome-custom
+      # fi
 
       clear
       $HOME/.local/bin/nerdfetch

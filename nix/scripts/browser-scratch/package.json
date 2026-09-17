@@ -1,0 +1,9 @@
+{
+  "name": "browser-scratch",
+  "private": true,
+  "type": "module",
+  "description": "Shared, version-pinned Playwright project for ad hoc browser checks (not tied to any single project's e2e setup). See README.md.",
+  "devDependencies": {
+    "playwright": "1.61.1"
+  }
+}

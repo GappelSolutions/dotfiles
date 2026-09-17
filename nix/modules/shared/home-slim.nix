@@ -52,6 +52,9 @@
         py = "python3";
         pip = "pip3";
         btm = "bottom";
+        cc = "claude --dangerously-skip-permissions";
+        rbm = "sudo nixos-rebuild switch --flake ~/watcher-gdm/server#minix";
+        rollback = "sudo nixos-rebuild switch --rollback";
       };
 
       initContent = ''

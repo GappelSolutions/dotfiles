@@ -10,7 +10,7 @@
 
 let
   # Your age master public key (replace this after running bootstrap)
-  masterKey = "age12vgwuh72srt7zsg8f5a76sdqz705aqp0ha4hqkdsrvt7tgcducxscr8shd";
+  masterKey = "age1g6lu0x2sgal3gzegdgmwz4rgcr6phg3kpm8mnrk7cwvs7kpfpp0qh75uvl";
 
   # You can add additional keys for other machines if needed
   # machine2 = "age1...";
@@ -20,4 +20,7 @@ in
   "ssh-github-personal.age".publicKeys = [ masterKey ];
   "ssh-github-work.age".publicKeys = [ masterKey ];
   "ssh-azure.age".publicKeys = [ masterKey ];
+
+  # Tokens
+  "azure-devops-pat.age".publicKeys = [ masterKey ];
 }

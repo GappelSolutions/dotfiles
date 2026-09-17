@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+# Link / unlink this machine's T3 Code environment with T3 Connect.
+#
+# T3 Code ships no `t3` binary on PATH here: the desktop app unpacks a server
+# runtime into ~/.t3/wsl-runtime/sha256-<digest>/ and the CLI is the bundled
+# apps/server/dist/bin.mjs. We resolve the newest runtime and run it with node.
+#
+# `connect unlink` disables remote access but keeps the stored CLI
+# authorization, so reconnecting needs no browser round-trip. Use `logout` to
+# also drop the credential.
+set -euo pipefail
+
+T3_HOME="${T3CODE_HOME:-$HOME/.t3}"
+RUNTIME_ROOT="$T3_HOME/wsl-runtime"
+
+die() {
+  echo "t3-connect: $*" >&2
+  exit 1
+}
+
+resolve_cli() {
+  [[ -d $RUNTIME_ROOT ]] || die "no runtime directory at $RUNTIME_ROOT — is T3 Code installed?"
+
+  local newest
+  newest=$(find "$RUNTIME_ROOT" -maxdepth 1 -type d -name 'sha256-*' -printf '%T@ %p\n' 2>/dev/null |
+    sort -rn | head -1 | cut -d' ' -f2-)
+
+  [[ -n $newest ]] || die "no unpacked runtime under $RUNTIME_ROOT"
+
+  local bin="$newest/apps/server/dist/bin.mjs"
+  [[ -f $bin ]] || die "runtime at $newest has no apps/server/dist/bin.mjs"
+
+  printf '%s' "$bin"
+}
+
+t3() {
+  node "$(resolve_cli)" "$@"
+}
+
+# `connect status --json` reports desired/authenticated/linked. Treat a missing
+# or unparseable value as false so a broken state reads as "not linked".
+status_field() {
+  t3 connect status --json 2>/dev/null |
+    grep -m1 "\"$1\":" |
+    sed -E 's/.*:[[:space:]]*([a-z]+|"[^"]*").*/\1/' |
+    tr -d '"' || true
+}
+
+cmd_status() {
+  t3 connect status --json
+}
+
+cmd_connect() {
+  if [[ $(status_field linked) == true ]]; then
+    echo "Already linked."
+    cmd_status
+    return 0
+  fi
+
+  # `connect link` records intent; the running server reconciles it on startup.
+  # It prompts for browser authorization only when no credential is stored.
+  t3 connect link "$@"
+  cmd_status
+}
+
+cmd_disconnect() {
+  if [[ $(status_field desired) != true ]]; then
+    echo "Already disconnected."
+    return 0
+  fi
+
+  t3 connect unlink
+  echo "Unlinked. Stored authorization kept — run t3c to reconnect."
+}
+
+case "${1:-}" in
+  connect | link | up)
+    shift
+    cmd_connect "$@"
+    ;;
+  disconnect | unlink | down)
+    cmd_disconnect
+    ;;
+  logout)
+    t3 connect logout
+    echo "Unlinked and cleared stored authorization."
+    ;;
+  status | "")
+    cmd_status
+    ;;
+  *)
+    die "unknown command '${1}' (expected: connect | disconnect | logout | status)"
+    ;;
+esac
