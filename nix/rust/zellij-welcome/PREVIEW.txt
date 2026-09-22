@@ -15,12 +15,12 @@
                    Sunday, February 02, 2026
 
 ┌─ Select a Session ─────────────────────────────────────────┐
-│  elixir               Elixir projects                       │
-│  gappel-solutions     Company solutions                     │
-│  decon                Decon project                         │
-│  screensaver          Screensaver development              │
-│  new                  Start a new session                   │
-│  welcome              Return to this screen                 │
+│▶ new                  Start a new session                  │
+│  colony               Multi-agent dev environments         │
+│  gappel-solutions     Company solutions                    │
+│  decon                Decon project                        │
+│  elixir               Elixir projects                      │
+│  welcome              Return to this screen                │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
@@ -37,12 +37,12 @@
 ================================================================================
 
 ┌─ Zellij Sessions ──────────────────────────────────────────┐
-│  elixir               Elixir projects                       │
-│  gappel-solutions     Company solutions                     │
-│  decon                Decon project                         │
-│  screensaver          Screensaver development              │
-│  new                  Start a new session                   │
-│  welcome              Return to this screen                 │
+│  new                  Start a new session                  │
+│  colony               Multi-agent dev environments         │
+│  gappel-solutions     Company solutions                    │
+│  decon                Decon project                        │
+│  elixir               Elixir projects                      │
+│  welcome              Return to this screen                │
 └─────────────────────────────────────────────────────────────┘
 ────────────────────────────────────────────────────────────────
           j/k: navigate • Enter: select • q: quit

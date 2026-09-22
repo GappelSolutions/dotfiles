@@ -46,11 +46,11 @@ zellij-welcome -m
 ## Sessions
 
 Predefined sessions:
-- elixir - Elixir projects
+- new - Start a new session
+- colony - Multi-agent dev environments
 - gappel-solutions - Company solutions
 - decon - Decon project
-- screensaver - Screensaver development
-- new - Start a new session
+- elixir - Elixir projects
 - welcome - Return to this screen
 
 ## Integration
@@ -61,4 +61,5 @@ Session shortcuts in zsh (from home.nix):
 - `zex` - elixir
 - `zgs` - gappel-solutions
 - `zdc` - decon
-- `zsc` - screensaver
+- `zco` - colony
+- `zel` - welcome screen

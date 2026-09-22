@@ -656,10 +656,7 @@ fn cleanup_old_sessions() -> Result<()> {
         "colony-",
         "gappel-solutions-",
         "decon-",
-        "screensaver-",
-        "lazychat-",
         "elixir-",
-        "lazylink-",
         "dev",
         "new-",
     ];

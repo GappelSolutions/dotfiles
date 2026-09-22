@@ -172,10 +172,7 @@
       zex() { _zj elixir; }
       zgs() { _zj gappel-solutions; }
       zdc() { _zj decon; }
-      zsc() { _zj screensaver; }
-      zlc() { _zj lazychat; }
       zco() { _zj colony; }
-      zll() { _zj lazylink; }
 
       zel() {
         zellij attach welcome || zellij --session welcome --new-session-with-layout welcome-custom
