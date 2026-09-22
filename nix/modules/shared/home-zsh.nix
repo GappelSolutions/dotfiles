@@ -167,7 +167,7 @@
           fi
           echo "ocl: CA offered by $endpoint"
           printf '%s' "$root" | openssl x509 -noout -issuer -dates -fingerprint -sha256
-          bundle+="$root"
+          bundle+="$root"$'\n'
         done
 
         local ok
