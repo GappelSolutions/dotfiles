@@ -79,6 +79,7 @@ in
     neovim
     (azure-cli.withExtensions [ azure-cli-extensions.azure-devops ])
     openshift
+    openssl
     openbao
     k9s
     tealdeer

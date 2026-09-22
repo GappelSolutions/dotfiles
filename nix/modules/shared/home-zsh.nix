@@ -141,9 +141,37 @@
 
       # --- OpenShift login ---
       # Credentials live in ~/.okd-credentials (mode 600), same pattern as
-      # ~/.azure-devops-pat. If absent, prompt once and offer to persist.
+      # ~/.azure-devops-pat. CA bundles per cluster in ~/.okd-ca/<host>.crt so
+      # logins stay TLS-verified instead of --insecure-skip-tls-verify.
+      OKD_CLUSTERS=(api.okd.ensor.test api.dev.ensor.test)
+
+      # Trust-on-first-use: pull the served chain, show issuer + fingerprint,
+      # pin the root only after explicit confirmation.
+      _ocl_fetch_ca() {
+        local host="$1" cadir=~/.okd-ca
+        local ca="$cadir/$host.crt" chain
+        chain=$(openssl s_client -showcerts -connect "$host:6443" </dev/null 2>/dev/null)
+        if [[ -z $chain ]]; then
+          echo "ocl: could not reach $host:6443" >&2
+          return 1
+        fi
+        # last cert in the chain is the signer OKD self-signs the API cert with
+        local root
+        root=$(printf '%s\n' "$chain" | sed -n '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' \
+          | awk '/-----BEGIN CERTIFICATE-----/{n++} {a[n]=a[n] $0 "\n"} END{printf "%s", a[n]}')
+        echo "ocl: certificate offered by $host"
+        printf '%s' "$root" | openssl x509 -noout -issuer -subject -dates -fingerprint -sha256
+        local ok
+        read -r "ok?Trust this CA for $host? [y/N] "
+        [[ $ok == [yY] ]] || return 1
+        mkdir -p "$cadir"
+        printf '%s' "$root" > "$ca"
+        chmod 644 "$ca"
+        echo "ocl: pinned $ca"
+      }
+
       ocl() {
-        local creds=~/.okd-credentials
+        local creds=~/.okd-credentials cadir=~/.okd-ca
         local user password save
 
         if [[ -r $creds ]]; then
@@ -164,10 +192,14 @@
           fi
         fi
 
-        local server rc=0
-        for server in https://api.okd.ensor.test:6443 https://api.dev.ensor.test:6443; do
-          echo "ocl: logging into $server"
-          oc login "$server" -u "$user" -p "$password" || rc=1
+        local host ca rc=0
+        for host in $OKD_CLUSTERS; do
+          ca="$cadir/$host.crt"
+          if [[ ! -r $ca ]]; then
+            _ocl_fetch_ca "$host" || { echo "ocl: skipping $host (no trusted CA)" >&2; rc=1; continue; }
+          fi
+          echo "ocl: logging into https://$host:6443"
+          oc login "https://$host:6443" --certificate-authority="$ca" -u "$user" -p "$password" || rc=1
         done
         return $rc
       }
