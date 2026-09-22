@@ -6,6 +6,7 @@
     ../../modules/shared/home-dotfiles.nix
     ../../modules/shared/home-claude-skills.nix
     ../../modules/shared/home-claude-config.nix
+    ../../modules/shared/home-t3-config.nix
     ../../modules/shared/home-mprocs.nix
   ];
 

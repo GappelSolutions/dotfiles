@@ -1,0 +1,21 @@
+# T3 Code projects, exported from state.sqlite projection_projects.
+#
+# The project list is event-sourced in state.sqlite and is NOT restorable from
+# a config file -- re-add these by hand on a new machine. settings.json keys its
+# per-project overrides by these UUIDs, and T3 mints a fresh UUID on re-add, so
+# this file is the only thing that makes those keys legible after a rebuild.
+#
+# uuid  title  workspace_root
+#
+# Refresh:
+#   sqlite3 ~/.t3/userdata/state.sqlite \
+#     "select project_id||'  '||title||'  '||workspace_root from projection_projects where deleted_at is null"
+#
+# Back up the live DB (WAL-safe; plain cp gives a torn snapshot):
+#   sqlite3 ~/.t3/userdata/state.sqlite ".backup ~/backup/t3-state.sqlite"
+
+e45afeb5-feb6-4d7d-b228-2c6bdcbae019  ClusterSetup  $HOME/dev/infra/ClusterSetup
+a0dacbfe-9d71-4473-9037-f54d69cb3c9e  NixMachines  $HOME/dev/infra/NixMachines
+76f07e19-1127-4cb4-92d4-0430f490fae2  dotfiles  $HOME/dev/misc/dotfiles
+c779abca-2493-4a5d-9b8a-7007b0d70445  infra  $HOME/dev/infra
+dbbb23d0-415b-469f-ad58-085fea833847  work-dash  $HOME/dev/private/work-dash
