@@ -141,31 +141,40 @@
 
       # --- OpenShift login ---
       # Credentials live in ~/.okd-credentials (mode 600), same pattern as
-      # ~/.azure-devops-pat. CA bundles per cluster in ~/.okd-ca/<host>.crt so
+      # ~/.azure-devops-pat. CA bundles per cluster in ~/.okd-ca/<domain>.crt so
       # logins stay TLS-verified instead of --insecure-skip-tls-verify.
-      OKD_CLUSTERS=(api.okd.ensor.test api.dev.ensor.test)
+      # A bundle needs two roots: the kube-apiserver signer for api.<domain>
+      # and the ingress-operator CA for the oauth route on *.apps.<domain>.
+      OKD_CLUSTERS=(okd.ensor.test dev.ensor.test)
 
-      # Trust-on-first-use: pull the served chain, show issuer + fingerprint,
-      # pin the root only after explicit confirmation.
+      _ocl_root_cert() {
+        openssl s_client -showcerts -connect "$1" </dev/null 2>/dev/null \
+          | sed -n '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' \
+          | awk '/-----BEGIN CERTIFICATE-----/{n++} {a[n]=a[n] $0 "\n"} END{printf "%s", a[n]}'
+      }
+
+      # Trust-on-first-use: pull both roots, show issuer + fingerprint,
+      # pin them only after explicit confirmation.
       _ocl_fetch_ca() {
-        local host="$1" cadir=~/.okd-ca
-        local ca="$cadir/$host.crt" chain
-        chain=$(openssl s_client -showcerts -connect "$host:6443" </dev/null 2>/dev/null)
-        if [[ -z $chain ]]; then
-          echo "ocl: could not reach $host:6443" >&2
-          return 1
-        fi
-        # last cert in the chain is the signer OKD self-signs the API cert with
-        local root
-        root=$(printf '%s\n' "$chain" | sed -n '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' \
-          | awk '/-----BEGIN CERTIFICATE-----/{n++} {a[n]=a[n] $0 "\n"} END{printf "%s", a[n]}')
-        echo "ocl: certificate offered by $host"
-        printf '%s' "$root" | openssl x509 -noout -issuer -subject -dates -fingerprint -sha256
+        local domain="$1" cadir=~/.okd-ca
+        local ca="$cadir/$domain.crt" endpoint root bundle=""
+
+        for endpoint in "api.$domain:6443" "oauth-openshift.apps.$domain:443"; do
+          root=$(_ocl_root_cert "$endpoint")
+          if [[ -z $root ]]; then
+            echo "ocl: could not reach $endpoint" >&2
+            return 1
+          fi
+          echo "ocl: CA offered by $endpoint"
+          printf '%s' "$root" | openssl x509 -noout -issuer -dates -fingerprint -sha256
+          bundle+="$root"
+        done
+
         local ok
-        read -r "ok?Trust this CA for $host? [y/N] "
+        read -r "ok?Trust these CAs for $domain? [y/N] "
         [[ $ok == [yY] ]] || return 1
         mkdir -p "$cadir"
-        printf '%s' "$root" > "$ca"
+        printf '%s' "$bundle" > "$ca"
         chmod 644 "$ca"
         echo "ocl: pinned $ca"
       }
@@ -192,14 +201,14 @@
           fi
         fi
 
-        local host ca rc=0
-        for host in $OKD_CLUSTERS; do
-          ca="$cadir/$host.crt"
+        local domain ca rc=0
+        for domain in $OKD_CLUSTERS; do
+          ca="$cadir/$domain.crt"
           if [[ ! -r $ca ]]; then
-            _ocl_fetch_ca "$host" || { echo "ocl: skipping $host (no trusted CA)" >&2; rc=1; continue; }
+            _ocl_fetch_ca "$domain" || { echo "ocl: skipping $domain (no trusted CA)" >&2; rc=1; continue; }
           fi
-          echo "ocl: logging into https://$host:6443"
-          oc login "https://$host:6443" --certificate-authority="$ca" -u "$user" -p "$password" || rc=1
+          echo "ocl: logging into https://api.$domain:6443"
+          oc login "https://api.$domain:6443" --certificate-authority="$ca" -u "$user" -p "$password" || rc=1
         done
         return $rc
       }
