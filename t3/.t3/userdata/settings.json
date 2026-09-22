@@ -1,0 +1,208 @@
+{
+  "defaultAutoPull": true,
+  "projectScriptOverrides": {
+    "467197c1-6525-4b56-a741-efe56552d363": [
+      {
+        "id": "serve",
+        "name": "serve",
+        "command": "cd src/GdmUi && bun start:okd test",
+        "icon": "play",
+        "runOnWorktreeCreate": false,
+        "previewUrl": "http://localhost:4100",
+        "autoOpenPreview": true
+      },
+      {
+        "id": "dry",
+        "name": "dry",
+        "command": "cd src/GdmUi && devenv tasks run cicd:dry",
+        "icon": "play",
+        "runOnWorktreeCreate": false
+      }
+    ]
+  },
+  "defaultModelSelection": {
+    "instanceId": "claudeAgent",
+    "model": "claude-opus-5",
+    "options": [
+      {
+        "id": "effort",
+        "value": "low"
+      },
+      {
+        "id": "contextWindow",
+        "value": "1m"
+      }
+    ]
+  },
+  "projectSettingsOverrides": {
+    "467197c1-6525-4b56-a741-efe56552d363": {
+      "defaultModelSelection": {
+        "instanceId": "claudeAgent",
+        "model": "claude-opus-5",
+        "options": [
+          {
+            "id": "effort",
+            "value": "low"
+          },
+          {
+            "id": "contextWindow",
+            "value": "200k"
+          }
+        ]
+      },
+      "defaultProjectScripts": [
+        {
+          "id": "serve",
+          "name": "serve",
+          "command": "cd src/GdmUi && bun start:okd test",
+          "icon": "play",
+          "runOnWorktreeCreate": false,
+          "previewUrl": "http://localhost:4100",
+          "autoOpenPreview": true
+        },
+        {
+          "id": "dry",
+          "name": "dry",
+          "command": "cd src/GdmUi && devenv tasks run cicd:dry",
+          "icon": "play",
+          "runOnWorktreeCreate": false
+        }
+      ]
+    },
+    "c779abca-2493-4a5d-9b8a-7007b0d70445": {
+      "defaultModelSelection": {
+        "instanceId": "claudeAgent",
+        "model": "claude-opus-5",
+        "options": [
+          {
+            "id": "effort",
+            "value": "low"
+          },
+          {
+            "id": "contextWindow",
+            "value": "200k"
+          }
+        ]
+      }
+    },
+    "76f07e19-1127-4cb4-92d4-0430f490fae2": {
+      "defaultModelSelection": {
+        "instanceId": "claudeAgent",
+        "model": "claude-opus-5",
+        "options": [
+          {
+            "id": "effort",
+            "value": "low"
+          },
+          {
+            "id": "contextWindow",
+            "value": "1m"
+          }
+        ]
+      }
+    },
+    "be424aee-63a8-4d51-a77e-760ccbf39684": {
+      "defaultModelSelection": {
+        "instanceId": "claudeAgent",
+        "model": "claude-opus-5",
+        "options": [
+          {
+            "id": "effort",
+            "value": "low"
+          },
+          {
+            "id": "contextWindow",
+            "value": "200k"
+          }
+        ]
+      }
+    },
+    "bfc5dfcf-a7d2-406a-acba-80b68912b258": {
+      "defaultModelSelection": {
+        "instanceId": "claudeAgent",
+        "model": "claude-opus-5",
+        "options": [
+          {
+            "id": "effort",
+            "value": "low"
+          },
+          {
+            "id": "contextWindow",
+            "value": "200k"
+          }
+        ]
+      }
+    },
+    "a0dacbfe-9d71-4473-9037-f54d69cb3c9e": {
+      "defaultModelSelection": {
+        "instanceId": "claudeAgent",
+        "model": "claude-opus-5",
+        "options": [
+          {
+            "id": "effort",
+            "value": "low"
+          },
+          {
+            "id": "contextWindow",
+            "value": "200k"
+          }
+        ]
+      }
+    }
+  },
+  "projectSettingsFolded": true,
+  "sidebarAutoSettleAfterDays": null,
+  "sidebarAutoSettleOnMerge": false,
+  "defaultThreadEnvMode": "worktree",
+  "textGenerationModelSelection": {
+    "instanceId": "claudeAgent",
+    "model": "claude-sonnet-5",
+    "options": [
+      {
+        "id": "effort",
+        "value": "low"
+      },
+      {
+        "id": "contextWindow",
+        "value": "200k"
+      }
+    ]
+  },
+  "providers": {
+    "cursor": {
+      "enabled": false
+    },
+    "grok": {
+      "enabled": false
+    },
+    "opencode": {
+      "enabled": true
+    }
+  },
+  "providerInstances": {
+    "claudeAgent": {
+      "driver": "claudeAgent",
+      "enabled": true,
+      "config": {
+        "binaryPath": "claude",
+        "homePath": "",
+        "customModels": [],
+        "launchArgs": "",
+        "autoCompactWindow": ""
+      }
+    },
+    "opencode": {
+      "driver": "opencode",
+      "enabled": true,
+      "config": {
+        "binaryPath": "opencode",
+        "serverUrl": "",
+        "serverPassword": "",
+        "customModels": [
+          "nix-hitch-one/agentic",
+          "nix-hitch-one/chat"
+        ]
+      }
+    }
+  }
+}

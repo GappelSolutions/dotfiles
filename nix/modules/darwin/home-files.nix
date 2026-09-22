@@ -8,6 +8,7 @@ in
     ../shared/home-agent-tools.nix
     ../shared/home-omp-caveman.nix
     ../shared/home-claude-config.nix
+    ../shared/home-t3-config.nix
     ../shared/home-codex-config.nix
   ];
 

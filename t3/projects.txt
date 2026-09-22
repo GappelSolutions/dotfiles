@@ -1,0 +1,25 @@
+# T3 Code projects, exported from state.sqlite projection_projects.
+#
+# The project list is event-sourced in state.sqlite and is NOT restorable from
+# a config file -- re-add these by hand on a new machine. settings.json keys its
+# per-project overrides by these UUIDs, and T3 mints a fresh UUID on re-add, so
+# this file is the only thing that makes those keys legible after a rebuild.
+#
+# uuid  title  workspace_root
+#
+# Refresh:
+#   sqlite3 ~/.t3/userdata/state.sqlite \
+#     "select project_id||'  '||title||'  '||workspace_root from projection_projects where deleted_at is null"
+#
+# Back up the live DB (WAL-safe; plain cp gives a torn snapshot):
+#   sqlite3 ~/.t3/userdata/state.sqlite ".backup ~/backup/t3-state.sqlite"
+
+e45afeb5-feb6-4d7d-b228-2c6bdcbae019  ClusterSetup  $HOME/dev/infra/ClusterSetup
+be424aee-63a8-4d51-a77e-760ccbf39684  DevelopmentTools  $HOME/dev/nova/DevelopmentTools
+467197c1-6525-4b56-a741-efe56552d363  ModularMonolithGDM  $HOME/dev/nova/ModularMonolithGDM
+a0dacbfe-9d71-4473-9037-f54d69cb3c9e  NixMachines  $HOME/dev/infra/NixMachines
+bfc5dfcf-a7d2-406a-acba-80b68912b258  Watcher_GDM  $HOME/dev/nova/Watcher_GDM
+76f07e19-1127-4cb4-92d4-0430f490fae2  dotfiles  $HOME/dev/misc/dotfiles
+451a8169-3ddf-439e-b38b-5d1218627b3a  gdm-demo-ui  $HOME/dev/nova/gdm-demo-ui
+c779abca-2493-4a5d-9b8a-7007b0d70445  infra  $HOME/dev/infra
+dbbb23d0-415b-469f-ad58-085fea833847  work-dash  $HOME/dev/private/work-dash

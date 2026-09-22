@@ -1,2 +1,7 @@
 lazygit/.config/lazygit/development.log
 windows/.config/windows/.env
+
+# T3 Code runtime state and credentials -- never track
+t3/.t3/userdata/secrets/
+t3/**/clerk-tokens.json
+t3/**/state.sqlite*
