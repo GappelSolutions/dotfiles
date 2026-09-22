@@ -145,7 +145,13 @@
       # logins stay TLS-verified instead of --insecure-skip-tls-verify.
       # A bundle needs two roots: the kube-apiserver signer for api.<domain>
       # and the ingress-operator CA for the oauth route on *.apps.<domain>.
+      # Cluster domain -> short kubeconfig context name. oc login generates
+      # namespace/cluster/user names, so ocl renames them back after each login.
       OKD_CLUSTERS=(okd.ensor.test dev.ensor.test)
+      typeset -gA OKD_CONTEXTS=(
+        okd.ensor.test gdm-stage
+        dev.ensor.test gdm-dev
+      )
 
       _ocl_root_cert() {
         openssl s_client -showcerts -connect "$1" </dev/null 2>/dev/null \
@@ -201,14 +207,23 @@
           fi
         fi
 
-        local domain ca rc=0
+        local domain ca ctxname current rc=0
         for domain in $OKD_CLUSTERS; do
           ca="$cadir/$domain.crt"
           if [[ ! -r $ca ]]; then
             _ocl_fetch_ca "$domain" || { echo "ocl: skipping $domain (no trusted CA)" >&2; rc=1; continue; }
           fi
           echo "ocl: logging into https://api.$domain:6443"
-          oc login "https://api.$domain:6443" --certificate-authority="$ca" -u "$user" -p "$password" || rc=1
+          if ! oc login "https://api.$domain:6443" --certificate-authority="$ca" -u "$user" -p "$password"; then
+            rc=1
+            continue
+          fi
+          ctxname=$OKD_CONTEXTS[$domain]
+          current=$(oc config current-context)
+          if [[ -n $ctxname && $current != $ctxname ]]; then
+            oc config delete-context "$ctxname" >/dev/null 2>&1
+            oc config rename-context "$current" "$ctxname" >/dev/null
+          fi
         done
         return $rc
       }
