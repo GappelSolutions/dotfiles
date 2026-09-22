@@ -656,18 +656,10 @@ fn cleanup_old_sessions() -> Result<()> {
 
     // Valid session prefixes
     let valid_prefixes = [
-        "energyboard-",
-        "easyasset-",
         "colony-",
-        "backoffice-",
         "gappel-solutions-",
         "decon-",
-        "screensaver-",
-        "lazychat-",
         "elixir-",
-        "msp-",
-        "smartflex-",
-        "lazylink-",
         "watcher-",
         "iggy-",
         "mmgdm-",

@@ -169,18 +169,13 @@
           zellij action switch-session "$layout-$(date +%Y%m%d-%H%M%S)" -l "$layout"
         fi
       }
-      zeb() { _zj energyboard; }
-      zbo() { _zj backoffice; }
-      zea() { _zj easyasset; }
       zex() { _zj elixir; }
       zgs() { _zj gappel-solutions; }
       zdc() { _zj decon; }
-      zsc() { _zj screensaver; }
-      zlc() { _zj lazychat; }
       zco() { _zj colony; }
-      zms() { _zj msp; }
-      zsf() { _zj smartflex; }
-      zll() { _zj lazylink; }
+      zig() { _zj iggy; }
+      zmm() { _zj mmgdm; }
+      zwa() { _zj watcher; }
 
       zel() {
         zellij attach welcome || zellij --session welcome --new-session-with-layout welcome-custom

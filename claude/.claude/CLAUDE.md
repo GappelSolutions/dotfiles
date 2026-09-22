@@ -34,7 +34,7 @@ cd <repo>/secrets && agenix -i /home/cgpp/.age/master.key -d <name>.age
 
 ## Zellij shortcuts
 
-`zex` Elixir · `zgs` Gappel Solutions · `zdc` Decon · `zsc` Screensaver · `zlc` Lazychat — attach to active session only, never resurrect exited ones.
+`zex` Elixir · `zgs` Gappel Solutions · `zdc` Decon · `zco` Colony · `zig` Iggy · `zmm` ModularMonolithGDM · `zwa` Watcher — attach to active session only, never resurrect exited ones.
 
 # Playwright
 

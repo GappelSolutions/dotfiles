@@ -49,7 +49,7 @@ A beautiful, modern terminal UI for Zellij session management using Ratatui (Rus
 ✅ **Smart Attach**: Attaches to existing active sessions
 ✅ **Auto-Create**: Creates new sessions with timestamps
 ✅ **Plugin Integration**: Works with zellij-switch.wasm plugin
-✅ **Nine Sessions**: energyboard, backoffice, easyasset, elixir, gappel-solutions, decon, screensaver, new, welcome
+✅ **Nine Sessions**: new, mmgdm, iggy, watcher, colony, gappel-solutions, decon, elixir, welcome
 
 ## Technical Details
 
@@ -67,7 +67,7 @@ A beautiful, modern terminal UI for Zellij session management using Ratatui (Rus
 
 ### Integration
 - **Home Manager**: Automatically installed to `~/.local/bin/zellij-welcome`
-- **Zsh Shortcuts**: Works with existing `zeb`, `zbo`, etc. aliases
+- **Zsh Shortcuts**: Works with existing `zex`, `zgs`, etc. aliases
 - **Git Tracked**: Binary committed for Nix flake compatibility
 
 ## Comparison to Old fzf Approach

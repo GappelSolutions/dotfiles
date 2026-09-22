@@ -46,14 +46,14 @@ zellij-welcome -m
 ## Sessions
 
 Predefined sessions:
-- energyboard - Energy management portal
-- backoffice - Admin backend systems
-- easyasset - Asset tracking platform
-- elixir - Elixir projects
+- new - Start a new session
+- mmgdm - Modular Monolith GDM
+- iggy - Iggy POC
+- watcher - GDM Watcher
+- colony - Multi-agent dev environments
 - gappel-solutions - Company solutions
 - decon - Decon project
-- screensaver - Screensaver development
-- new - Start a new session
+- elixir - Elixir projects
 - welcome - Return to this screen
 
 ## Integration
@@ -61,10 +61,11 @@ Predefined sessions:
 The binary is automatically installed to `~/.local/bin/zellij-welcome` via home-manager.
 
 Session shortcuts in zsh (from home.nix):
-- `zeb` - energyboard
-- `zbo` - backoffice
-- `zea` - easyasset
 - `zex` - elixir
 - `zgs` - gappel-solutions
 - `zdc` - decon
-- `zsc` - screensaver
+- `zco` - colony
+- `zig` - iggy
+- `zmm` - mmgdm
+- `zwa` - watcher
+- `zel` - welcome screen

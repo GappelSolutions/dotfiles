@@ -79,7 +79,7 @@ Tabs are organized by keyboard position for ergonomic access:
 
 ### Standard Tab Naming
 
-For project layouts (e.g., `easyasset.kdl`):
+For project layouts (e.g., `mmgdm.kdl`):
 
 - **1-agent** - Claude Code agents
 - **2-front-nvim** - Frontend neovim
