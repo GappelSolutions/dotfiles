@@ -139,6 +139,39 @@
       export VISUAL="nvim"
       export EDITOR="nvim"
 
+      # --- OpenShift login ---
+      # Credentials live in ~/.okd-credentials (mode 600), same pattern as
+      # ~/.azure-devops-pat. If absent, prompt once and offer to persist.
+      ocl() {
+        local creds=~/.okd-credentials
+        local user password save
+
+        if [[ -r $creds ]]; then
+          user=$(sed -n 's/^OKD_USER=//p' "$creds" | head -1)
+          password=$(sed -n 's/^OKD_PASSWORD=//p' "$creds" | head -1)
+        fi
+
+        if [[ -z $user || -z $password ]]; then
+          read -r "user?OKD username: "
+          read -rs "password?OKD password: "; echo
+          if [[ -z $user || -z $password ]]; then
+            echo "ocl: aborted, empty credentials" >&2
+            return 1
+          fi
+          read -r "save?Save credentials to $creds? [y/N] "
+          if [[ $save == [yY] ]]; then
+            ( umask 077; printf 'OKD_USER=%s\nOKD_PASSWORD=%s\n' "$user" "$password" > "$creds" )
+          fi
+        fi
+
+        local server rc=0
+        for server in https://api.okd.ensor.test:6443 https://api.dev.ensor.test:6443; do
+          echo "ocl: logging into $server"
+          oc login "$server" -u "$user" -p "$password" || rc=1
+        done
+        return $rc
+      }
+
       # --- Zellij session helpers ---
       _zj() {
         local layout="$1"
