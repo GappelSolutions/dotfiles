@@ -1,0 +1,38 @@
+#!/bin/sh
+# Clipboard sink for zellij's `copy_command`.
+#
+# zellij/config.kdl is shared by every host (macOS, NixOS desktop, WSL,
+# headless NixOS), and copy_command takes one fixed command, so the
+# host-specific choice happens here at runtime instead.
+
+is_wsl() {
+  [ -n "${WSL_DISTRO_NAME:-}" ] || [ -e /proc/sys/fs/binfmt_misc/WSLInterop ]
+}
+
+if is_wsl; then
+  # clip.exe decodes stdin with the console OEM codepage and mangles UTF-8
+  # (nerd font glyphs, box drawing). win32yank talks to the Win32 clipboard
+  # API directly -- same reasoning as nvim/.config/nvim/lua/options.lua.
+  win32yank="/mnt/c/Program Files/Neovim/bin/win32yank.exe"
+  if [ -x "$win32yank" ]; then
+    exec "$win32yank" -i --crlf
+  fi
+  exec /mnt/c/Windows/System32/clip.exe
+fi
+
+if command -v pbcopy >/dev/null 2>&1; then
+  exec pbcopy
+fi
+
+if [ -n "${WAYLAND_DISPLAY:-}" ] && command -v wl-copy >/dev/null 2>&1; then
+  exec wl-copy
+fi
+
+if [ -n "${DISPLAY:-}" ] && command -v xclip >/dev/null 2>&1; then
+  exec xclip -selection clipboard
+fi
+
+# Headless host (minix, nix-cc, dev over ssh): nothing local to copy into.
+# Drain stdin so zellij doesn't block on a full pipe.
+cat >/dev/null
+exit 1

@@ -15,6 +15,11 @@
     executable = true;
   };
 
+  home.file.".local/bin/zellij-copy" = {
+    source = ../../scripts/zellij-copy;
+    executable = true;
+  };
+
   home.activation.createSharedDirs = config.lib.dag.entryBefore [ "checkLinkTargets" ] ''
     mkdir -p $HOME/dev
     mkdir -p $HOME/bin
