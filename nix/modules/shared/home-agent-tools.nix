@@ -24,7 +24,7 @@ let
 
     [session.custom_agents]
     claude = "claude --verbose"
-    omp = "omp \"/skill:caveman ultra\""
+    omp = "omp"
 
     [session.agent_detect_as]
     omp = "pi"
@@ -68,12 +68,6 @@ let
             contextWindow: 262144
             maxTokens: 32768
             cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
-  '';
-
-  cavemanSeed = pkgs.writeText "caveman-config.json" ''
-    {
-      "defaultMode": "ultra"
-    }
   '';
 in
 {
@@ -119,17 +113,6 @@ in
       if [ ! -e "$config_file" ]; then
         mkdir -p "$config_dir"
         install -m 0600 ${ompModelsSeed} "$config_file"
-      fi
-    '';
-
-  home.activation.bootstrapCavemanConfig =
-    config.lib.dag.entryAfter [ "writeBoundary" ] ''
-      config_dir="$HOME/.config/caveman"
-      config_file="$config_dir/config.json"
-
-      if [ ! -e "$config_file" ]; then
-        mkdir -p "$config_dir"
-        install -m 0600 ${cavemanSeed} "$config_file"
       fi
     '';
 }

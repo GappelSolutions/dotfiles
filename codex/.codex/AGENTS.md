@@ -1,1 +1,0 @@
-always use "caveman ultra" on session start

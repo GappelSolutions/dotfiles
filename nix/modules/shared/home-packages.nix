@@ -37,6 +37,8 @@ in
     pkgs.opencode
     pkgs.playwright-driver.browsers
     pkgs.pipx
+    pkgs.typescript-language-server
+    pkgs.csharp-ls
   ] ++ (with pkgs; [
     git
     zoxide
