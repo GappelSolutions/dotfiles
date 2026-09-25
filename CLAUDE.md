@@ -62,7 +62,7 @@ nvim/ vim/ alacritty/ yazi/ lazygit/ lazyops/ k9s/   # shared CLI/terminal confi
 aerospace/ jetbrains/ vscode/                        # macOS only
 ```
 
-Not deployed by nix: `karabiner/`, `init.sh` (pre-nix setup), `archive/`, `tmp`. The pre-nix Stow
+Not deployed by nix: `init.sh` (pre-nix setup). The pre-nix Stow
 setup lives on the `stow` branch.
 
 ## Secrets
