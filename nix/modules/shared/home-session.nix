@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, osConfig ? { }, ... }:
 
 {
   home = {
@@ -7,7 +7,11 @@
     sessionVariables = {
       ZELLIJ_SOCKET_DIR = "/tmp/zellij";
       BUN_INSTALL = "${config.home.homeDirectory}/.bun";
-    } // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
+    }
+    # Only where podman is the container runtime. cgpp-t14 runs the Docker
+    # daemon, and pointing its docker CLI at a podman socket that does not
+    # exist broke it.
+    // lib.optionalAttrs (osConfig.virtualisation.podman.enable or false) {
       DOCKER_HOST = "unix://\${XDG_RUNTIME_DIR}/podman/podman.sock";
     };
 
