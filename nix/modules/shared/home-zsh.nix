@@ -46,8 +46,7 @@
       py = "python3";
       pip = "pip3";
       nerdfetch = "$HOME/.local/bin/nerdfetch";
-      rb = "sudo nixos-rebuild switch --flake ~/dev/misc/dotfiles/nix#cgpp-t14-nix";
-      rbl = "sudo nixos-rebuild switch --flake ~/dev/misc/dotfiles/nix#cgpp-t14-nix-lite";
+      rb = "sudo nixos-rebuild switch --flake ~/dev/misc/dotfiles/nix";
       rbw = "sudo nixos-rebuild switch --flake ~/dev/misc/dotfiles/nix#wsl";
       rollback = "sudo nixos-rebuild switch --rollback";
       sz = "source ~/.zshrc";
