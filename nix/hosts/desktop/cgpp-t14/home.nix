@@ -17,4 +17,7 @@
 
   xdg.configFile."alacritty".source =
     ../../../../alacritty/.config/alacritty;
+
+  # gnome-keyring runs on this host (modules/desktop/hyprland.nix).
+  programs.git.settings.credential.credentialStore = "secretservice";
 }

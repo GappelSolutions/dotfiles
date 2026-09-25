@@ -16,7 +16,6 @@
         pull.rebase = true;
         credential.helper = "${pkgs.git-credential-manager}/bin/git-credential-manager";
         credential."https://dev.azure.com".useHttpPath = true;
-        credential.credentialStore = "plaintext";
       };
     };
 
