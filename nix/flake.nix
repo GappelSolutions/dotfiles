@@ -201,6 +201,7 @@
               useGlobalPkgs = true;
               useUserPackages = true;
               backupFileExtension = "hm-backup";
+              extraSpecialArgs = { inherit inputs; };
               users.cgpp = import ./hosts/dev/home.nix;
             };
           }
@@ -219,6 +220,7 @@
               useGlobalPkgs = true;
               useUserPackages = true;
               backupFileExtension = "hm-backup";
+              extraSpecialArgs = { inherit inputs; };
               users.cga = import ./hosts/minix/home.nix;
             };
           }
@@ -237,6 +239,7 @@
               useGlobalPkgs = true;
               useUserPackages = true;
               backupFileExtension = "hm-backup";
+              extraSpecialArgs = { inherit inputs; };
               users.cga = import ./hosts/minix/home.nix;
             };
           }
@@ -255,6 +258,7 @@
               useGlobalPkgs = true;
               useUserPackages = true;
               backupFileExtension = "hm-backup";
+              extraSpecialArgs = { inherit inputs; };
               users.cga = import ./hosts/nix-cc/home.nix;
             };
           }
