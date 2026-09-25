@@ -1,0 +1,9 @@
+# Windows T3 Code projects, exported by win-host/sync.sh pull.
+# Maps the UUID keys in .t3/userdata/settings.json to project names.
+# The project list itself lives only in state.sqlite; re-add by hand.
+#
+# uuid  title  workspace_root
+
+b8e69d34-3289-420d-8410-1e90e79e564c  ModularMonolithGDM  C:\Users\christian.gappel\dev\nova\ModularMonolithGDM
+75e8bbf3-a2dd-4b36-a9eb-36d069b3a029  dev  C:\Users\christian.gappel\dev
+e95fd27a-dbe8-42d4-914e-805ec7564b40  private  C:\Users\christian.gappel\private

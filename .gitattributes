@@ -1,0 +1,5 @@
+# Windows-native configs are stored byte-exact. Several are CRLF, and the
+# global core.autocrlf=input would otherwise strip CRs on commit, so
+# win-host/sync.sh push would hand Windows apps LF files they never had.
+win-host/** -text
+win-host/sync.sh text eol=lf
