@@ -39,6 +39,11 @@ in
     executable = true;
   };
 
+  home.file.".local/bin/zellij-copy" = {
+    source = ../../scripts/zellij-copy;
+    executable = true;
+  };
+
   home.activation.createDirs = config.lib.dag.entryAfter ["writeBoundary"] ''
     mkdir -p $HOME/dev
     mkdir -p $HOME/bin
