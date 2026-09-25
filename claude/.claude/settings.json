@@ -1,5 +1,5 @@
 {
-  "model": "sonnet",
+  "model": "opus",
   "effortLevel": "low",
   "env": {
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
