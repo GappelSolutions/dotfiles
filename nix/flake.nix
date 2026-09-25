@@ -319,7 +319,7 @@
               useUserPackages = true;
               backupFileExtension = "hm-backup";
               extraSpecialArgs = { inherit inputs; };
-              users.cgpp = import ./hosts/dev/home.nix;
+              users.cgpp = import ./hosts/wsl/home.nix;
             };
           }
         ];
