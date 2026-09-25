@@ -40,13 +40,17 @@ let
     has_responded_to_telemetry = true
   '';
 
+  # Single source for the llama-swap box address. Plain LAN IP: the box has no
+  # DNS name, and it is reachable from macOS and WSL alike.
+  nixHitchOneUrl = "http://172.25.65.31:8080/v1";
+
   # Local llama-swap box (nix-hitch-one, gfx1201). `agentic` is Qwen3.8-27B Q4_K_XL,
   # `chat` is the fast MoE. The API is unauthenticated and reachable only from
   # the allowlisted LAN range, hence `auth: none`.
   ompModelsSeed = pkgs.writeText "omp-models.yml" ''
     providers:
       nix-hitch-one:
-        baseUrl: http://172.25.65.31:8080/v1
+        baseUrl: ${nixHitchOneUrl}
         api: openai-completions
         auth: none
         models:
@@ -93,7 +97,7 @@ in
     provider.nix-hitch-one = {
       npm = "@ai-sdk/openai-compatible";
       name = "nix-hitch-one (llama-swap)";
-      options.baseURL = "http://172.25.65.31:8080/v1";
+      options.baseURL = nixHitchOneUrl;
       models = {
         agentic = {
           name = "Qwen3.8-27B Q4_K_XL";
