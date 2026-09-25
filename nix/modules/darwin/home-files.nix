@@ -22,6 +22,10 @@ in
 
   home.file.".aerospace.toml".source = repo + /aerospace/.aerospace.toml;
   home.file.".vimrc".source = repo + /vim/.vimrc;
+  # xdg.enable is off on this host, so lazygit reads Application Support,
+  # not ~/.config.
+  home.file."Library/Application Support/lazygit/config.yml".source =
+    repo + /lazygit/.config/lazygit/config.yml;
   home.file.".ideavimrc".source = repo + /jetbrains/.ideavimrc;
   home.file."dev.smb.inetloc".text = ''
     <?xml version="1.0" encoding="UTF-8"?>
