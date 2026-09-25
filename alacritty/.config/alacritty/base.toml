@@ -1,0 +1,130 @@
+# Shared by every host. Do not put [terminal.shell] or platform-specific
+# workarounds here -- each host's alacritty.toml imports this file and adds
+# its own. Arrays (keyboard.bindings) from here are appended to, tables are
+# merged, and the importing file's scalars win.
+#
+#   unix (macOS, NixOS):  alacritty/.config/alacritty/alacritty.toml
+#   Windows:              win-host/AppData/Roaming/alacritty/alacritty.toml
+
+[bell]
+duration = 0
+
+[colors.bright]
+black = "#6b7089"
+blue = "#91acd1"
+cyan = "#95c4ce"
+green = "#c0ca8e"
+magenta = "#ada0d3"
+red = "#e98989"
+white = "#d2d4de"
+yellow = "#e9b189"
+
+[colors.cursor]
+cursor = "#d2d4de"
+text = "#000000"
+
+[colors.normal]
+black = "#161821"
+blue = "#84a0c6"
+cyan = "#89b8c2"
+green = "#b4be82"
+magenta = "#a093c7"
+red = "#e27878"
+white = "#c6c8d1"
+yellow = "#e2a478"
+
+[colors.primary]
+background = "#000000"
+foreground = "#c6c8d1"
+
+[colors.selection]
+background = "#1e2132"
+text = "#c6c8d1"
+
+[env]
+TERM = "xterm-256color"
+EDITOR = "nvim"
+VISUAL = "nvim"
+ZELLIJ_SOCKET_DIR = "/tmp/zellij"
+
+[font]
+size = 14.0
+
+[font.bold]
+style = "auto"
+
+[font.bold_italic]
+style = "auto"
+
+[font.italic]
+style = "auto"
+
+[font.normal]
+family = "FiraCode Nerd Font"
+style = "Medium"
+
+[scrolling]
+history = 2000
+multiplier = 4
+
+[selection]
+save_to_clipboard = true
+
+[window]
+opacity = 0.8
+option_as_alt = "Both"
+
+[window.padding]
+x = 4
+y = 4
+
+# Cmd+1-9 sends Alt+1-9 escape sequences for Zellij tab switching
+[[keyboard.bindings]]
+key = "1"
+mods = "Command"
+chars = "\u001b1"
+
+[[keyboard.bindings]]
+key = "2"
+mods = "Command"
+chars = "\u001b2"
+
+[[keyboard.bindings]]
+key = "3"
+mods = "Command"
+chars = "\u001b3"
+
+[[keyboard.bindings]]
+key = "4"
+mods = "Command"
+chars = "\u001b4"
+
+[[keyboard.bindings]]
+key = "5"
+mods = "Command"
+chars = "\u001b5"
+
+[[keyboard.bindings]]
+key = "6"
+mods = "Command"
+chars = "\u001b6"
+
+[[keyboard.bindings]]
+key = "7"
+mods = "Command"
+chars = "\u001b7"
+
+[[keyboard.bindings]]
+key = "8"
+mods = "Command"
+chars = "\u001b8"
+
+[[keyboard.bindings]]
+key = "9"
+mods = "Command"
+chars = "\u001b9"
+
+[[keyboard.bindings]]
+key = "0"
+mods = "Command"
+chars = "\u001b0"
