@@ -4,6 +4,18 @@ set -euo pipefail
 FLAKE_DIR="$HOME/dev/misc/dotfiles/nix"
 FLAKE_ATTR="$(hostname)"
 
+# NixOS only has a working sudo at the setuid wrapper. A plain `sudo` from
+# the nix store (e.g. via runtimeInputs) refuses to run: "must be owned by
+# uid 0 and have the setuid bit set".
+SUDO=/run/wrappers/bin/sudo
+
+# The timer is installed for every user importing home-cli (e.g. the second
+# account on cgpp-t14), but only the owner of the checkout can update it.
+if [[ ! -d "$FLAKE_DIR" ]]; then
+  echo "flake.lock: no checkout at $FLAKE_DIR, nothing to do"
+  exit 0
+fi
+
 cd "$FLAKE_DIR"
 
 before_hash=$(sha256sum flake.lock | cut -d' ' -f1)
@@ -24,5 +36,25 @@ if ! nixos-rebuild build --flake ".#$FLAKE_ATTR"; then
 fi
 
 echo "flake.lock: build OK, switching to new generation..."
-sudo nixos-rebuild switch --flake ".#$FLAKE_ATTR"
+# Revert on a failed switch too, so the lock never claims a generation the
+# system isn't running.
+if ! "$SUDO" -n nixos-rebuild switch --flake ".#$FLAKE_ATTR"; then
+  echo "flake.lock: switch failed, reverting lock (staying on current generation)" >&2
+  git checkout -- flake.lock
+  exit 1
+fi
 echo "flake.lock: switched $FLAKE_ATTR to updated generation. Roll back with: sudo nixos-rebuild switch --rollback"
+
+# Record the lock the system now runs, so it isn't left as a local-only
+# change. Commits only flake.lock, never other work in the tree; never
+# pushes. Skipped mid-rebase/merge.
+git_dir="$(git rev-parse --git-dir)"
+if [[ -e "$git_dir/MERGE_HEAD" || -d "$git_dir/rebase-merge" || -d "$git_dir/rebase-apply" ]]; then
+  echo "flake.lock: merge/rebase in progress, leaving the lock uncommitted" >&2
+  exit 0
+fi
+if git commit --only flake.lock -m "chore(flake): update flake.lock" -m "Automated by update-flake-lock after a successful switch of $FLAKE_ATTR."; then
+  echo "flake.lock: committed"
+else
+  echo "flake.lock: commit failed, lock left uncommitted" >&2
+fi
