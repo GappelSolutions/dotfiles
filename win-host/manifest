@@ -1,0 +1,41 @@
+# win-host/sync.sh manifest: <mode> <repo path> <path under %USERPROFILE%>
+#
+# file    copied both ways. Paths outside win-host/ are shared with the unix
+#         hosts: stored LF in the repo, CRs stripped on pull.
+# dir     like file, for every file in the directory. Never deletes.
+# render  push generates the Windows file from the shared one (see
+#         render_zellij in sync.sh); pull only reports drift.
+# seed    app-owned state (T3 Code rewrites these itself). Push only
+#         installs when absent; pull always captures the live copy.
+
+# Alacritty -- base.toml is shared with macOS/NixOS
+file    alacritty/.config/alacritty/base.toml               AppData/Roaming/alacritty/base.toml
+file    win-host/AppData/Roaming/alacritty/alacritty.toml   AppData/Roaming/alacritty/alacritty.toml
+file    win-host/AppData/Roaming/alacritty/entry.cmd        AppData/Roaming/alacritty/entry.cmd
+
+# Zellij (native Windows build reads %APPDATA%\Zellij\config)
+render  zellij/.config/zellij/config.kdl                    AppData/Roaming/Zellij/config/config.kdl
+dir     zellij/.config/zellij/layouts                       AppData/Roaming/Zellij/config/layouts
+
+# Shared with unix
+file    yazi/.config/yazi/yazi.toml                         AppData/Roaming/yazi/config/yazi.toml
+file    lazygit/.config/lazygit/config.yml                  AppData/Roaming/lazygit/config.yml
+file    vim/.vimrc                                          _vimrc
+
+# Window management: komorebi (KOMOREBI_CONFIG_HOME=%USERPROFILE%\assets),
+# whkd hotkeys, YASB bar
+file    win-host/assets/komorebi.json                       assets/komorebi.json
+file    win-host/assets/applications.json                   assets/applications.json
+file    win-host/.config/whkdrc                             .config/whkdrc
+file    win-host/.config/yasb/config.yaml                   .config/yasb/config.yaml
+file    win-host/.config/yasb/styles.css                    .config/yasb/styles.css
+
+# Shell
+file    win-host/Documents/PowerShell/profile.ps1           Documents/PowerShell/profile.ps1
+file    win-host/.config/atuin/config.toml                  .config/atuin/config.toml
+file    win-host/.wslconfig                                 .wslconfig
+
+# T3 Code (Windows desktop client + its local backend)
+seed    win-host/.t3/userdata/settings.json                 .t3/userdata/settings.json
+seed    win-host/.t3/userdata/client-settings.json          .t3/userdata/client-settings.json
+seed    win-host/.t3/userdata/desktop-settings.json         .t3/userdata/desktop-settings.json
