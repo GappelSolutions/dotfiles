@@ -9,6 +9,8 @@
 #   hitch-pr annotate <pr-id> <file>  one annotation thread per line of
 #       <file>: "<path>:<line><TAB><text>", or "<path><TAB><text>" for the
 #       whole file. <line> is in the PR's new version of <path>.
+#   hitch-pr stats <pr-id>...  one line per PR for hitch-inspector: cycle
+#       times in hours, pushes, annotations, and what other people said.
 # A thread is unaddressed while it's open and its last comment isn't by the PR
 # author: the author's own threads are annotations, and the author never
 # resolves threads.
@@ -99,8 +101,35 @@ annotate() {
   done <"$2"
 }
 
+stats() {
+  local id pr
+  for id in "$@"; do
+    pr=$(pr_json "$id")
+    jq -r --argjson t "$(threads_json "$id" "$(jq -r .repository.id <<<"$pr")")" \
+      --argjson it "$(curl -sf -u ":$AZURE_DEVOPS_EXT_PAT" \
+        "$org/$project/_apis/git/repositories/$(jq -r .repository.id <<<"$pr")/pullRequests/$id/iterations?api-version=7.1")" '
+      def epoch: sub("\\.[0-9]+"; "") | sub("\\+00:00$"; "Z") | fromdateiso8601;
+      def hours($a; $b): if $a and $b then (($b | epoch) - ($a | epoch)) / 3600 * 10 | round / 10 | tostring + "h" else "-" end;
+      .createdBy.id as $author
+      | ($t.value | map(select(.isDeleted | not))) as $threads
+      | def system($type): $threads | map(select(.properties.CodeReviewThreadType["$value"] == $type));
+      (system("IsDraftUpdate") | map(select(.comments[0].content | test("published"))) | first | .publishedDate) as $published
+      | (system("VoteUpdate") | map(select(.comments[0].author.id != $author and (.comments[0].content | test("voted 10$")))) | first | .publishedDate) as $approved
+      | ($threads | map(select(.properties.CodeReviewThreadType == null))) as $text
+      | ($text | map(.comments[] | select(.commentType == "text" and (.isDeleted | not) and .author.id != $author))) as $theirs
+      | "PR \(.pullRequestId) \(.status) draft=\(.isDraft)"
+        + " draft→publish=\(hours(.creationDate; $published)) publish→approve=\(hours($published; $approved))"
+        + " approve→close=\(hours($approved; .closedDate))"
+        + " pushes=\($it.value | length) after-publish=\([$it.value[] | select($published and (.createdDate | epoch) > ($published | epoch))] | length)"
+        + " annotations=\($text | map(select(.comments[0].author.id == $author and .threadContext.filePath)) | length)"
+        + " their-threads=\($text | map(select(.comments[0].author.id != $author)) | length) their-comments=\($theirs | length)"
+        + " negative-votes=\(system("VoteUpdate") | map(select(.comments[0].content | test("voted -"))) | length)"
+    ' <<<"$pr"
+  done
+}
+
 usage() {
-  echo "usage: hitch-pr wait [-i seconds] <pr-id>... | gate <pr-id> | annotate <pr-id> <file>" >&2
+  echo "usage: hitch-pr wait [-i seconds] <pr-id>... | gate <pr-id> | annotate <pr-id> <file> | stats <pr-id>..." >&2
   exit 2
 }
 
@@ -108,5 +137,6 @@ case ${1:-} in
 wait) shift && wait_prs "$@" ;;
 gate) (($# == 2)) || usage && gate "$2" ;;
 annotate) (($# == 3)) || usage && annotate "$2" "$3" ;;
+stats) shift && (($#)) || usage && stats "$@" ;;
 *) usage ;;
 esac

@@ -31,7 +31,11 @@ Row 'hitch-skeptic'  'agent' 'Full review incl. comment slop; 2 run blind'
 Row 'hitch-referee'  'agent' '3rd review on top of both: the final fix list'
 Row 'hitch-janitor'  'agent' 'Feature done: worktrees, branches, leftovers'
 ''
+"$bold$cyan CHECK$reset"
+Row 'hitch-inspector' '/cmd' 'Weekly scorecard: loops, slow, corrections, PRs'
+''
 "  $dim" + 'plan   /hitch-duck <feature-id | story-id | text>' + $reset
 "  $dim" + 'run    /hitch-tower <feature-id | story-id>' + $reset
+"  $dim" + 'check  /hitch-inspector [since]   mark live: #flag <note>' + $reset
 "  $dim" + 'merge  approval (10) by someone else + no unaddressed comment' + $reset
 "  $dim" + 'ADRs   ~/.hitch/<repo>/adr  (daily backup: P:\backup)' + $reset

@@ -17,6 +17,7 @@ Apply these to every message and every ticket.
 
 - No bloat: keywords, bullets, one line per fact. No preamble, no restating the user, no closing recap.
 - Sketches beat prose: contract, DDL + the query that uses it, type signature, call tree. ≤10 lines each.
+- `#flag <note>` from the user marks a moment for `hitch-inspector`. Reply `noted` and carry on.
 
 ## Start
 

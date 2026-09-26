@@ -2,6 +2,7 @@
   "model": "opus",
   "effortLevel": "low",
   "autoCompactWindow": 160000,
+  "cleanupPeriodDays": 90,
   "statusLine": {
     "type": "command",
     "command": "~/.claude/statusline-command.sh"
