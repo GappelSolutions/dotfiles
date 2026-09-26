@@ -20,6 +20,36 @@ alt + q                 : komorebic close
 alt + t                 : komorebic toggle-float
 alt + shift + f         : komorebic toggle-monocle
 alt + p                 : komorebic toggle-pause
+alt + i                 : komorebic toggle-shortcuts
+alt + m                 : komorebic minimize
+
+# Focus / move (vim keys)
+alt + h                 : komorebic focus left
+alt + j                 : komorebic focus down
+alt + k                 : komorebic focus up
+alt + l                 : komorebic focus right
+alt + shift + h         : komorebic move left
+alt + shift + j         : komorebic move down
+alt + shift + k         : komorebic move up
+alt + shift + l         : komorebic move right
+alt + shift + return    : komorebic promote
+
+# Stacks ([ and ] cycle, ; unstacks). Upstream binds stacking to alt + arrows,
+# left out here because alt + left/right is back/forward in browsers.
+alt + oem_1             : komorebic unstack
+alt + oem_4             : komorebic cycle-stack previous
+alt + oem_6             : komorebic cycle-stack next
+
+# Resize
+alt + oem_plus          : komorebic resize-axis horizontal increase
+alt + oem_minus         : komorebic resize-axis horizontal decrease
+alt + shift + oem_plus  : komorebic resize-axis vertical increase
+alt + shift + oem_minus : komorebic resize-axis vertical decrease
+
+# Layout
+alt + x                 : komorebic flip-layout horizontal
+alt + y                 : komorebic flip-layout vertical
+alt + shift + r         : komorebic retile
 
 # Workspaces
 alt + 1                 : komorebic focus-workspace 0
@@ -45,5 +75,7 @@ alt + shift + 8         : komorebic move-to-workspace 7
 alt + shift + 9         : komorebic move-to-workspace 8
 alt + shift + 0         : komorebic move-to-workspace 9
 
-alt + tab : komorebic cycle-workspace next
-alt + shift + tab : komorebic cycle-workspace previous
+# Toggle between the current and the previously focused workspace; with
+# shift, take the focused window along (mirrors alt + shift + N)
+alt + tab               : komorebic focus-last-workspace
+alt + shift + tab       : komorebic move-to-last-workspace
