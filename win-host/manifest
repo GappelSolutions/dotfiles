@@ -30,6 +30,9 @@ file    win-host/.config/whkdrc                             .config/whkdrc
 file    win-host/.config/yasb/config.yaml                   .config/yasb/config.yaml
 file    win-host/.config/yasb/styles.css                    .config/yasb/styles.css
 
+# Raycast script commands (register the folder once: Settings -> Script Commands -> Add Script Directory)
+dir     win-host/AppData/Roaming/Raycast/Scripts            AppData/Roaming/Raycast/Scripts
+
 # Shell
 file    win-host/Documents/PowerShell/profile.ps1           Documents/PowerShell/profile.ps1
 file    win-host/.config/atuin/config.toml                  .config/atuin/config.toml
