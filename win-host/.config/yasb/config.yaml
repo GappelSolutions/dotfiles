@@ -13,6 +13,7 @@ bars:
     screens:
     - '*'
     class_name: yasb-bar
+    style: adaptive
     alignment:
       position: top
       align: center
@@ -20,11 +21,12 @@ bars:
       enabled: true
       duration: 300
     blur_effect:
-      enabled: true
+      enabled: false
       round_corners: false
     window_flags:
       always_on_top: false
       windows_app_bar: true
+      hide_on_fullscreen: true
     dimensions:
       width: 100%
       height: 34
@@ -49,6 +51,8 @@ widgets:
     type: yasb.custom.CustomWidget
     options:
       class_name: launcher-widget
+      exec_options:
+        run_once: true
       label: "<span></span>"
       callbacks:
         on_left: 'exec explorer.exe shell:AppsFolder\Raycast.Raycast_qypenmj9wpt2a!Raycast'
@@ -82,6 +86,14 @@ widgets:
       cache_ttl: 120
       five_hour_reset_format: relative
       seven_day_reset_format: relative
+      menu:
+        blur: true
+        round_corners: true
+        round_corners_type: normal
+        border_color: system
+        alignment: right
+        direction: down
+        offset_top: 6
       callbacks:
         on_left: toggle_menu
         on_middle: refresh
@@ -89,12 +101,18 @@ widgets:
   wifi:
     type: yasb.wifi.WifiWidget
     options:
-      label: '{wifi_icon} {wifi_name}'
-      label_alt: '{wifi_icon} {wifi_name}'
+      label: '<span>{wifi_icon}</span> {wifi_name}'
+      label_alt: '<span>{wifi_icon}</span> {wifi_strength}%'
+      menu_config:
+        blur: true
+        round_corners: true
+        alignment: right
+        direction: down
+        offset_top: 6
       callbacks:
-        on_left: toggle_label
+        on_left: toggle_menu
         on_middle: do_nothing
-        on_right: do_nothing
+        on_right: toggle_label
   volume:
     type: yasb.volume.VolumeWidget
     options:
@@ -128,7 +146,7 @@ widgets:
     type: yasb.clock.ClockWidget
     options:
       label: '{%a %d %b %H:%M:%S}'
-      label_alt: '{%a, %d %b %H:%M:%S}'
+      label_alt: '{%A, %d %B %Y · KW%V}'
       calendar:
         blur: true
         round_corners: true
@@ -145,7 +163,7 @@ widgets:
   battery:
     type: yasb.battery.BatteryWidget
     options:
-      label: '{icon} {percent}%'
+      label: '<span>{icon}</span> {percent}%'
       label_alt: '{percent}% | remaining: {time_remaining}'
       charging_options:
         icon_format: '{charging_icon}'

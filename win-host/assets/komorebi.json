@@ -7,63 +7,65 @@
   "default_container_padding": 8,
   "border": true,
   "border_width": 6,
-  "border_offset": -1,
-  "border_colours": {
-    "single": "#84a0c6",
-    "stack": "#a093c7",
-    "monocle": "#161821",
-    "unfocused": "#161821",
-    "floating": "#e2a478"
+  "animation": {
+    "enabled": true,
+    "duration": 120,
+    "fps": 60,
+    "style": [0.05, 0.7, 0.1, 1.0]
+  },
+  "theme": {
+    "palette": "Custom",
+    "colours": {
+      "base_00": "#161821",
+      "base_01": "#1e2132",
+      "base_02": "#3a4059",
+      "base_03": "#6b7089",
+      "base_04": "#818596",
+      "base_05": "#c6c8d1",
+      "base_06": "#d2d4de",
+      "base_07": "#e8e9ec",
+      "base_08": "#e27878",
+      "base_09": "#e2a478",
+      "base_0a": "#e2a478",
+      "base_0b": "#b4be82",
+      "base_0c": "#89b8c2",
+      "base_0d": "#84a0c6",
+      "base_0e": "#a093c7",
+      "base_0f": "#e27878"
+    },
+    "single_border": "Base0D",
+    "stack_border": "Base0E",
+    "monocle_border": "Base0C",
+    "floating_border": "Base09",
+    "unfocused_border": "Base02",
+    "unfocused_locked_border": "Base08",
+    "stackbar_background": "Base01",
+    "stackbar_focused_text": "Base0D",
+    "stackbar_unfocused_text": "Base03"
+  },
+  "stackbar": {
+    "mode": "OnStack",
+    "height": 28,
+    "label": "Title",
+    "tabs": {
+      "width": 200,
+      "font_size": 12,
+      "font_family": "Segoe UI Variable"
+    }
   },
   "monitors": [
     {
-      "work_area_offset": {
-        "left": 0,
-        "top": 0,
-        "right": 0,
-        "bottom": 0
-      },
       "workspaces": [
-        {
-          "name": "I",
-          "layout": "BSP"
-        },
-        {
-          "name": "II",
-          "layout": "BSP"
-        },
-        {
-          "name": "III",
-          "layout": "BSP"
-        },
-        {
-          "name": "IV",
-          "layout": "BSP"
-        },
-        {
-          "name": "V",
-          "layout": "BSP"
-        },
-        {
-          "name": "VI",
-          "layout": "BSP"
-        },
-        {
-          "name": "VII",
-          "layout": "BSP"
-        },
-        {
-          "name": "VIII",
-          "layout": "BSP"
-        },
-        {
-          "name": "IX",
-          "layout": "BSP"
-        },
-        {
-          "name": "X",
-          "layout": "BSP"
-        }
+        { "name": "I", "layout": "BSP" },
+        { "name": "II", "layout": "BSP" },
+        { "name": "III", "layout": "BSP" },
+        { "name": "IV", "layout": "BSP" },
+        { "name": "V", "layout": "BSP" },
+        { "name": "VI", "layout": "BSP" },
+        { "name": "VII", "layout": "BSP" },
+        { "name": "VIII", "layout": "BSP" },
+        { "name": "IX", "layout": "BSP" },
+        { "name": "X", "layout": "BSP" }
       ]
     }
   ]
