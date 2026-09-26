@@ -1,7 +1,7 @@
 {
   "model": "opus",
   "effortLevel": "low",
-  "autoCompactWindow": 160000,
+  "autoCompactWindow": 200000,
   "cleanupPeriodDays": 90,
   "statusLine": {
     "type": "command",
