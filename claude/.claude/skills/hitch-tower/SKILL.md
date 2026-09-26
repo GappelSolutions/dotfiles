@@ -16,6 +16,7 @@ Input: `$ARGUMENTS`
 - No bloat: keywords, bullets, one line per fact. Status lines, not narration.
 - The user reads code in the PR. In chat: what changed and why, never the code itself.
 - PR description and annotations are read by colleagues: raw info a reviewer needs, readable like the tickets.
+- `#flag <note>` from the user marks a moment for `hitch-inspector`. Reply `noted` and carry on.
 
 ## Crew
 

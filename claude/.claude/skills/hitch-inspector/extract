@@ -1,0 +1,343 @@
+#!/usr/bin/env python3
+"""Metrics and incidents of hitch sessions, from Claude Code's own transcripts.
+
+  extract [--since YYYY-MM-DD] [--until YYYY-MM-DD] [--all]
+
+Default: the last 7 days. Reads ~/.claude/projects/<project>/<session>.jsonl and
+<session>/subagents/agent-*.jsonl. A session counts when it loaded a hitch skill
+or spawned a hitch agent (--all: every session, as a baseline). Prints a Markdown report; refs are <file-key>:<line>,
+resolved in the Files section.
+"""
+
+import argparse
+import json
+import re
+import statistics
+from collections import Counter, defaultdict
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+PROJECTS = Path.home() / ".claude/projects"
+IDLE = 600  # a gap this long with no tool running is waiting for someone, not work
+SLOW_TOOL = 300
+SLOW_AGENT = 1800
+LOOP = 3
+ERROR_STREAK = 3
+REWORK = 6
+
+HITCH_SKILL = re.compile(r"Base directory for this skill: \S*/skills/(hitch-[\w-]+)")
+PR_REF = re.compile(r"hitch-pr (?:gate|annotate|stats) (\d+)|hitch-pr wait(?: -i \d+)?((?: \d+)+)|az repos pr \w+ --id (\d+)")
+POLL = re.compile(r"hitch-pr wait")
+DENIED = re.compile(r"doesn't want to proceed|Permission to use .* has been denied|user (rejected|denied)")
+SEVERITY = re.compile(r"^\s*- \[(blocker|fix|nit|question)\]", re.M)
+
+
+def when(entry):
+    return datetime.fromisoformat(entry["timestamp"].replace("Z", "+00:00"))
+
+
+def text_of(content):
+    if isinstance(content, str):
+        return content
+    return "\n".join(b.get("text", "") for b in content if b.get("type") == "text")
+
+
+def one_line(text, n):
+    text = re.sub(r"\s+", " ", text).strip()
+    return text if len(text) <= n else text[: n - 1] + "…"
+
+
+def human_prompt(entry):
+    """What the user typed, else None. Tool results and injected context don't count."""
+    if entry.get("isMeta") or entry.get("isCompactSummary"):
+        return None
+    content = entry["message"]["content"]
+    if isinstance(content, list) and any(b.get("type") == "tool_result" for b in content):
+        return None
+    text = text_of(content).strip()
+    if not text or text.startswith(("<", "Base directory for this skill", "Caveat:", "This session is being continued")):
+        return None
+    return text
+
+
+class Transcript:
+    def __init__(self, path, key, kind):
+        self.path, self.key, self.kind = path, key, kind
+        self.start = self.end = None
+        self.work = 0.0
+        self.tool_calls = Counter()
+        self.errors = 0
+        self.denials = []
+        self.loops = []
+        self.streaks = []
+        self.slow = []
+        self.edits = Counter()
+        self.spawns = []
+        self.prompts = []
+        self.interrupts = []
+        self.flags = []
+        self.compactions = []
+        self.skills = set()
+        self.prs = set()
+        self.tokens_out = 0
+        self.tokens_in = 0
+        self.cost = None
+        self.final_text = ""
+        self.cwd = None
+        self._parse()
+
+    def _parse(self):
+        pending = {}
+        calls = Counter()
+        seen_msgs = set()
+        streak = 0
+        last_ts = None
+        idle_after = False
+        last_assistant_text = ""
+        for line_no, raw in enumerate(self.path.open(), 1):
+            for skill in HITCH_SKILL.findall(raw):
+                self.skills.add(skill)
+            entry = json.loads(raw)
+            kind = entry.get("type")
+            if kind == "cost-state":
+                self.cost = entry.get("totalCostUSD")
+            if kind == "attachment" and entry["attachment"].get("type") == "queued_command":
+                self._prompt(str(entry["attachment"].get("prompt", "")), line_no, last_assistant_text)
+            if kind not in ("user", "assistant", "system") or "timestamp" not in entry:
+                continue
+            ts = when(entry)
+            self.cwd = self.cwd or entry.get("cwd")
+            self.start = self.start or ts
+            self.end = ts
+            if last_ts is not None:
+                gap = (ts - last_ts).total_seconds()
+                if pending or (gap <= IDLE and not idle_after):
+                    self.work += gap
+            last_ts = ts
+
+            if kind == "system" and entry.get("subtype") == "compact_boundary":
+                meta = entry.get("compactMetadata") or {}
+                self.compactions.append((line_no, meta.get("trigger"), meta.get("preTokens")))
+            if kind == "system":
+                continue
+
+            message = entry.get("message") or {}
+            content = message.get("content")
+            if kind == "assistant":
+                msg_id = message.get("id")
+                usage = message.get("usage") or {}
+                if msg_id not in seen_msgs:
+                    seen_msgs.add(msg_id)
+                    self.tokens_out += usage.get("output_tokens", 0)
+                    self.tokens_in += sum(usage.get(k, 0) for k in
+                                          ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens"))
+                for block in content or []:
+                    if block.get("type") == "text" and block["text"].strip():
+                        last_assistant_text = block["text"]
+                        self.final_text = block["text"]
+                    if block.get("type") != "tool_use":
+                        continue
+                    name, args = block["name"], block.get("input") or {}
+                    pending[block["id"]] = (name, args, ts, line_no)
+                    self.tool_calls[name] += 1
+                    command = str(args.get("command", ""))
+                    for match in PR_REF.finditer(command):
+                        self.prs.update(n for g in match.groups() if g for n in g.split())
+                    if name in ("Edit", "Write", "NotebookEdit"):
+                        self.edits[args.get("file_path") or args.get("notebook_path")] += 1
+                    if name in ("Agent", "Task"):
+                        self.spawns.append((line_no, args.get("subagent_type", "general-purpose"),
+                                            one_line(args.get("description", ""), 60)))
+                    if not POLL.search(command):
+                        key = (name, json.dumps(args, sort_keys=True))
+                        calls[key] += 1
+                        if calls[key] == LOOP:
+                            self.loops.append((line_no, name, one_line(command or json.dumps(args), 120)))
+                idle_after = message.get("stop_reason") == "end_turn" and not pending
+                continue
+
+            if isinstance(content, list):
+                for block in content:
+                    if block.get("type") != "tool_result":
+                        continue
+                    name, args, started, use_line = pending.pop(block.get("tool_use_id"), ("?", {}, ts, line_no))
+                    result = text_of(block.get("content") or "")
+                    took = (ts - started).total_seconds()
+                    if took >= SLOW_TOOL and not args.get("run_in_background"):
+                        self.slow.append((use_line, name, took, one_line(str(args.get("command") or args.get("description") or ""), 100)))
+                    if block.get("is_error"):
+                        self.errors += 1
+                        streak += 1
+                        if DENIED.search(result):
+                            self.denials.append((use_line, name, one_line(result, 100)))
+                        if streak == ERROR_STREAK:
+                            self.streaks.append((use_line, name, one_line(result, 120)))
+                    else:
+                        streak = 0
+            text = human_prompt(entry)
+            if text is None:
+                continue
+            if text.startswith("[Request interrupted"):
+                self.interrupts.append(line_no)
+                continue
+            self._prompt(text, line_no, last_assistant_text)
+            idle_after = False
+
+    def _prompt(self, text, line_no, before):
+        if text.lstrip().startswith("#flag"):
+            self.flags.append((line_no, one_line(text, 300)))
+        self.prompts.append((line_no, one_line(before, 200), one_line(text, 400)))
+
+    @property
+    def wall(self):
+        return (self.end - self.start).total_seconds() if self.start else 0.0
+
+    @property
+    def rework(self):
+        return [(f, n) for f, n in self.edits.items() if n >= REWORK]
+
+
+def review_counts(agent):
+    text = agent.final_text
+    if agent.kind == "hitch-referee":
+        parts = re.split(r"\*\*(Fix|Dropped|Open)\*\*", text)
+        sections = {parts[i]: parts[i + 1] for i in range(1, len(parts) - 1, 2)}
+        counts = {name: len(re.findall(r"^\s*- ", body, re.M)) for name, body in sections.items()}
+        found_by = Counter(re.findall(r"\[(A\+B|A|B|referee)\]\s*$", sections.get("Fix", ""), re.M))
+        return counts | {f"found by {k}": v for k, v in found_by.items()}
+    return Counter(SEVERITY.findall(text))
+
+
+def load(since, until, everything):
+    sessions = []
+    for main in PROJECTS.glob("*/*.jsonl"):
+        if datetime.fromtimestamp(main.stat().st_mtime, timezone.utc) < since:
+            continue
+        agents = []
+        for sub in sorted((main.parent / main.stem / "subagents").glob("agent-*.jsonl")):
+            meta = sub.with_suffix(".meta.json")
+            kind = json.loads(meta.read_text()).get("agentType", "?") if meta.exists() else "?"
+            agents.append((sub, kind))
+        head = main.read_text()
+        if not everything and not HITCH_SKILL.search(head) and not any(k.startswith("hitch-") for _, k in agents):
+            continue
+        key = main.stem[:8]
+        session = Transcript(main, key, "main")
+        if "t3code-claude-title" in (session.cwd or ""):
+            continue
+        if not session.start or not since <= session.start < until:
+            continue
+        session.agents = [Transcript(p, f"{key}/{i}", k) for i, (p, k) in enumerate(agents, 1)]
+        sessions.append(session)
+    return sorted(sessions, key=lambda s: s.start)
+
+
+def fmt_h(seconds):
+    return f"{seconds / 3600:.1f}h" if seconds >= 3600 else f"{seconds / 60:.0f}m"
+
+
+def project_of(session):
+    cwd = session.cwd or str(session.path.parent)
+    match = re.search(r"worktrees/([^/]+)/", cwd + "/")
+    return match.group(1) if match else Path(cwd).name
+
+
+def report(sessions, since, until):
+    out = [f"# hitch inspection {since.astimezone():%Y-%m-%d} → {until.astimezone():%Y-%m-%d}", ""]
+    everything = [t for s in sessions for t in (s, *s.agents)]
+    calls = sum(sum(t.tool_calls.values()) for t in everything)
+    errors = sum(t.errors for t in everything)
+    costs = [s.cost for s in sessions if s.cost is not None]
+    out += ["## Totals", "",
+            f"- sessions {len(sessions)} · agents {sum(len(s.agents) for s in sessions)}"
+            f" · work {fmt_h(sum(s.work for s in sessions))} (main) + {fmt_h(sum(a.work for s in sessions for a in s.agents))} (agents)"
+            f" · cost ${sum(costs):.2f}",
+            f"- prompts {sum(len(s.prompts) for s in sessions)} · interrupts {sum(len(s.interrupts) for s in sessions)}"
+            f" · flags {sum(len(t.flags) for t in everything)} · compactions {sum(len(t.compactions) for t in everything)}",
+            f"- tool calls {calls} · errors {errors} ({errors / calls:.1%})" if calls else "- tool calls 0",
+            f"- loops {sum(len(t.loops) for t in everything)} · error streaks {sum(len(t.streaks) for t in everything)}"
+            f" · slow calls {sum(len(t.slow) for t in everything)} · rework files {sum(len(t.rework) for t in everything)}"
+            f" · denials {sum(len(t.denials) for t in everything)}", ""]
+
+    out += ["## Sessions", "",
+            "| ref | start | project | skills | work | wall | cost | prompts | interrupts | compactions | calls | errors | agents |",
+            "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+    for s in sessions:
+        agents = " ".join(f"{k.removeprefix('hitch-')}×{n}" for k, n in Counter(a.kind for a in s.agents).most_common())
+        out.append(f"| {s.key} | {s.start.astimezone():%a %d %H:%M} | {project_of(s)} | {','.join(sorted(s.skills)) or '-'}"
+                   f" | {fmt_h(s.work)} | {fmt_h(s.wall)} | {'$%.2f' % s.cost if s.cost is not None else '-'}"
+                   f" | {len(s.prompts)} | {len(s.interrupts)} | {len(s.compactions)} | {sum(s.tool_calls.values())}"
+                   f" | {s.errors} | {agents} |")
+    out.append("")
+
+    by_kind = defaultdict(list)
+    for s in sessions:
+        for a in s.agents:
+            by_kind[a.kind].append(a)
+    out += ["## Agents", "",
+            "| agent | runs | work median | work max | calls median | errors | out tokens median | slow runs |",
+            "|---|---|---|---|---|---|---|---|"]
+    for kind, runs in sorted(by_kind.items()):
+        works = [a.work for a in runs]
+        out.append(f"| {kind} | {len(runs)} | {fmt_h(statistics.median(works))} | {fmt_h(max(works))}"
+                   f" | {statistics.median(sum(a.tool_calls.values()) for a in runs):.0f} | {sum(a.errors for a in runs)}"
+                   f" | {statistics.median(a.tokens_out for a in runs):.0f} | {sum(a.work >= SLOW_AGENT for a in runs)} |")
+    out.append("")
+
+    reviews = [(s, a) for s in sessions for a in s.agents if a.kind in ("hitch-skeptic", "hitch-referee")]
+    if reviews:
+        out += ["## Reviews", ""]
+        for s, a in reviews:
+            counts = review_counts(a)
+            out.append(f"- {a.key} {a.kind}: " + (" · ".join(f"{k} {v}" for k, v in counts.items()) or "no findings"))
+        out.append("")
+
+    out += ["## Incidents", ""]
+    for t in everything:
+        who = t.kind if t.kind != "main" else "main"
+        for line, name, what in t.loops:
+            out.append(f"- [loop] {t.key}:{line} {who} {name} ×{LOOP}+: {what}")
+        for line, name, what in t.streaks:
+            out.append(f"- [error-streak] {t.key}:{line} {who} {name} ×{ERROR_STREAK}: {what}")
+        for line, name, took, what in t.slow:
+            out.append(f"- [slow] {t.key}:{line} {who} {name} {fmt_h(took)}: {what}")
+        if t.kind != "main" and t.work >= SLOW_AGENT:
+            out.append(f"- [slow-agent] {t.key} {who} {fmt_h(t.work)}")
+        for f, n in t.rework:
+            out.append(f"- [rework] {t.key} {who} {f} edited ×{n}")
+        for line, name, what in t.denials:
+            out.append(f"- [denied] {t.key}:{line} {who} {name}: {what}")
+        for line, trigger, tokens in t.compactions:
+            out.append(f"- [compaction] {t.key}:{line} {who} {trigger} at {tokens} tokens")
+        for line in t.interrupts:
+            out.append(f"- [interrupt] {t.key}:{line}")
+        for line, text in t.flags:
+            out.append(f"- [flag] {t.key}:{line} {text}")
+    out.append("")
+
+    prs = sorted({p for t in everything for p in t.prs}, key=int)
+    out += ["## PRs", "", " ".join(prs) or "none", ""]
+
+    out += ["## Prompts", "", "Every user message in a hitch session, with what the assistant said just before.", ""]
+    for s in sessions:
+        for line, before, text in s.prompts:
+            out.append(f"- {s.key}:{line}\n  - before: {before or '-'}\n  - user: {text}")
+    out += ["", "## Files", ""]
+    for t in everything:
+        out.append(f"- {t.key} ({t.kind}): {t.path}")
+    return "\n".join(out)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--since", type=datetime.fromisoformat)
+    parser.add_argument("--until", type=datetime.fromisoformat)
+    parser.add_argument("--all", action="store_true")
+    args = parser.parse_args()
+    until = (args.until or datetime.now() + timedelta(days=1)).astimezone(timezone.utc)
+    since = (args.since or datetime.now() - timedelta(days=7)).astimezone(timezone.utc)
+    print(report(load(since, until, args.all), since, until))
+
+
+if __name__ == "__main__":
+    main()
