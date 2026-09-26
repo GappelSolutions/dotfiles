@@ -1,0 +1,112 @@
+#!/usr/bin/env bash
+# Azure DevOps PR checks for hitch-tower.
+#   hitch-pr wait [-i seconds] <pr-id>...  block until one PR changes (status,
+#       draft, votes, comments), print the changed lines. Run it in the
+#       background: the harness wakes the session when it exits. Failed polls
+#       (VPN down, token expired) are retried.
+#   hitch-pr gate <pr-id>  exit 0 and "READY" when the PR may be merged
+#       automatically, else exit 1 and list every blocker.
+#   hitch-pr annotate <pr-id> <file>  one annotation thread per line of
+#       <file>: "<path>:<line><TAB><text>", or "<path><TAB><text>" for the
+#       whole file. <line> is in the PR's new version of <path>.
+# A thread is unaddressed while it's open and its last comment isn't by the PR
+# author: the author's own threads are annotations, and the author never
+# resolves threads.
+set -euo pipefail
+
+org=$(az devops configure -l | sed -n 's/^organization = //p')
+project=$(az devops configure -l | sed -n 's/^project = //p')
+
+pr_json() { az repos pr show --id "$1" --only-show-errors -o json; }
+
+threads_json() {
+  curl -sf -u ":$AZURE_DEVOPS_EXT_PAT" \
+    "$org/$project/_apis/git/repositories/$2/pullRequests/$1/threads?api-version=7.1"
+}
+
+state() {
+  local pr comments
+  pr=$(pr_json "$1") || return 1
+  comments=$(threads_json "$1" "$(jq -r .repository.id <<<"$pr")" |
+    jq '[.value[].comments[] | select(.commentType == "text" and (.isDeleted | not))] | length') || return 1
+  jq -r --arg c "$comments" \
+    '"PR \(.pullRequestId) \(.status) draft=\(.isDraft) votes=\([.reviewers[] | "\(.displayName):\(.vote)"] | join(",")) comments=\($c)"' \
+    <<<"$pr"
+}
+
+wait_prs() {
+  local interval=300 before now id
+  if [[ ${1:-} == -i ]]; then
+    interval=$2
+    shift 2
+  fi
+  (($#)) || usage
+  snapshot() { for id in "$@"; do state "$id" || return 1; done; }
+  until before=$(snapshot "$@"); do sleep "$interval"; done
+  while sleep "$interval"; do
+    now=$(snapshot "$@") || continue
+    if [[ $now != "$before" ]]; then
+      diff <(echo "$before") <(echo "$now") | sed -n 's/^> //p'
+      return 0
+    fi
+  done
+}
+
+gate() {
+  local pr threads blockers
+  pr=$(pr_json "$1")
+  threads=$(threads_json "$1" "$(jq -r .repository.id <<<"$pr")")
+  blockers=$(jq -r --argjson t "$threads" '
+    .createdBy.id as $author
+    | ([.reviewers[] | select(.vote == 10 and .id != $author and (.isContainer | not))]) as $ok
+    | (if .status != "active" then "- status: \(.status)" else empty end),
+      (if .isDraft then "- draft" else empty end),
+      (if .mergeStatus == "conflicts" then "- merge conflicts" else empty end),
+      (if ($ok | length) == 0 then "- no approval (10) from anyone but the author" else empty end),
+      (.reviewers[] | select(.vote < 0) | "- vote \(.vote): \(.displayName)"),
+      ($t.value[]
+        | select(.isDeleted | not)
+        | select(.status == "active" or .status == "pending")
+        | ([.comments[] | select(.commentType == "text" and (.isDeleted | not))] | last) as $last
+        | select($last != null and $last.author.id != $author)
+        | "- unaddressed \(.threadContext.filePath // "(PR)"):\(.threadContext.rightFileStart.line // "") \($last.author.displayName): \($last.content | gsub("\\s+"; " ") | .[0:100])")
+  ' <<<"$pr")
+  if [[ -z $blockers ]]; then
+    echo "PR $1 READY"
+  else
+    echo "PR $1 BLOCKED"
+    echo "$blockers"
+    return 1
+  fi
+}
+
+annotate() {
+  local repo loc text path line body
+  repo=$(pr_json "$1" | jq -r .repository.id)
+  while IFS=$'\t' read -r loc text; do
+    [[ -n $loc ]] || continue
+    path=${loc%%:*} line=${loc#"$path"}
+    line=${line#:}
+    body=$(jq -n --arg p "/${path#/}" --arg l "$line" --arg t "$text" '{
+      status: "active",
+      comments: [{parentCommentId: 0, content: $t, commentType: 1}],
+      threadContext: ({filePath: $p} + (if $l == "" then {} else {
+        rightFileStart: {line: ($l | tonumber), offset: 1},
+        rightFileEnd: {line: ($l | tonumber), offset: 1}} end))}')
+    curl -sf -u ":$AZURE_DEVOPS_EXT_PAT" -H 'Content-Type: application/json' -X POST \
+      "$org/$project/_apis/git/repositories/$repo/pullRequests/$1/threads?api-version=7.1" \
+      -d "$body" | jq -r '"thread \(.id) \(.threadContext.filePath):\(.threadContext.rightFileStart.line // "")"'
+  done <"$2"
+}
+
+usage() {
+  echo "usage: hitch-pr wait [-i seconds] <pr-id>... | gate <pr-id> | annotate <pr-id> <file>" >&2
+  exit 2
+}
+
+case ${1:-} in
+wait) shift && wait_prs "$@" ;;
+gate) (($# == 2)) || usage && gate "$2" ;;
+annotate) (($# == 3)) || usage && annotate "$2" "$3" ;;
+*) usage ;;
+esac

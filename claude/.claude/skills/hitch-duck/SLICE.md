@@ -30,4 +30,4 @@ Ask whether the granularity is right, whether the edges are right, and whether a
 1. Show exactly what will be written: new items, changed items, and items to close.
 2. Wait for an explicit "go".
 3. Write the items as described in `hitch-clerk`.
-4. Reply with one table (`# | ID | title | blocked by`) and the next step: `/hitch-tower <story-id>` for each Story in B1.
+4. Reply with one table (`# | ID | title | blocked by`) and the next step: `/hitch-tower <feature-id>` (Story mode: `/hitch-tower <story-id>`).
