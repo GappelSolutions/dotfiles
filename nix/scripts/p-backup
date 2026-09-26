@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# Mirror local-only data to the Windows home share P:\ (DFS, reachable only on
+# the company network). Current version only: robocopy /MIR also deletes on P:
+# what was deleted locally. The timer fires hourly; the stamp limits it to one
+# copy per day, taken on the first run where P: is reachable.
+set -euo pipefail
+
+STAMP="${XDG_STATE_HOME:-$HOME/.local/state}/p-backup/last-success"
+DEST='P:\backup'
+WIN=/mnt/c/Windows/System32
+
+today=$(date +%F)
+if [[ "$(cat "$STAMP" 2>/dev/null)" == "$today" ]]; then
+  echo "p-backup: already done today"
+  exit 0
+fi
+
+# cmd.exe refuses a UNC working directory (the WSL home).
+cd /mnt/c
+
+if ! "$WIN/cmd.exe" /c 'if exist P:\ (exit 0) else (exit 1)' >/dev/null 2>&1; then
+  echo "p-backup: P: not reachable, retrying next hour"
+  exit 0
+fi
+
+win_home=$(/sbin/wslpath -u "$("$WIN/cmd.exe" /c 'echo %USERPROFILE%' | tr -d '\r')")
+
+# "<source>|<name under $DEST>"
+SOURCES=(
+  "$win_home/kepano-obsidian|kepano-obsidian"
+  "$HOME/.hitch|hitch"
+)
+
+failed=0
+for entry in "${SOURCES[@]}"; do
+  src=${entry%%|*} name=${entry##*|}
+  # An empty or missing source would mirror as "delete everything on P:".
+  if [[ ! -d "$src" || -z "$(ls -A "$src")" ]]; then
+    echo "p-backup: $src missing or empty, skipped"
+    continue
+  fi
+  rc=0
+  "$WIN/robocopy.exe" "$(/sbin/wslpath -w "$src")" "$DEST\\$name" \
+    /MIR /R:2 /W:10 /NP /NFL /NDL /NJH | tr -d '\r' || rc=${PIPESTATUS[0]}
+  # robocopy: 0-7 are success bit flags (copied/extra/mismatched), 8+ is failure.
+  if ((rc >= 8)); then
+    echo "p-backup: $name failed (robocopy exit $rc)" >&2
+    failed=1
+  fi
+done
+
+((failed)) && exit 1
+mkdir -p "$(dirname "$STAMP")"
+echo "$today" >"$STAMP"
+echo "p-backup: done"
