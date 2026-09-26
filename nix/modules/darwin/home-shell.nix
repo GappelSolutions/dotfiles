@@ -37,12 +37,11 @@
     };
 
     shellAliases = {
-      ls = "eza --icons";
-      ll = "eza -l --icons";
-      lt = "eza --tree --level=1 --icons";
-      lsa = "eza -a --icons";
-      lla = "eza -al --icons";
-      lta = "eza -a --tree --level=1 --icons";
+      ll = "eza -l --icons=auto";
+      lt = "eza --tree --level=1 --icons=auto";
+      lsa = "eza -a --icons=auto";
+      lla = "eza -al --icons=auto";
+      lta = "eza -a --tree --level=1 --icons=auto";
 
       ssh-cloud = "ssh cgpp@192.168.178.33";
       ftp-cloud = "sftp cgpp@192.168.178.33";
@@ -145,6 +144,8 @@
       PROMPT=$'\n %F{cyan}''${_bubble_left}%K{magenta} %K{red}%F{black}''${_apple_icon}%K{yellow} %K{blue}%F{green}''${_bubble_right}%f%F{blue}%K{blue}%F{black}  %~ %f%k''${_git_info}\n %F{magenta}╰─❯%f '
 
       # --- Tools ---
+      # Agents (Claude Code's Bash) get GNU ls: eza rejects flags like -t.
+      [[ -n $CLAUDECODE ]] || alias ls='eza --icons=auto'
       eval "$(zoxide init zsh)"
       setopt nocaseglob
       [[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh

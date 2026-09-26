@@ -24,12 +24,11 @@
     };
 
     shellAliases = {
-      ls = "eza --icons";
-      ll = "eza -l --icons";
-      lt = "eza --tree --level=1 --icons";
-      lsa = "eza -a --icons";
-      lla = "eza -al --icons";
-      lta = "eza -a --tree --level=1 --icons";
+      ll = "eza -l --icons=auto";
+      lt = "eza --tree --level=1 --icons=auto";
+      lsa = "eza -a --icons=auto";
+      lla = "eza -al --icons=auto";
+      lta = "eza -a --tree --level=1 --icons=auto";
       lg = "lazygit";
       t3c = "t3-connect connect";
       t3d = "t3-connect disconnect";
@@ -127,6 +126,8 @@
       PROMPT=$'\n %F{blue}''${_bubble_left}%K{blue}%F{black} ''${_host_icon} %K{green}%F{blue}''${_bubble_right}%F{black}  %~ %f%k''${_git_info}\n %F{blue}╰─❯%f '
 
       # --- Tools ---
+      # Agents (Claude Code's Bash) get GNU ls: eza rejects flags like -t.
+      [[ -n $CLAUDECODE ]] || alias ls='eza --icons=auto'
       eval "$(${pkgs.zoxide}/bin/zoxide init zsh)"
       setopt nocaseglob
       [[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
