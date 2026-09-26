@@ -1,6 +1,7 @@
 {
   "model": "opus",
   "effortLevel": "low",
+  "autoCompactWindow": 160000,
   "statusLine": {
     "type": "command",
     "command": "~/.claude/statusline-command.sh"
