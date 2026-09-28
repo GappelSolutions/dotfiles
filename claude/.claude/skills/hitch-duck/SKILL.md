@@ -66,12 +66,21 @@ Rounds:
 - If the user pushes back, discuss it. Don't rewrite anything while a decision is still open.
 
 ```
-❓ **Q<n> - <title>**: <context ≤2 lines>. (a) … (b) … when real alternatives exist
+❓ **Q<n> - <title>**
+<context: the constraint that drives the question, ≤2 lines>
 
-➡️ <recommendation>. <why, one line>
+- **(a) <short name>**: <how it works>. <cost or catch>
+- **(b) <short name>**: …
+
+➡️ **(<letter>)**: <why, one line>
 
 ---
 ```
+
+- Options only when real alternatives exist. Otherwise ask the question on the context line.
+- One option per bullet, ≤2 lines. Lead with a 2–5 word name so options can be compared at a glance.
+- Split a long option with `;` or `·`, never with nested parentheses. Identifiers, endpoints and SQL in backticks.
+- Re-asked question: add `(re-asked)` after the title and name the decision that changed it on the context line.
 
 After each round, show only the new or changed decisions:
 
