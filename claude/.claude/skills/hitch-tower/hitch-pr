@@ -11,9 +11,10 @@
 #       whole file. <line> is in the PR's new version of <path>.
 #   hitch-pr stats <pr-id>...  one line per PR for hitch-inspector: cycle
 #       times in hours, pushes, annotations, and what other people said.
-# A thread is unaddressed while it's open and its last comment isn't by the PR
-# author: the author's own threads are annotations, and the author never
-# resolves threads.
+# A thread is unaddressed while it's open and anyone but the PR author
+# commented in it. The author's own threads are annotations and stay open. A
+# reply doesn't address a thread: it's set to fixed or wontFix once the code
+# or a reason settles it.
 set -euo pipefail
 
 org=$(az devops configure -l | sed -n 's/^organization = //p')
@@ -58,7 +59,7 @@ gate() {
   local pr threads blockers
   pr=$(pr_json "$1")
   threads=$(threads_json "$1" "$(jq -r .repository.id <<<"$pr")")
-  blockers=$(jq -r --argjson t "$threads" '
+  blockers=$(jq -r --slurpfile t <(printf '%s' "$threads") '
     .createdBy.id as $author
     | ([.reviewers[] | select(.vote == 10 and .id != $author and (.isContainer | not))]) as $ok
     | (if .status != "active" then "- status: \(.status)" else empty end),
@@ -66,11 +67,11 @@ gate() {
       (if .mergeStatus == "conflicts" then "- merge conflicts" else empty end),
       (if ($ok | length) == 0 then "- no approval (10) from anyone but the author" else empty end),
       (.reviewers[] | select(.vote < 0) | "- vote \(.vote): \(.displayName)"),
-      ($t.value[]
+      ($t[0].value[]
         | select(.isDeleted | not)
         | select(.status == "active" or .status == "pending")
-        | ([.comments[] | select(.commentType == "text" and (.isDeleted | not))] | last) as $last
-        | select($last != null and $last.author.id != $author)
+        | ([.comments[] | select(.commentType == "text" and (.isDeleted | not) and .author.id != $author)] | last) as $last
+        | select($last != null)
         | "- unaddressed \(.threadContext.filePath // "(PR)"):\(.threadContext.rightFileStart.line // "") \($last.author.displayName): \($last.content | gsub("\\s+"; " ") | .[0:100])")
   ' <<<"$pr")
   if [[ -z $blockers ]]; then
@@ -105,13 +106,13 @@ stats() {
   local id pr
   for id in "$@"; do
     pr=$(pr_json "$id")
-    jq -r --argjson t "$(threads_json "$id" "$(jq -r .repository.id <<<"$pr")")" \
-      --argjson it "$(curl -sf -u ":$AZURE_DEVOPS_EXT_PAT" \
-        "$org/$project/_apis/git/repositories/$(jq -r .repository.id <<<"$pr")/pullRequests/$id/iterations?api-version=7.1")" '
+    jq -r --slurpfile t <(threads_json "$id" "$(jq -r .repository.id <<<"$pr")") \
+      --slurpfile it <(curl -sf -u ":$AZURE_DEVOPS_EXT_PAT" \
+        "$org/$project/_apis/git/repositories/$(jq -r .repository.id <<<"$pr")/pullRequests/$id/iterations?api-version=7.1") '
       def epoch: sub("\\.[0-9]+"; "") | sub("\\+00:00$"; "Z") | fromdateiso8601;
       def hours($a; $b): if $a and $b then (($b | epoch) - ($a | epoch)) / 3600 * 10 | round / 10 | tostring + "h" else "-" end;
       .createdBy.id as $author
-      | ($t.value | map(select(.isDeleted | not))) as $threads
+      | ($t[0].value | map(select(.isDeleted | not))) as $threads
       | def system($type): $threads | map(select(.properties.CodeReviewThreadType["$value"] == $type));
       (system("IsDraftUpdate") | map(select(.comments[0].content | test("published"))) | first | .publishedDate) as $published
       | (system("VoteUpdate") | map(select(.comments[0].author.id != $author and (.comments[0].content | test("voted 10$")))) | first | .publishedDate) as $approved
@@ -120,7 +121,7 @@ stats() {
       | "PR \(.pullRequestId) \(.status) draft=\(.isDraft)"
         + " draft→publish=\(hours(.creationDate; $published)) publish→approve=\(hours($published; $approved))"
         + " approve→close=\(hours($approved; .closedDate))"
-        + " pushes=\($it.value | length) after-publish=\([$it.value[] | select($published and (.createdDate | epoch) > ($published | epoch))] | length)"
+        + " pushes=\($it[0].value | length) after-publish=\([$it[0].value[] | select($published and (.createdDate | epoch) > ($published | epoch))] | length)"
         + " annotations=\($text | map(select(.comments[0].author.id == $author and .threadContext.filePath)) | length)"
         + " their-threads=\($text | map(select(.comments[0].author.id != $author)) | length) their-comments=\($theirs | length)"
         + " negative-votes=\(system("VoteUpdate") | map(select(.comments[0].content | test("voted -"))) | length)"

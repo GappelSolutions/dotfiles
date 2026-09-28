@@ -37,5 +37,6 @@ Row 'hitch-inspector' '/cmd' 'Weekly scorecard: loops, slow, corrections, PRs'
 "  $dim" + 'plan   /hitch-duck <feature-id | story-id | text>' + $reset
 "  $dim" + 'run    /hitch-tower <feature-id | story-id>' + $reset
 "  $dim" + 'check  /hitch-inspector [since]   mark live: #flag <note>' + $reset
-"  $dim" + 'merge  approval (10) by someone else + no unaddressed comment' + $reset
+"  $dim" + 'merge  approval (10) by someone else + every comment fixed/wontFix' + $reset
+"  $dim" + 'after  pipeline deploys, smoke test on shared dev, then close' + $reset
 "  $dim" + 'ADRs   ~/.hitch/<repo>/adr  (daily backup: P:\backup)' + $reset

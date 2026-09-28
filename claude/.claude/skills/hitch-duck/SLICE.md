@@ -12,7 +12,7 @@ Turn the settled decisions into Stories (one per PR) and Tasks (the minimal step
 - Tasks: the ordered minimal steps inside a Story, each a compilable, testable increment. A title is enough; add one line only if the step isn't obvious.
 - Checks for each Story:
   - automated: the exact commands
-  - manual: what to observe in your dev namespace on the dev cluster (a message on queue X, rows in table Y, an endpoint's response)
+  - dev: the input to send, what to read back (a message on queue X, rows in table Y, an endpoint's response), and what to clean up. It must run as is against any deployed environment: no deploying, no config.
 - Stories reference decisions by ID and never copy them.
 - Story mode: slice the one Story into Tasks. If it's too big, propose sibling Stories under the same parent.
 
