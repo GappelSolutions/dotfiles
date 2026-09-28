@@ -158,10 +158,10 @@ az repos pr update --id <pr> --draft false                            # publish
 az repos pr update --id <pr> --status completed --squash <bool> --delete-source-branch <bool>   # as their PRs do
 ```
 
-Threads, via REST (`$repo` = the repository ID from `az repos pr show`):
+Threads, via REST. The base is the PR's own repository URL: its repo may sit in another project.
 
 ```bash
-t="$org/$project/_apis/git/repositories/$repo/pullRequests/<pr>/threads"
+t="$(az repos pr show --id <pr> --query repository.url -o tsv)/pullRequests/<pr>/threads"
 curl -s -u ":$AZURE_DEVOPS_EXT_PAT" "$t?api-version=7.1"                           # read; humans: commentType "text"
 curl -s -u ":$AZURE_DEVOPS_EXT_PAT" -H 'Content-Type: application/json' -X POST \
   "$t/<thread>/comments?api-version=7.1" -d '{"content": "…", "parentCommentId": 1}' # reply

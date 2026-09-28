@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Azure DevOps PR checks for hitch-tower.
 #   hitch-pr wait [-i seconds] <pr-id>...  block until one PR changes (status,
-#       draft, votes, comments), print the changed lines. Run it in the
+#       draft, votes, comments, pushes), print the changed lines. Run it in the
 #       background: the harness wakes the session when it exits. Failed polls
 #       (VPN down, token expired) are retried.
 #   hitch-pr gate <pr-id>  exit 0 and "READY" when the PR may be merged
@@ -17,23 +17,22 @@
 # or a reason settles it.
 set -euo pipefail
 
-org=$(az devops configure -l | sed -n 's/^organization = //p')
-project=$(az devops configure -l | sed -n 's/^project = //p')
-
+# REST calls go through the PR's own repository URL: the repo may live in any
+# project of the org, not only the default one.
 pr_json() { az repos pr show --id "$1" --only-show-errors -o json; }
 
-threads_json() {
-  curl -sf -u ":$AZURE_DEVOPS_EXT_PAT" \
-    "$org/$project/_apis/git/repositories/$2/pullRequests/$1/threads?api-version=7.1"
+pr_api() {
+  curl -sf -u ":$AZURE_DEVOPS_EXT_PAT" "${@:4}" \
+    "$(jq -r .repository.url <<<"$1")/pullRequests/$2/$3?api-version=7.1"
 }
 
 state() {
   local pr comments
   pr=$(pr_json "$1") || return 1
-  comments=$(threads_json "$1" "$(jq -r .repository.id <<<"$pr")" |
+  comments=$(pr_api "$pr" "$1" threads |
     jq '[.value[].comments[] | select(.commentType == "text" and (.isDeleted | not))] | length') || return 1
   jq -r --arg c "$comments" \
-    '"PR \(.pullRequestId) \(.status) draft=\(.isDraft) votes=\([.reviewers[] | "\(.displayName):\(.vote)"] | join(",")) comments=\($c)"' \
+    '"PR \(.pullRequestId) \(.status) draft=\(.isDraft) votes=\([.reviewers[] | "\(.displayName):\(.vote)"] | join(",")) comments=\($c) head=\(.lastMergeSourceCommit.commitId[0:7])"' \
     <<<"$pr"
 }
 
@@ -58,7 +57,7 @@ wait_prs() {
 gate() {
   local pr threads blockers
   pr=$(pr_json "$1")
-  threads=$(threads_json "$1" "$(jq -r .repository.id <<<"$pr")")
+  threads=$(pr_api "$pr" "$1" threads)
   blockers=$(jq -r --slurpfile t <(printf '%s' "$threads") '
     .createdBy.id as $author
     | ([.reviewers[] | select(.vote == 10 and .id != $author and (.isContainer | not))]) as $ok
@@ -84,8 +83,8 @@ gate() {
 }
 
 annotate() {
-  local repo loc text path line body
-  repo=$(pr_json "$1" | jq -r .repository.id)
+  local pr loc text path line body
+  pr=$(pr_json "$1")
   while IFS=$'\t' read -r loc text; do
     [[ -n $loc ]] || continue
     path=${loc%%:*} line=${loc#"$path"}
@@ -96,9 +95,7 @@ annotate() {
       threadContext: ({filePath: $p} + (if $l == "" then {} else {
         rightFileStart: {line: ($l | tonumber), offset: 1},
         rightFileEnd: {line: ($l | tonumber), offset: 1}} end))}')
-    curl -sf -u ":$AZURE_DEVOPS_EXT_PAT" -H 'Content-Type: application/json' -X POST \
-      "$org/$project/_apis/git/repositories/$repo/pullRequests/$1/threads?api-version=7.1" \
-      -d "$body" | jq -r '"thread \(.id) \(.threadContext.filePath):\(.threadContext.rightFileStart.line // "")"'
+    pr_api "$pr" "$1" threads -H 'Content-Type: application/json' -X POST -d "$body" | jq -r '"thread \(.id) \(.threadContext.filePath):\(.threadContext.rightFileStart.line // "")"'
   done <"$2"
 }
 
@@ -106,9 +103,7 @@ stats() {
   local id pr
   for id in "$@"; do
     pr=$(pr_json "$id")
-    jq -r --slurpfile t <(threads_json "$id" "$(jq -r .repository.id <<<"$pr")") \
-      --slurpfile it <(curl -sf -u ":$AZURE_DEVOPS_EXT_PAT" \
-        "$org/$project/_apis/git/repositories/$(jq -r .repository.id <<<"$pr")/pullRequests/$id/iterations?api-version=7.1") '
+    jq -r --slurpfile t <(pr_api "$pr" "$id" threads) --slurpfile it <(pr_api "$pr" "$id" iterations) '
       def epoch: sub("\\.[0-9]+"; "") | sub("\\+00:00$"; "Z") | fromdateiso8601;
       def hours($a; $b): if $a and $b then (($b | epoch) - ($a | epoch)) / 3600 * 10 | round / 10 | tostring + "h" else "-" end;
       .createdBy.id as $author
