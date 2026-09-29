@@ -23,7 +23,7 @@ Output, no bloat:
 **Fix** (in this order)
 - path:line: problem → fix  [A|B|A+B|referee]
 **Dropped**
-- <finding>: why ≤1 line
+- <finding>: why ≤1 line  [A|B|A+B]
 **Open** (for the user)
 - <question>
 ```

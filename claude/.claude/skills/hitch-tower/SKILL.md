@@ -20,13 +20,13 @@ Input: `$ARGUMENTS`
 
 ## Crew
 
-| agent | does | effort |
+| agent | does | model · effort |
 |---|---|---|
-| `hitch-bouncer` | loads a Story from Azure: brief + Ready verdict | low |
-| `hitch-mechanic` | builds one Story in its worktree: fixes, dev deploy, annotations | high |
-| `hitch-skeptic` | full review; two run independently | high |
-| `hitch-referee` | third review, with both as input: the final fix list | high |
-| `hitch-janitor` | cleanup once the Feature is done | medium |
+| `hitch-bouncer` | loads a Story from Azure: brief + Ready verdict | sonnet · medium |
+| `hitch-mechanic` | builds one Story in its worktree: fixes, dev deploy, annotations | opus · high |
+| `hitch-skeptic` | full review; two run independently | A opus · B sonnet (trial) · high |
+| `hitch-referee` | third review, with both as input: the final fix list | opus · high |
+| `hitch-janitor` | cleanup once the Feature is done | sonnet · medium |
 
 Spawn them in the background with absolute paths. Keep only their reports in your context. `hitch-pr` means `~/.claude/skills/hitch-tower/hitch-pr`.
 
@@ -54,7 +54,7 @@ The frontier is every Story whose Predecessors are all `Closed`. Run them in par
    `<default>`: `git symbolic-ref --short refs/remotes/origin/HEAD`. `<branch>`: the naming rule in the repo's CLAUDE.md/AGENTS.md or its pre-PR skill, e.g. `<initials>_U<story-id>_<Title_Words>`, with the placeholders filled in as in your own branches (`git for-each-ref refs/remotes --format='%(authoremail) %(refname:short)'`). No rule: the convention in `git branch -r`.
 3. **Build**: `hitch-mechanic` with the worktree and the brief. It returns a hand-off.
 4. **Review**, always, for every Story. Reviews stay in chat, never on Azure.
-   - Two `hitch-skeptic` runs in parallel with the same input: the worktree, `origin/<default>` as base, the brief and the hand-off. Duplicate on purpose: AI reviews aren't consistent. Neither sees the other.
+   - Two `hitch-skeptic` runs in parallel with the same input: the worktree, `origin/<default>` as base, the brief and the hand-off. Duplicate on purpose: AI reviews aren't consistent. Neither sees the other. Spawn B with the model override `sonnet` (trial, measured by `hitch-inspector`).
    - Then `hitch-referee` with the same input plus both reviews, as A and B.
    - Its **Fix** list goes to the Story's mechanic (SendMessage, context intact). Its **Open** items go to the user in step 7.
 5. **Dev**: each Story gets its own dev namespace, so Stories deploy in parallel.

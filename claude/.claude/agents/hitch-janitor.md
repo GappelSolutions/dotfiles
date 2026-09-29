@@ -2,7 +2,7 @@
 name: hitch-janitor
 description: Cleanup once a hitch Feature is done. Removes merged worktrees and local branches, finds temporary code the Feature left on the default branch, and reports what's left for the user. Never changes Azure or the remote.
 tools: Read, Grep, Glob, Bash
-model: opus
+model: sonnet
 effort: medium
 ---
 

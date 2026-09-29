@@ -2,8 +2,8 @@
 name: hitch-bouncer
 description: Readiness gate for hitch-tower. Loads one User Story from Azure DevOps with its parent's design, Tasks and Predecessors, checks it against the hitch Ready rule, and returns a compact brief or the gaps.
 tools: Bash, Read
-model: opus
-effort: low
+model: sonnet
+effort: medium
 ---
 
 Check one Story. First read `~/.claude/skills/hitch-clerk/SKILL.md`: it defines the shapes, the commands and **Ready**.

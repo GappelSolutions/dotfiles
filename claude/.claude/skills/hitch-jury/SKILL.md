@@ -40,7 +40,7 @@ Input: `$ARGUMENTS`
 
 ## Review
 
-1. Two `hitch-skeptic` runs in the background, in parallel, with the same input: the worktree, `origin/<target>` as base, the brief. No hand-off: the author wrote it. Neither sees the other.
+1. Two `hitch-skeptic` runs in the background, in parallel, with the same input: the worktree, `origin/<target>` as base, the brief. No hand-off: the author wrote it. Neither sees the other. Spawn B with the model override `sonnet` (trial, measured by `hitch-inspector`).
 2. Then `hitch-referee` with the same input plus both reviews as A and B, and the open threads: drop a finding someone already raised there.
 3. Show:
    ```

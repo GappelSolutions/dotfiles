@@ -46,5 +46,6 @@ Output: no bloat. Every claim cites a ref (`<file-key>:<line>`).
    **Proposed edits**: <file>: <change>
    ```
    Read the review metrics like this: a high `A` or `B` alone justifies two skeptics. `A+B` near 100% means one would do. A high `referee` alone means the lens misses things. A high dropped means noise.
+   Model trial: skeptic A runs on opus, B on sonnet. Compare `A` alone vs `B` alone and dropped `A` vs `B`. B about equal to A: propose sonnet for both. B clearly lower: propose opus for B again.
 7. **Save** the scorecard and the pitfalls (not the raw extract) to `~/.hitch/inspections/<until>.md`. It's the next baseline.
 8. **Edits**: only on the user's OK. Make them in the dotfiles repo (`claude/.claude/...`), never in the deployed files.
