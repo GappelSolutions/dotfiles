@@ -163,7 +163,7 @@ widgets:
   battery:
     type: yasb.battery.BatteryWidget
     options:
-      label: '<span>{icon}</span> {percent}%'
+      label: '{icon} {percent}%'
       label_alt: '{percent}% | remaining: {time_remaining}'
       charging_options:
         icon_format: '{charging_icon}'
