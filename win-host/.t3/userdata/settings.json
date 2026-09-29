@@ -44,7 +44,7 @@
   "addProjectBaseDirectory": "~/dev/",
   "textGenerationModelSelection": {
     "instanceId": "claudeAgent",
-    "model": "claude-sonnet-5",
+    "model": "claude-sonnet-5-5",
     "options": [
       {
         "id": "effort",

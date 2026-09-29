@@ -65,7 +65,7 @@
     "c779abca-2493-4a5d-9b8a-7007b0d70445": {
       "defaultModelSelection": {
         "instanceId": "claudeAgent",
-        "model": "claude-opus-5",
+        "model": "claude-opus-5-5",
         "options": [
           {
             "id": "effort",
@@ -81,7 +81,7 @@
     "76f07e19-1127-4cb4-92d4-0430f490fae2": {
       "defaultModelSelection": {
         "instanceId": "claudeAgent",
-        "model": "claude-opus-5",
+        "model": "claude-opus-5-5",
         "options": [
           {
             "id": "effort",
@@ -97,7 +97,7 @@
     "be424aee-63a8-4d51-a77e-760ccbf39684": {
       "defaultModelSelection": {
         "instanceId": "claudeAgent",
-        "model": "claude-opus-5",
+        "model": "claude-opus-5-5",
         "options": [
           {
             "id": "effort",
@@ -113,7 +113,7 @@
     "bfc5dfcf-a7d2-406a-acba-80b68912b258": {
       "defaultModelSelection": {
         "instanceId": "claudeAgent",
-        "model": "claude-opus-5",
+        "model": "claude-opus-5-5",
         "options": [
           {
             "id": "effort",
@@ -129,7 +129,7 @@
     "a0dacbfe-9d71-4473-9037-f54d69cb3c9e": {
       "defaultModelSelection": {
         "instanceId": "claudeAgent",
-        "model": "claude-opus-5",
+        "model": "claude-opus-5-5",
         "options": [
           {
             "id": "effort",
@@ -149,7 +149,7 @@
   "defaultThreadEnvMode": "worktree",
   "textGenerationModelSelection": {
     "instanceId": "claudeAgent",
-    "model": "claude-sonnet-5",
+    "model": "claude-sonnet-5-5",
     "options": [
       {
         "id": "effort",
