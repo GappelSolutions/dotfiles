@@ -45,8 +45,8 @@
       py = "python3";
       pip = "pip3";
       nerdfetch = "$HOME/.local/bin/nerdfetch";
-      rb = "sudo nixos-rebuild switch --flake ~/dev/misc/dotfiles/nix";
-      rbw = "sudo nixos-rebuild switch --flake ~/dev/misc/dotfiles/nix#wsl";
+      rb = "sudo nixos-rebuild switch --option warn-dirty false --flake ~/dev/misc/dotfiles/nix";
+      rbw = "sudo nixos-rebuild switch --option warn-dirty false --flake ~/dev/misc/dotfiles/nix#wsl";
       rollback = "sudo nixos-rebuild switch --rollback";
       sz = "source ~/.zshrc";
       zr = "zellij run -i --";

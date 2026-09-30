@@ -19,7 +19,7 @@
       ld = "lazydocker";
       vi = "nvim";
       ai = "codex --dangerously-bypass-approvals-and-sandbox";
-      rb = "sudo nixos-rebuild switch --flake ~/dev/misc/dotfiles/nix";
+      rb = "sudo nixos-rebuild switch --option warn-dirty false --flake ~/dev/misc/dotfiles/nix";
       rollback = "sudo nixos-rebuild switch --rollback";
       sz = "source ~/.bashrc";
       zel = "zellij attach welcome || zellij --session welcome --new-session-with-layout welcome-custom";

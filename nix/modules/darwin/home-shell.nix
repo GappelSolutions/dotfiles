@@ -67,7 +67,7 @@
 
       nerdfetch = "$HOME/.local/bin/nerdfetch";
       sc = "~/bin/macos-screensaver";
-      rb = "sudo HOME=/var/root /nix/var/nix/profiles/default/bin/nix run nix-darwin -- switch --flake ~/dev/misc/dotfiles/nix 2>&1 | grep --line-buffered -v \"builtins.toFile\"";
+      rb = "sudo HOME=/var/root /nix/var/nix/profiles/default/bin/nix run nix-darwin -- switch --option warn-dirty false --flake ~/dev/misc/dotfiles/nix 2>&1 | grep --line-buffered -v \"builtins.toFile\"";
       dsh = "ssh dev";
       dev = "ssh -t dev 'cd /home/cgpp/dev && zellij attach welcome || zellij --session welcome --new-session-with-layout welcome-custom'";
       dev-files = "open smb://dev/dev";

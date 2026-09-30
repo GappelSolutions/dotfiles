@@ -2,7 +2,7 @@
 
 let
   zellij-welcome = pkgs.callPackage ../../rust/zellij-welcome { };
-  lazyops = inputs.lazyops.packages.${pkgs.system}.default;
+  lazyops = inputs.lazyops.packages.${pkgs.stdenv.hostPlatform.system}.default;
   oh-my-pi = pkgs.callPackage ../../pkgs/oh-my-pi/package.nix { };
   agent-of-empires = pkgs.callPackage ../../pkgs/agent-of-empires/package.nix { };
   revdiff = pkgs.callPackage ../../pkgs/revdiff/package.nix { };
@@ -29,7 +29,7 @@ in
     rd
     lazyops
     dotnet
-    inputs.agenix.packages.${pkgs.system}.default
+    inputs.agenix.packages.${pkgs.stdenv.hostPlatform.system}.default
     pkgs.jujutsu
     pkgs.claude-code
     pkgs.codex
