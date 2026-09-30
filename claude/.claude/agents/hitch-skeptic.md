@@ -15,7 +15,7 @@ Lens, all of it:
 - **Scale**: this is mass data. Flag what breaks at the expected volume (an unbounded load into memory, N+1, per-row round trips, O(n²) on a hot path) and what glues a bottleneck in place. Don't ask for optimization beyond that.
 - **Tests**: would they fail if the code were wrong? Edge cases the ACs imply but nobody tests.
 - **Security**: injection, secrets, authz at new entry points.
-- **Comments**: every comment the diff adds or touches, one by one. Default verdict: delete. Keep one only if it says a why the code can't. This is the user's top concern, so miss none.
+- **Comments**: every comment the diff adds or touches, tests included, one by one, against the Comments rules in CODE.md. Default verdict: delete. Keep one only if a reviewer would misread or wrongly "fix" the code without it; "informative" is not enough. Report the count added and the count you would keep. A `<summary>` on a record, DTO, interface, repository method, endpoint, config class, private method or test is a `fix: delete` without discussion. This is the user's top concern, so miss none, and lean to delete on a doubt.
 - **Conventions**: naming, layout, error handling, logging and test style, compared with the neighbouring code.
 - **Simplicity**: less code doing the same, speculative abstraction, needless indirection, duplication, dead code, unused parameters, defensive checks for impossible states.
 - **Diff noise**: unrelated changes, formatting churn, debug leftovers, commented-out code, stray files. Commit messages in the repo's convention.

@@ -1,0 +1,221 @@
+#!/usr/bin/env python3
+"""Comments the final diff of each PR adds, measured against CODE.md, for hitch-inspector.
+
+usage: comments <pr-id>...
+
+The diff is lastMergeTargetCommit → lastMergeCommit: the squash or merge commit of a completed PR,
+the test merge of an active one. Both commits are fetched blobless into ~/.cache/hitch/git/<repo-id>,
+so only the blobs the diff reads are downloaded. The PAT goes in a per-command header, never to disk.
+
+Per PR: the comment count against the budget (~1 per 200 added non-test lines), then every added
+comment with the CODE.md patterns a script can recognise. [-] means none: whether it passes the
+"would a reviewer misread the code" test is still the reader's call. Generated files are skipped.
+"""
+
+import base64
+import functools
+import json
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+CACHE = Path.home() / ".cache/hitch/git"
+
+C_LIKE = {".cs", ".ts", ".tsx", ".js", ".jsx", ".mjs", ".scss", ".css", ".less", ".java", ".kt", ".go", ".rs", ".proto"}
+HASH = {".sh", ".bash", ".py", ".yaml", ".yml", ".toml", ".ps1", ".nix", ".tf", ".conf", ".properties"}
+HASH_NAMES = {"Dockerfile", "Makefile", ".gitignore", ".dockerignore", ".editorconfig"}
+MARKUP = {".html", ".xml", ".csproj", ".props", ".targets", ".config", ".xaml", ".svg"}
+
+GENERATED = re.compile(
+    r"\.Designer\.cs$|ModelSnapshot\.cs$|/Migrations/\d{14}_|\.g\.cs$|\.gen\.|\.generated\.|/generated/|\.min\.(js|css)$"
+    r"|(^|/)(package-lock\.json|bun\.lockb?|yarn\.lock|pnpm-lock\.yaml|packages\.lock\.json)$"
+)
+TEST = re.compile(r"(^|/)(tests?|__tests__)/|\.Tests?/|Tests?\.cs$|\.(spec|test)\.[jt]sx?$", re.I)
+
+# CODE.md "Never write a <summary>/docstring on", as far as the declaration line or the file name tells.
+BANNED_DECL = re.compile(
+    r"\b(record|interface|enum|struct)\b"
+    r"|\bclass\s+\w*(Dto|Request|Response|Command|Query|Event|Options|Settings|Config|Configuration|Entity)\b"
+    r"|\b(private|internal)\b[^=;{]*\w\s*\(|^\s*type\s+\w+\s*="
+)
+BANNED_FILE = re.compile(r"(Repository|Client|Controller|Endpoints?|Handler|Dto|Request|Response|Command|Query|Event|Entity|Options|Settings|Config)\.\w+$|(^|/)I[A-Z]\w*\.cs$")
+
+FLAGS = [
+    ("banner", re.compile(r"^[-=*#_/~]{3,}|[-=*#]{4,}")),
+    ("history", re.compile(
+        r"\b(added|now (uses|returns|is|has|takes)|changed from|fixed|as requested|no longer|previously|refactored)\b"
+        r"|\b(user story|story|US)\s*#?\d+|\bspec(ification)? (section )?§?\d", re.I)),
+    ("restates", re.compile(
+        r"^(gets?|sets?|returns?|represents?|creates?|initiali[sz]es?)( or sets)? (the|a|an|whether)\b|^(default )?constructor\b", re.I)),
+    ("filler", re.compile(r"\b(note that|basically|simply|this (method|function|class) (is responsible|handles))\b", re.I)),
+    ("code", re.compile(
+        r"[;{}]\s*$|^(if|for|foreach|while|return|var|let|const|await|using|import|public|private|new|throw)\b.*[;({=]"
+        r"|^[\w.]+\([^)]*\);?$")),
+]
+TODO = re.compile(r"\b(TODO|FIXME|HACK|XXX)\b")
+TICKET = re.compile(r"#\d+|\b[A-Z][A-Z0-9]+-\d+\b|\b\d{4,}\b")
+
+
+def run(*args, **kwargs):
+    return subprocess.run(args, check=True, capture_output=True, text=True, **kwargs).stdout
+
+
+def pr_json(pr_id):
+    return json.loads(run("az", "repos", "pr", "show", "--id", pr_id, "--only-show-errors", "-o", "json"))
+
+
+def git(repo, *args):
+    token = base64.b64encode(f":{os.environ['AZURE_DEVOPS_EXT_PAT']}".encode()).decode()
+    return run("git", "-C", str(repo), "-c", f"http.extraHeader=Authorization: Basic {token}", *args)
+
+
+def fetch(pr):
+    repo = CACHE / pr["repository"]["id"]
+    if not repo.exists():
+        run("git", "init", "-q", "--bare", str(repo))
+        git(repo, "remote", "add", "origin", pr["repository"]["remoteUrl"])
+        git(repo, "config", "remote.origin.promisor", "true")
+        git(repo, "config", "remote.origin.partialclonefilter", "blob:none")
+    shas = [pr["lastMergeTargetCommit"]["commitId"], pr["lastMergeCommit"]["commitId"]]
+    missing = [s for s in shas if subprocess.run(
+        ["git", "-C", str(repo), "cat-file", "-e", f"{s}^{{commit}}"], capture_output=True).returncode]
+    if missing:
+        git(repo, "fetch", "-q", "--depth=1", "--filter=blob:none", "origin", *missing)
+    return repo, shas
+
+
+def syntax(path):
+    name = Path(path).name
+    ext = Path(path).suffix.lower()
+    if ext in C_LIKE:
+        return "c"
+    if ext in HASH or name in HASH_NAMES:
+        return "hash"
+    if ext == ".sql":
+        return "sql"
+    if ext in MARKUP:
+        return "markup"
+    return None
+
+
+def comment_text(kind, line, in_block):
+    """(full-line comment text | None, trailing comment text | None, in_block after this line)."""
+    s = line.strip()
+    if kind == "c":
+        if in_block:
+            return s.lstrip("*/ ").rstrip("*/ "), None, "*/" not in s
+        if s.startswith("//"):
+            return s.lstrip("/ "), None, False
+        if s.startswith("/*"):
+            return s.lstrip("/* ").rstrip("*/ "), None, "*/" not in s
+        m = re.search(r"\s//\s(.*)$", line)
+        return None, (m.group(1).strip() if m else None), False
+    if kind == "hash":
+        return (s.lstrip("# ") if s.startswith("#") and not s.startswith("#!") else None), None, False
+    if kind == "sql":
+        return (s.lstrip("- ") if s.startswith("--") else None), None, False
+    if in_block:
+        return s.replace("-->", "").strip(), None, "-->" not in s
+    if s.startswith("<!--"):
+        return s[4:].replace("-->", "").strip(), None, "-->" not in s
+    return None, None, False
+
+
+def added_comments(diff):
+    """Per file: added non-test lines, and the added comments as [start line, end line, text, is docstring]."""
+    files, path, kind, line_no, in_block, block_doc, prev_comment = {}, None, None, 0, False, False, None
+    for line in diff.splitlines():
+        if line.startswith("+++ "):
+            path = line[6:] if line.startswith("+++ b/") else None
+            kind = syntax(path) if path and not GENERATED.search(path) else None
+            if kind:
+                files[path] = {"lines": 0, "comments": []}
+            continue
+        if line.startswith("@@"):
+            line_no = int(re.match(r"@@ -\S+ \+(\d+)", line).group(1))
+            in_block, block_doc, prev_comment = False, False, None
+            continue
+        if not kind or not line.startswith("+"):
+            continue
+        entry, code = files[path], line[1:]
+        entry["lines"] += 1
+        full, trailing, in_block_next = comment_text(kind, code, in_block)
+        doc = block_doc if in_block else code.lstrip().startswith(("///", "/**"))
+        if full is not None:
+            if prev_comment and prev_comment[1] == line_no - 1 and prev_comment[3] == doc:
+                prev_comment[1], prev_comment[2] = line_no, f"{prev_comment[2]} {full}".strip()
+            else:
+                prev_comment = [line_no, line_no, full, doc]
+                entry["comments"].append(prev_comment)
+        else:
+            prev_comment = None
+            if trailing:
+                entry["comments"].append([line_no, line_no, trailing, False])
+        in_block, block_doc = in_block_next, doc
+        line_no += 1
+    return files
+
+
+@functools.cache
+def lines_at(repo, sha, path):
+    return git(repo, "show", f"{sha}:{path}").splitlines()
+
+
+def declaration(repo, sha, path, after):
+    """The first line after a docstring that isn't blank, an attribute or a decorator."""
+    for line in lines_at(repo, sha, path)[after:]:
+        s = line.strip()
+        if s and not s.startswith(("[", "@", "//", "*")):
+            return s
+    return ""
+
+
+def flags(repo, sha, path, comment):
+    start, end, text, doc = comment
+    text = re.sub(r"</?(summary|remarks|param[^>]*|returns|inheritdoc\s*/?)>", " ", text).strip()
+    found = [name for name, pattern in FLAGS if pattern.search(text)]
+    if TODO.search(text) and not TICKET.search(text):
+        found.append("todo")
+    if doc:
+        banned = TEST.search(path) or BANNED_FILE.search(path) or BANNED_DECL.search(declaration(repo, sha, path, end))
+        found.insert(0, "docstring→banned" if banned else "docstring")
+    return found
+
+
+def report(pr_id):
+    pr = pr_json(pr_id)
+    head = f"PR {pr_id} {pr['repository']['name']} {pr['status']} by={pr['createdBy']['displayName']}"
+    if "lastMergeCommit" not in pr:
+        return [f"{head}: no merge commit ({pr.get('mergeStatus', 'unknown')}), skipped"]
+    repo, (base, sha) = fetch(pr)
+    files = added_comments(git(repo, "diff", "-U0", "--no-color", "--no-ext-diff", "-M", base, sha))
+    code_lines = sum(f["lines"] for p, f in files.items() if not TEST.search(p))
+    rows, non_test, flagged = [], 0, 0
+    for path, entry in files.items():
+        for comment in entry["comments"]:
+            found = flags(repo, sha, path, comment)
+            non_test += not TEST.search(path)
+            flagged += bool(found)
+            text = re.sub(r"\s+", " ", comment[2])[:100]
+            rows.append(f"  {path}:{comment[0]} [{','.join(found) or '-'}] {text}")
+    total = len(rows)
+    budget = code_lines / 200
+    over = f" over=+{non_test - int(budget)}" if non_test > budget else ""
+    return [f"{head}: comments={total} non-test={non_test} budget={budget:.1f} ({code_lines} lines){over} flagged={flagged}",
+            *rows]
+
+
+def main():
+    if len(sys.argv) < 2:
+        sys.exit(__doc__.split("\n\n")[1])
+    for pr_id in sys.argv[1:]:
+        try:
+            print("\n".join(report(pr_id)))
+        except subprocess.CalledProcessError as e:
+            print(f"PR {pr_id}: {' '.join(e.cmd[:3])} failed: {e.stderr.strip().splitlines()[-1:]}")
+
+
+if __name__ == "__main__":
+    main()

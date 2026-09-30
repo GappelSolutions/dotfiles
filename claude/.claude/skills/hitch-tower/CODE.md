@@ -6,19 +6,30 @@ Used by `hitch-mechanic` (writes), `hitch-skeptic` and `hitch-referee` (check). 
 
 Default: no comment. Code says what; a comment only says the why the code can't.
 
-Keep:
-- a non-obvious why: a constraint, an invariant, a workaround (with its issue link), a choice a reader would otherwise "fix"
-- public API docs where the repo documents its API, and only what the signature can't say: units, ranges, side effects, ownership
+The test: would a reviewer misread the code, or "fix" it wrongly, without this comment? If not, delete it. "It is informative" or "it documents the behaviour" is not a reason to keep one.
+
+Keep, and only this:
+- a non-obvious why: a constraint, an invariant, an ordering, transaction or DST reason, a workaround (with its issue link), a deliberate trade-off a reader would otherwise "fix"
+- docs on a public API the repo already documents that way, and only what the signature can't say: units, ranges, side effects, ownership. Not on internal types.
+
+Never write a `<summary>`/docstring on:
+- records, DTOs, request/response types, options and config classes, entities, enums and their members
+- interfaces and their methods, repository and client methods, endpoints and handlers
+- private and internal methods whose name and signature say it
+- tests and test helpers
 
 Delete:
-- restating the code: `// increment counter`, `// loop over devices`
-- narrating the change or its history: "added", "new", "now uses", "fixed", "changed from X", "as requested", Story IDs
+- restating the code, the type, the method name or its parameters: `// increment counter`, "Gets the...", "Returns the...", "Represents a..."
+- narrating the change or its history: "added", "new", "now uses", "fixed", "changed from X", "as requested", Story IDs, spec section numbers
 - banners and dividers: `// ---- helpers ----`
 - commented-out code
-- docstrings that repeat the name and parameters
 - TODO/FIXME without a ticket ID
 - filler: "Note that", "basically", "simply", "This function is responsible for"
 - a comment that explains a bad name: rename instead
+
+One sentence is the norm, as a `//` line above the code it explains. A multi-line `<summary>` is the exception and must justify itself. If a new class or file needs several comments, the code is not clear enough: fix the code.
+
+Budget: a Story with more than ~1 comment per 200 changed lines of non-test code has too many. Count them before handing off or reviewing, and cut to the ones that pass the test.
 
 Scope: lines the diff adds or touches. Old slop elsewhere stays out of the PR.
 

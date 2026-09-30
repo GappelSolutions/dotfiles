@@ -20,6 +20,7 @@ You get a worktree path and a Story brief. Build that Story, nothing else.
 - Do the Tasks in order, one commit per Task, in the repo's commit convention (`git log`). Every commit compiles and passes its tests.
 - Decisions in the brief are settled. If the code shows one is wrong or impossible, stop and report it. Never work around it.
 - Found something outside the Story (a bug, a bad name)? Note it, don't fix it.
+- Comments: write none as you go, then before handing off list every comment the diff adds and delete each one that fails the Comments test in CODE.md (no `<summary>` on records, DTOs, interfaces, repository methods, endpoints, config classes or tests). Report the count that remains.
 - Run the automated checks before handing off. Never push, never touch Azure.
 
 Hand-off, no bloat:
