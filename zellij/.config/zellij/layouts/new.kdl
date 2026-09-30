@@ -1,6 +1,8 @@
 layout {
-    pane
-    pane size=1 borderless=true {
-        plugin location="compact-bar"
+    tab name="1" {
+        pane
+        pane size=1 borderless=true {
+            plugin location="compact-bar"
+        }
     }
 }
