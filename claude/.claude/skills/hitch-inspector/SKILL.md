@@ -43,6 +43,7 @@ Output: no bloat. Every claim cites a ref (`<file-key>:<line>`).
    1. <pattern> ×n: <refs>. Cause: <path:line | missing rule | env>. Change: <one line>.
    **Slow**: top 3 by time, with cause
    **Keep**: ≤3 lines of what worked
+   **No-ops**: hitch instructions the transcripts never show changing behavior: path:line, proposed deletion
    **Proposed edits**: <file>: <change>
    ```
    Read the review metrics like this: a high `A` or `B` alone justifies two skeptics. `A+B` near 100% means one would do. A high `referee` alone means the lens misses things. A high dropped means noise.
