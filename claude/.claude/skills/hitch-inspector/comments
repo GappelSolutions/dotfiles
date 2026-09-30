@@ -50,10 +50,11 @@ FLAGS = [
     ("restates", re.compile(
         r"^(gets?|sets?|returns?|represents?|creates?|initiali[sz]es?)( or sets)? (the|a|an|whether)\b|^(default )?constructor\b", re.I)),
     ("filler", re.compile(r"\b(note that|basically|simply|this (method|function|class) (is responsible|handles))\b", re.I)),
-    ("code", re.compile(
-        r"[;{}]\s*$|^(if|for|foreach|while|return|var|let|const|await|using|import|public|private|new|throw)\b.*[;({=]"
-        r"|^[\w.]+\([^)]*\);?$")),
 ]
+CODE = re.compile(
+    r"(\(.*\)|=).*;\s*$|[{}]\s*$|^(if|for|foreach|while|return|var|let|const|await|using|import|public|private|new|throw)\b.*[;({=]"
+    r"|^[\w.]+\([^)]*\);?$")
+YAML_CODE = re.compile(r"^-?\s*[\w.-]+:(\s+\S+)?$")
 TODO = re.compile(r"\b(TODO|FIXME|HACK|XXX)\b")
 TICKET = re.compile(r"#\d+|\b[A-Z][A-Z0-9]+-\d+\b|\b\d{4,}\b")
 
@@ -124,7 +125,7 @@ def comment_text(kind, line, in_block):
 
 
 def added_comments(diff):
-    """Per file: added non-test lines, and the added comments as [start line, end line, text, is docstring]."""
+    """Per file: added non-test lines, and the added comments as [start line, end line, [line texts], is docstring]."""
     files, path, kind, line_no, in_block, block_doc, prev_comment = {}, None, None, 0, False, False, None
     for line in diff.splitlines():
         if line.startswith("+++ "):
@@ -145,14 +146,15 @@ def added_comments(diff):
         doc = block_doc if in_block else code.lstrip().startswith(("///", "/**"))
         if full is not None:
             if prev_comment and prev_comment[1] == line_no - 1 and prev_comment[3] == doc:
-                prev_comment[1], prev_comment[2] = line_no, f"{prev_comment[2]} {full}".strip()
+                prev_comment[1] = line_no
+                prev_comment[2].append(full)
             else:
-                prev_comment = [line_no, line_no, full, doc]
+                prev_comment = [line_no, line_no, [full], doc]
                 entry["comments"].append(prev_comment)
         else:
             prev_comment = None
             if trailing:
-                entry["comments"].append([line_no, line_no, trailing, False])
+                entry["comments"].append([line_no, line_no, [trailing], False])
         in_block, block_doc = in_block_next, doc
         line_no += 1
     return files
@@ -173,9 +175,12 @@ def declaration(repo, sha, path, after):
 
 
 def flags(repo, sha, path, comment):
-    start, end, text, doc = comment
-    text = re.sub(r"</?(summary|remarks|param[^>]*|returns|inheritdoc\s*/?)>", " ", text).strip()
+    start, end, lines, doc = comment
+    text = re.sub(r"</?(summary|remarks|param[^>]*|returns|inheritdoc\s*/?)>", " ", " ".join(lines)).strip()
     found = [name for name, pattern in FLAGS if pattern.search(text)]
+    yaml = Path(path).suffix in (".yml", ".yaml")
+    if any(CODE.search(line) or yaml and YAML_CODE.search(line) for line in lines):
+        found.append("code")
     if TODO.search(text) and not TICKET.search(text):
         found.append("todo")
     if doc:
@@ -198,7 +203,7 @@ def report(pr_id):
             found = flags(repo, sha, path, comment)
             non_test += not TEST.search(path)
             flagged += bool(found)
-            text = re.sub(r"\s+", " ", comment[2])[:100]
+            text = re.sub(r"\s+", " ", " ".join(comment[2]))[:100]
             rows.append(f"  {path}:{comment[0]} [{','.join(found) or '-'}] {text}")
     total = len(rows)
     budget = code_lines / 200

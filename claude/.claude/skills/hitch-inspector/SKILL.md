@@ -14,7 +14,7 @@ Output: no bloat. Every claim cites a ref (`<file-key>:<line>`).
 ## Steps
 
 1. **Extract**: `~/.claude/skills/hitch-inspector/extract --since <date> [--all] > /tmp/hitch-inspection.md`, then read it. Refs resolve through its Files section. Read a transcript line with `sed -n '<line>p' <file> | jq`.
-2. **PRs**: `~/.claude/skills/hitch-tower/hitch-pr stats <every id in ## PRs>`.
+2. **PRs**: `~/.claude/skills/hitch-tower/hitch-pr stats <every id in ## PRs>`, then `~/.claude/skills/hitch-inspector/comments <same ids>`: every comment each final diff adds, against the CODE.md budget, tagged with the patterns a script can tell. Only the tower's PRs (`by=` you) measure the crew; hitch-jury PRs are colleagues' code.
 3. **Prompts**: classify every entry in ## Prompts, using `before` for context:
    - `correction`: the crew went the wrong way, or did more or less than asked.
    - `redo`: the same thing asked again.
@@ -33,6 +33,7 @@ Output: no bloat. Every claim cites a ref (`<file-key>:<line>`).
    Metrics, per PR (Story = PR) where it applies:
    - Outcome: their comments, pushes after publish, negative votes, publish→approve.
    - Your load: corrections + redos + avoidable, interrupts, draft→publish.
+   - Comments: added per PR, over budget, tagged (`docstring→banned`, `history`, `banner`, ...) and `[-]` that fail the CODE.md test anyway.
    - Reviews: referee fixes, dropped (skeptic false positives), found by `A+B`, `A` or `B` alone, and `referee` alone.
    - Cost: agent work time, main-session work time, $, compactions.
    - Friction: tool error rate, loops, error streaks, slow calls, rework files, denials.
@@ -47,6 +48,7 @@ Output: no bloat. Every claim cites a ref (`<file-key>:<line>`).
    **Proposed edits**: <file>: <change>
    ```
    Read the review metrics like this: a high `A` or `B` alone justifies two skeptics. `A+B` near 100% means one would do. A high `referee` alone means the lens misses things. A high dropped means noise.
+   Comments: every one on a tower PR that fails CODE.md got past the mechanic, both skeptics and the referee. Find which one saw it and let it through.
    Model trial: skeptic A runs on opus, B on sonnet. Compare `A` alone vs `B` alone and dropped `A` vs `B`. B about equal to A: propose sonnet for both. B clearly lower: propose opus for B again.
 7. **Save** the scorecard and the pitfalls (not the raw extract) to `~/.hitch/inspections/<until>.md`. It's the next baseline.
 8. **Edits**: only on the user's OK. Make them in the dotfiles repo (`claude/.claude/...`), never in the deployed files.
