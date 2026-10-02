@@ -30,7 +30,7 @@ Output: no bloat. Every claim cites a ref (`<file-key>:<line>`).
    **Scorecard** <since> → <until> (vs <previous>)
    | metric | now | before |
    ```
-   Metrics, per PR (Story = PR) where it applies:
+   Metrics, per PR (Task = PR) where it applies:
    - Outcome: their comments, pushes after publish, negative votes, publish→approve.
    - Your load: corrections + redos + avoidable, interrupts, draft→publish.
    - Comments: added per PR, over budget, tagged (`docstring→banned`, `history`, `banner`, ...) and `[-]` that fail the CODE.md test anyway.

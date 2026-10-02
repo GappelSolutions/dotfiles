@@ -1,6 +1,6 @@
 ---
 name: hitch-jury
-description: Review someone else's PR with the hitch review crew only: two blind hitch-skeptic runs and a hitch-referee on top. Proposes review comments and a vote in chat, posts them on your OK, and re-reviews after the author pushes. No PR given: lists the active PRs where you're a reviewer.
+description: "Review someone else's PR with the hitch review crew only: two blind hitch-skeptic runs and a hitch-referee on top. Proposes review comments and a vote in chat, posts them on your OK, and re-reviews after the author pushes. No PR given: lists the active PRs where you're a reviewer."
 argument-hint: "[pr-id | pr-url]"
 disable-model-invocation: true
 ---
@@ -30,7 +30,7 @@ Input: `$ARGUMENTS`
 3. Load the PR:
    - `az repos pr show --id <pr> -o json`: repo, source and target branch (`refs/heads/` stripped), author, reviewers.
    - Threads, as in `hitch-clerk`: what's already been said, and which threads are yours (first comment's `author.id` = `$id`).
-   - Brief: the linked Story (`az repos pr work-item list --id <pr>`) with its description, ACs and the parent's `## Design` if it has one; else the PR title and description.
+   - Brief: the linked work items (`az repos pr work-item list --id <pr>`). A Task: its scope, plus its parent Story. A Story: its description, ACs and `## Design` if it has one. None: the PR title and description.
 4. Worktree: find a local clone whose `origin` points at the PR's repo (the current repo, else `find ~/dev -maxdepth 4 -name .git`). None: ask the user.
    ```bash
    git -C <clone> fetch origin <source> <target>

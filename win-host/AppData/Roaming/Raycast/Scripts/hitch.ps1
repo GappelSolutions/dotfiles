@@ -19,24 +19,25 @@ function Row($name, $kind, $what) {
 }
 
 "$bold$cyan PLAN$reset"
-Row 'hitch-duck'     '/cmd'  'Grills you, challenges one-way doors, slices Stories'
+Row 'hitch-duck'     '/cmd'  'Grills a Story, challenges one-way doors, slices Tasks'
 Row 'hitch-scout'    'agent' 'Blind code research: path:line facts, no opinions'
-Row 'hitch-clerk'    'skill' 'Azure: Story = PR, Task = step, Predecessor = batch'
+Row 'hitch-clerk'    '/cmd'  'Azure conventions; publishes your own branch as a PR'
 ''
 "$bold$cyan EXECUTE$reset"
 Row 'hitch-tower'    '/cmd'  'Runs the crew: batches, draft PRs, merge, next'
-Row 'hitch-bouncer'  'agent' 'Readiness gate + Story brief; gaps -> duck'
-Row 'hitch-mechanic' 'agent' 'Builds one Story in its worktree, dev, annotations'
+Row 'hitch-bouncer'  'agent' 'Readiness gate + Task brief; gaps -> duck'
+Row 'hitch-mechanic' 'agent' 'Builds one Task in its worktree, dev, annotations'
 Row 'hitch-skeptic'  'agent' 'Full review incl. comment slop; 2 run blind'
 Row 'hitch-referee'  'agent' '3rd review on top of both: the final fix list'
-Row 'hitch-janitor'  'agent' 'Feature done: worktrees, branches, leftovers'
+Row 'hitch-janitor'  'agent' 'Story done: worktrees, branches, leftovers'
 ''
 "$bold$cyan REVIEW + CHECK$reset"
 Row 'hitch-jury'     '/cmd'  "Review a colleague's PR: 2 skeptics + referee"
 Row 'hitch-inspector' '/cmd' 'Weekly scorecard: loops, slow, corrections, PRs'
 ''
-"  $dim" + 'plan   /hitch-duck <feature-id | story-id | text>' + $reset
-"  $dim" + 'run    /hitch-tower <feature-id | story-id>' + $reset
+"  $dim" + 'plan   /hitch-duck <story-id | task-id | feature-id | text>' + $reset
+"  $dim" + 'run    /hitch-tower <story-id | task-id>' + $reset
+"  $dim" + 'pr     /hitch-clerk [task-id] [branch]   again after a push: sync' + $reset
 "  $dim" + 'review /hitch-jury [pr-id]   no id: PRs waiting on you' + $reset
 "  $dim" + 'check  /hitch-inspector [since]   mark live: #flag <note>' + $reset
 "  $dim" + 'merge  approval (10) by someone else + every comment fixed/wontFix' + $reset

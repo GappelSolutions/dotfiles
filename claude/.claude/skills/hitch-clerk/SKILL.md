@@ -1,10 +1,12 @@
 ---
 name: hitch-clerk
-description: Azure DevOps conventions and commands for the hitch workflow (hitch-duck, hitch-tower). Covers the shape of Features, User Stories, Tasks, blocking links and PRs, states, and when a Story is ready. Load it when a hitch skill reads or writes work items, or when a hitch ticket is fixed by hand.
-user-invocable: false
+description: Azure DevOps conventions and commands for the hitch workflow (hitch-duck, hitch-tower). Covers the shape of User Stories and their Tasks (one slice = one PR each), blocking links and PRs, states, and when a Task is ready. Load it when a hitch skill reads or writes work items, or when a hitch ticket is fixed by hand. /hitch-clerk publishes the user's own branch as a hitch PR.
+argument-hint: "[task-id | story-id] [branch]"
 ---
 
 # hitch-clerk
+
+Invoked by the user as `/hitch-clerk` (input: `$ARGUMENTS`): read `~/.claude/skills/hitch-clerk/PUBLISH.md` and follow it, with this file as the reference. Loaded by another skill: reference only.
 
 Org and project are the `az devops configure` defaults. Auth is `$AZURE_DEVOPS_EXT_PAT`. Process: Agile.
 
@@ -15,24 +17,24 @@ project=$(az devops configure -l | sed -n 's/^project = //p')
 
 ## Convention
 
-- **Feature**: the unit that gets grilled. Its description keeps the original text and gets a `## Design` section appended.
-- **User Story** = one PR. Its parent is the Feature. In Story mode, the Story carries the `## Design` section itself.
-- **Task** = one minimal step of its Story. Its parent is the Story.
-- **Blocking**: if Story B is blocked by A, B gets a `Predecessor` link to A.
-- **PR**: links to its Story only (`az repos pr create --work-items <story-id>`), never to a Task or Feature.
+- **Feature**: the PO's. Context only: hitch reads it and never writes to it, not even its state.
+- **User Story**: the unit that gets grilled. Its description keeps the original text and gets a `## Design` section appended. Its parent is a Feature, if there is one. A new Story only if the PO could ship or drop it on its own (another role or benefit). It gets its own Design, with no refs to another Story's.
+- **Task** = one slice = one PR. Its parent is the Story. It carries no decisions: the Design lives on the Story, once.
+- **Blocking**: if Task B is blocked by A, B gets a `Predecessor` link to A.
+- **PR**: links to its Task and its Story (`az repos pr create --work-items <task-id> <story-id>`), never to a Feature. Tower completes it with `--transition-work-items false`, so a merge never closes the Story.
 - Area: copy it from the parent or siblings.
 - Iteration: don't set it. Sprint planning is done by humans.
 - Tags: one component tag, reused from the siblings. Never invent one.
 - State: new items start as `New`. Never delete. Close obsolete items (`Removed`) only with the user's OK.
-- Lifecycle, set by hitch-tower. Nothing moves on its own: completing a PR doesn't change any state. `Resolved` isn't used for Stories.
+- Lifecycle, set by hitch-tower. Nothing moves on its own: completing a PR doesn't change any state. `Resolved` isn't used.
 
-  | when | Feature | Story + its Tasks |
+  | when | Story | Task |
   |---|---|---|
-  | tower starts the Story (worktree) | `Active` if `New` | `Active`, assigned to the user |
-  | its PR is published | | Tasks to the taskboard's review column (state stays `Active`) |
+  | tower starts a Task (worktree) | `Active` if `New`, assigned to the user | `Active`, assigned to the user |
+  | its PR is published | | to the taskboard's review column (state stays `Active`) |
   | its PR completes and the after-merge check passes | | `Closed` |
-  | every Story `Closed` | `Resolved`, only on the user's OK | |
-  | Story dropped | | back to `New`, unassigned, only on the user's OK |
+  | every Task `Closed` | `Closed` | |
+  | Task dropped | | back to `New`, unassigned, only on the user's OK |
 
   ```bash
   me=$(curl -s -u ":$AZURE_DEVOPS_EXT_PAT" "<org>/_apis/connectionData" | jq -r '.authenticatedUser.properties.Account["$value"]')
@@ -51,41 +53,45 @@ project=$(az devops configure -l | sed -n 's/^project = //p')
   curl "${a[@]}" -H 'Content-Type: application/json' -X PATCH -d '{"newColumn": "<column>"}' \
     "$org/$project/$team/_apis/work/taskboardworkitems/<iteration-id>/<task-id>?api-version=7.1-preview.1"
   ```
-- Colleagues read these items, so write plain work items: no agent scaffolding, no bloat.
+- Colleagues read these items, so write plain work items: no agent scaffolding, no bloat. Nothing they can't open: no refs to local ADRs or `~/.hitch/` files, in work items, PRs or annotations.
 
 ## Shapes
 
-The Design section (on the grilled item):
-
-````
-## Design (YYYY-MM-DD)
-**Scope**: …
-**Out**: …
-**Decisions**
-- D1 …: why
-**Sketches**
-```sql
-…
-```
-````
-
 A Story:
 - Title: the outcome, verb first.
-- Description:
-  ```
+- Description: the story line, then the Design. An existing Story keeps its text and gets the Design appended. If it has no story line, propose one at the gate.
+  ````
   As a <role>, I want <capability>, so that <benefit>.
 
-  **Decisions**: F<id>/D1, D4   (or: none)
-  **Checks**
+  ## Design (YYYY-MM-DD)
+  **Scope**: …
+  **Out**: …
+  **Decisions**
+  *System*
+  - D1 …: why
+  *Program*
+  - D4 …: why
+  **Sketches**
+  ```sql
+  …
+  ```
+  ````
+  The role is someone who uses or runs the system (an operator, a meter admin), never "developer".
+- `Acceptance Criteria` field: bullets of observable behavior. Tasks have no such field.
+
+A Task:
+- Title: the slice's outcome, verb first, ≤60 chars, no IDs. On the taskboard it's all anyone reads.
+- Description:
+  ```
+  <1–2 lines: what works after this PR>
   - auto: `<command>`
   - dev: <input to send> → <what to read back> · cleanup: <what the check leaves behind>
   ```
-  The role is someone who uses or runs the system (an operator, a meter admin), never "developer". The dev check runs against any deployed environment as is: it sends input and reads results, and never deploys or configures anything.
-- `Acceptance Criteria` field: bullets of observable behavior.
+  No steps: the mechanic plans its own commits. The dev check runs against any deployed environment as is: it sends input and reads results, and never deploys or configures anything. A prefactor without behavior change: `dev: none, no behavior change`.
 
-A Task: title only. Add ≤2 description lines if the step isn't obvious.
-
-**Ready** means (checked by `hitch-bouncer`): an "As a … I want … so that …" line with a real role, acceptance criteria, resolvable decision refs, checks, and every Predecessor `Closed`.
+**Ready** means (checked by `hitch-bouncer`, per Task):
+- Story: an "As a … I want … so that …" line with a real role, acceptance criteria, a `## Design`.
+- Task: the scope line, checks, every Predecessor `Closed`.
 
 ## Read
 
@@ -98,7 +104,7 @@ Relations: `System.LinkTypes.Hierarchy-Forward` = child, `-Reverse` = parent, `S
 
 ## Write (only after the user's "go")
 
-Order: Feature (if new) → Stories in dependency order → Predecessor links → Tasks.
+Order: Story (if new) → Tasks in dependency order → Predecessor links.
 
 Create or update through REST so the descriptions are Markdown (existing items are HTML):
 
@@ -121,6 +127,8 @@ curl -s -u ":$AZURE_DEVOPS_EXT_PAT" -H 'Content-Type: application/json-patch+jso
 ]
 ```
 
+A Task: `$Task`, without the two `AcceptanceCriteria` ops.
+
 After the first write, read the item back and check its `multilineFieldsFormat`. If Markdown was rejected, fall back to minimal HTML.
 
 ```bash
@@ -135,7 +143,7 @@ Conventions come from the repo's last completed PRs, never from its PR template:
 az repos pr list --status completed --top 5 --query '[].[title, completionOptions.mergeStrategy, completionOptions.deleteSourceBranch]' -o tsv
 ```
 
-- Title: their pattern (e.g. `#<story-id>: <story title>`).
+- Title: their pattern, with the Task's ID and title (e.g. `#<task-id>: <task title>`).
 - Description: the same short overview on every PR, whatever the repo's PRs do. Plain Markdown for a colleague, readable like the tickets. No template checklist, no checks, no agent scaffolding:
   ````
   <one line: what works after this PR>
@@ -154,11 +162,11 @@ az repos pr list --status completed --top 5 --query '[].[title, completionOption
 
 ```bash
 az repos pr create --draft --repository <repo> --source-branch <branch> --target-branch <default> \
-  --work-items <story-id> --title "<title>" --description "$(cat pr.md)"
+  --work-items <task-id> <story-id> --title "<title>" --description "$(cat pr.md)"
 ~/.claude/skills/hitch-tower/hitch-pr annotate <pr> annotations.tsv   # <path>:<line><TAB><text>
 az repos pr update --id <pr> --description "$(cat pr.md)"             # keep it true after every push
 az repos pr update --id <pr> --draft false                            # publish
-az repos pr update --id <pr> --status completed --squash <bool> --delete-source-branch <bool>   # as their PRs do
+az repos pr update --id <pr> --status completed --squash <bool> --delete-source-branch <bool> --transition-work-items false   # as their PRs do
 ```
 
 Threads, via REST. The base is the PR's own repository URL: its repo may sit in another project.

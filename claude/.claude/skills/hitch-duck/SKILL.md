@@ -1,13 +1,13 @@
 ---
 name: hitch-duck
-description: Plan a feature by grilling the user. Blind code research, a decision-tree interview that challenges one-way-door decisions, then vertical-slice Stories and Tasks in Azure DevOps for hitch-tower to execute.
-argument-hint: "[feature-id | story-id | free text]"
+description: Plan a User Story by grilling the user. Blind code research, a decision-tree interview that challenges one-way-door decisions, then the Design on the Story and one Task per vertical slice in Azure DevOps for hitch-tower to execute.
+argument-hint: "[story-id | task-id | feature-id | free text]"
 disable-model-invocation: true
 ---
 
 # hitch-duck
 
-You grill, the user decides. Result: settled decisions plus Azure Stories/Tasks that `hitch-tower` can execute.
+You grill, the user decides. Result: a User Story with its Design and one Task per slice, for `hitch-tower` to execute.
 
 Input: `$ARGUMENTS`
 
@@ -24,10 +24,11 @@ Apply these to every message and every ticket.
 1. Effort is `${CLAUDE_EFFORT}`. If it's below `high`, open with one line: "effort ${CLAUDE_EFFORT}: `/effort high`?". Then continue.
 2. Load the `hitch-clerk` skill for the conventions.
 3. Resolve the input:
-   - Feature ID: load the Feature, its children, links and attachments.
-   - Story ID: **Story mode**. Grill only this Story, and challenge its scope, its direction and its parent.
-   - Free text: no ticket yet. The Feature gets created at the Azure gate.
-   - Existing children and descriptions are a draft to challenge, not truth.
+   - Story ID: the Story to grill. Load it, its Tasks, links and attachments, and its parent Feature as context. Challenge its scope and its direction.
+   - Task ID: **Task mode**. Grill only this slice against its Story's Design, and challenge its scope and the decisions it touches. New decisions get merged into the Story's Design.
+   - Feature ID: context only, never written to. Load it and its Stories. The grill ends in one new Story under it, unless an existing Story already covers the ask: then grill that one.
+   - Free text: no ticket yet. The Story gets created at the Azure gate. Ask there which Feature it goes under, or none.
+   - Existing Tasks and descriptions are a draft to challenge, not truth.
 4. Read the ADRs in `~/.hitch/<repo>/adr/`, where `<repo>` is the last segment of `git remote get-url origin`.
 5. Dispatch scouts, then ask round 1 right away about scope and intent.
 
@@ -89,8 +90,29 @@ After each round, show only the new or changed decisions:
 D<n> <decision>: <why, ≤8 words>
 ```
 
-ADR: write one only when all three hold: hard to reverse, surprising without context, a real trade-off. Put it at `~/.hitch/<repo>/adr/NNNN-slug.md` (`mkdir -p`) as 1–3 sentences: context, decision, why. Mention it in one line. Never commit it.
+ADR: write one only when all three hold: hard to reverse, surprising without context, a real trade-off. Put it at `~/.hitch/<repo>/adr/NNNN-slug.md` (`mkdir -p`) as 1–3 sentences: context, decision, why. Mention it in chat in one line. Never commit it. ADRs are local only: never cite one in a ticket, the decision's why goes in the D line itself.
+
+## Consolidate
+
+When the frontier is empty, turn the round log into the Story's Design (shape in `hitch-clerk`). The log is history. The Design is what `hitch-bouncer`, `hitch-mechanic` and the reviewers read.
+
+- Only final answers survive: drop superseded, reversed and re-asked versions.
+- Merge decisions about the same thing (a table, a contract, a module) into one, with one why.
+- A sketch replaces the decisions it shows (column types, payload shape). Keep a D line only for the why a sketch can't carry.
+- Fold trivial two-way defaults into the decision or sketch they belong to. Drop what the code already implies.
+- Group by system, then program. Renumber D1…Dn in that order. From here on only the new IDs count.
+- The Story already has a Design: produce one merged Design, never a second.
+- Nothing lost: every settled decision is in a D line, merged, or shown by a sketch. ADRs still match.
+
+Show the draft Design, then:
+
+```
+Merged: D3+D7+D9 → D2 · …
+Dropped: D4 superseded by D11 · …
+```
+
+Iterate until the user approves.
 
 ## Done
 
-When the frontier is empty, ask "Frontier empty. Slice?". Once the user confirms, follow [SLICE.md](SLICE.md). Write nothing to Azure before its gate.
+Once the Design is approved, follow [SLICE.md](SLICE.md). Write nothing to Azure before its gate.
