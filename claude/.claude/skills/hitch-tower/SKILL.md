@@ -62,7 +62,7 @@ The frontier is every Task whose Predecessors are all `Closed`. A batch is the f
    - Lease: a namespace without a `hitch-lease` ConfigMap is free, and `<ns>` goes first. Take it with `oc create configmap hitch-lease -n <ns> --from-literal=task=<task-id>`. The lease lives in the cluster, so a later session finds it (Start, step 3). None free: the Task waits.
    - Keep it until the Task is closed, so feedback redeploys land in the same place. Then `oc delete configmap hitch-lease -n <ns>`.
    - Tell the mechanic: "deploy to `<ns>`, run the dev checks, then the annotations".
-6. **Draft PR**: `git push -u origin <branch>`, create the draft as in `hitch-clerk`, then `hitch-pr annotate <pr> <file>` with the mechanic's annotations. A UI change: upload the mechanic's screenshot and add it with the deployed URL to the description, as in `hitch-clerk`. Do it again after a push with a new screenshot.
+6. **Draft PR**: `git push -u origin <branch>`, create the draft as in `hitch-clerk`, then `hitch-pr annotate <pr> <file>` with the mechanic's annotations. Add the mechanic's deployed URL to the description, and for a UI change upload its screenshot, as in `hitch-clerk`. Again after a push with a new screenshot.
 7. **Report** per Task:
    ```
    **T<n> #<task> <title>** → <pr-url>
