@@ -10,7 +10,7 @@ layout {
 
     tab name="1-learn" focus=true {
         pane split_direction="vertical" {
-            pane size="60%" command="nvim" {
+            pane size="60%" command="vis" {
                 args "01-elixir-core/01-pattern-matching.md"
             }
             pane size="40%" command="bash" {
@@ -21,7 +21,7 @@ layout {
 
     tab name="2-code" {
         pane split_direction="vertical" {
-            pane size="60%" command="nvim" {
+            pane size="60%" command="vis" {
                 args "exercises/01-elixir-core/01-pattern-matching.ex"
             }
             pane size="40%" command="bash" {
@@ -45,5 +45,5 @@ layout {
     tab name="0" { pane; }
 }
 
-scrollback_editor "nvim"
+scrollback_editor "vis"
 default_mode "locked"

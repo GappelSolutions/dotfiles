@@ -52,5 +52,5 @@ layout {
     tab name="0" { pane; }
 }
 
-scrollback_editor "nvim"
+scrollback_editor "vis"
 default_mode "locked"

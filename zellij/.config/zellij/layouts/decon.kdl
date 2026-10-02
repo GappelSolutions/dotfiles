@@ -27,8 +27,8 @@ layout {
         }
     }
 
-    tab name="2-nvim" cwd="app" {
-        pane borderless=true command="nvim"
+    tab name="2-vis" cwd="app" {
+        pane borderless=true command="vis"
     }
 
     tab name="3" { pane; }
@@ -41,5 +41,5 @@ layout {
     tab name="0" { pane; }
 }
 
-scrollback_editor "nvim"
+scrollback_editor "vis"
 default_mode "locked"

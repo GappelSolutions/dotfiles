@@ -43,8 +43,8 @@ text = "#c6c8d1"
 
 [env]
 TERM = "xterm-256color"
-EDITOR = "nvim"
-VISUAL = "nvim"
+EDITOR = "vis"
+VISUAL = "vis"
 ZELLIJ_SOCKET_DIR = "/tmp/zellij"
 
 [font]

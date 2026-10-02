@@ -5,4 +5,6 @@ git:
     - colorArg: always
       command: delta --dark --paging=never --syntax-theme base16-256 -s
 os:
-  edit: "nvim --server $NVIM --remote-tab {{filename}}"
+  edit: "vis {{filename}}"
+  editAtLine: "vis +{{line}} {{filename}}"
+  editInTerminal: true

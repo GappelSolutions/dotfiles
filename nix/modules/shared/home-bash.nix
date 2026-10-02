@@ -17,7 +17,7 @@
       dcu = "podman-compose up -d --build";
       dcd = "podman-compose down";
       ld = "lazydocker";
-      vi = "nvim";
+      vi = "vis";
       ai = "codex --dangerously-bypass-approvals-and-sandbox";
       rb = "sudo nixos-rebuild switch --option warn-dirty false --flake ~/dev/misc/dotfiles/nix";
       rollback = "sudo nixos-rebuild switch --rollback";

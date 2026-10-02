@@ -32,6 +32,11 @@ file    win-host/.config/yasb/styles.css                    .config/yasb/styles.
 # Raycast script commands (register the folder once: Settings -> Script Commands -> Add Script Directory)
 dir     win-host/AppData/Roaming/Raycast/Scripts            AppData/Roaming/Raycast/Scripts
 
+# vis runs in WSL (vis-win in nix/hosts/wsl/home.nix): vis.cmd for cmd, pwsh and what they start,
+# vis for Git for Windows' sh. .local\bin is on the user PATH.
+file    win-host/.local/bin/vis.cmd                         .local/bin/vis.cmd
+file    win-host/.local/bin/vis                             .local/bin/vis
+
 # Shell
 file    win-host/Documents/PowerShell/profile.ps1           Documents/PowerShell/profile.ps1
 file    win-host/.config/atuin/config.toml                  .config/atuin/config.toml

@@ -18,8 +18,8 @@ function cat { bat @args }
 function lg { lazygit @args }
 function ld { lazydocker @args }
 
-$env:VISUAL = "nvim"
-$env:EDITOR = "nvim"
+$env:VISUAL = "vis"
+$env:EDITOR = "vis"
 
 function y {
     $tmp = [System.IO.Path]::GetTempFileName()

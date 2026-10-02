@@ -6,7 +6,7 @@
 
   nixpkgs.config.allowUnfree = true;
 
-  environment.variables.EDITOR = "nvim";
+  environment.variables.EDITOR = "vis";
   environment.systemPackages = with pkgs; [
     vim
     curl

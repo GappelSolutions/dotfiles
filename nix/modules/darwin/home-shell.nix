@@ -59,8 +59,8 @@
       ai = "codex --dangerously-bypass-approvals-and-sandbox";
       sz = "source ~/.zshrc";
       zr = "zellij run -i --";
-      vi = "nvim";
-      vim = "nvim --listen /tmp/nvim-server.pipe";
+      vi = "vis";
+      vim = "vis";
 
       py = "python3";
       pip = "pip3";
@@ -156,8 +156,8 @@
         export VISUAL="nvr -cc split --remote-wait +'set bufhidden=wipe'"
         export EDITOR="nvr -cc split --remote-wait +'set bufhidden=wipe'"
       else
-        export VISUAL="nvim"
-        export EDITOR="nvim"
+        export VISUAL="vis"
+        export EDITOR="vis"
       fi
 
       # --- Zellij session helpers ---

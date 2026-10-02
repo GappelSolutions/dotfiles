@@ -1,0 +1,3 @@
+#!/bin/sh
+# Git for Windows runs $EDITOR through its own sh, which skips vis.cmd
+exec wsl.exe -e sh -c 'exec vis-win "$@"' vis "$@"

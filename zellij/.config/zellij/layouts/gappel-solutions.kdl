@@ -8,12 +8,12 @@ layout {
         }
     }
 
-    tab name="1-front-nvim" cwd="src/frontend" {
-        pane borderless=true command="nvim"
+    tab name="1-front-vis" cwd="src/frontend" {
+        pane borderless=true command="vis"
     }
 
-    tab name="2-back-nvim" cwd="src/backend/GappelCloud.Api" {
-        pane borderless=true command="nvim"
+    tab name="2-back-vis" cwd="src/backend/GappelCloud.Api" {
+        pane borderless=true command="vis"
     }
 
     tab name="3" { pane; }
@@ -27,8 +27,8 @@ layout {
         }
     }
 
-    tab name="8-repo-nvim" cwd="~/dev/private/gappel-cloud" {
-        pane borderless=true command="nvim"
+    tab name="8-repo-vis" cwd="~/dev/private/gappel-cloud" {
+        pane borderless=true command="vis"
     }
 
     tab name="9" { pane; }
@@ -53,5 +53,5 @@ layout {
     }
 }
 
-scrollback_editor "nvim"
+scrollback_editor "vis"
 default_mode "locked"

@@ -411,7 +411,7 @@ copy_on_select true
  
 // Path to the default editor to use to edit pane scrollbuffer
 // Default: $EDITOR or $VISUAL
-scrollback_editor "nvim"
+scrollback_editor "vis"
  
 // A fixed name to always give the Zellij session.
 // Consider also setting `attach_to_session true,`

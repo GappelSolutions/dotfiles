@@ -40,8 +40,8 @@
       lo = "lazyops";
       ftp = "termscp";
       ai = "codex --dangerously-bypass-approvals-and-sandbox";
-      vi = "nvim";
-      vim = "nvim";
+      vi = "vis";
+      vim = "vis";
       py = "python3";
       pip = "pip3";
       nerdfetch = "$HOME/.local/bin/nerdfetch";
@@ -136,8 +136,8 @@
       command -v devenv >/dev/null && eval "$(COMPLETE=zsh devenv)"
       command -v bun >/dev/null && source <(bun completions)
 
-      export VISUAL="nvim"
-      export EDITOR="nvim"
+      export VISUAL="vis"
+      export EDITOR="vis"
 
       # --- OpenShift login ---
       # Credentials live in ~/.okd-credentials (mode 600), same pattern as

@@ -20,7 +20,8 @@ ueberzug_offset = [0, 0, 0, 0]
 
 [opener]
 edit = [
-	{ run = 'nvim "$@"', block = true },
+	{ run = 'vis "$@"', block = true, for = "unix" },
+	{ run = 'vis %*', block = true, for = "windows" },
 ]
 play = [
 	{ run = 'ffplay -autoexit "$1"', desc = "Play video", orphan = true },
