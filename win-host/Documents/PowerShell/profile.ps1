@@ -17,6 +17,8 @@ function lt { eza --tree --level=1 --icons @args }
 function cat { bat @args }
 function lg { lazygit @args }
 function ld { lazydocker @args }
+# A function, not a cc.bat on PATH: build tools probe PATH for `cc` as the C compiler.
+function cc { claude --dangerously-skip-permissions @args }
 
 $env:VISUAL = "vis"
 $env:EDITOR = "vis"
