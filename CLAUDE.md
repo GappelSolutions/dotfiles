@@ -72,7 +72,9 @@ vis (`nix/modules/shared/home-vis.nix`, patched) is `$EDITOR`/`$VISUAL`, `vi`/`v
 in lazygit, yazi and zellij on every host but the slim servers (vim). nvim stays installed, not
 default. Windows has no vis build: `%USERPROFILE%\.local\bin\vis.cmd` (cmd, pwsh, lazygit, yazi)
 and `vis` (Git for Windows' sh) run WSL's through `vis-win` (`nix/hosts/wsl/home.nix`), which
-turns Windows paths into WSL ones.
+turns Windows paths into WSL ones. `win-host/register-vis.ps1` makes it Explorer's "Open with" and
+default app for text formats (Rio + `vis-open.cmd`); extensions with a picked "Always" app need
+vis picked there once.
 
 ## Secrets
 

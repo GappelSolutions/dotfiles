@@ -33,9 +33,11 @@ file    win-host/.config/yasb/styles.css                    .config/yasb/styles.
 dir     win-host/AppData/Roaming/Raycast/Scripts            AppData/Roaming/Raycast/Scripts
 
 # vis runs in WSL (vis-win in nix/hosts/wsl/home.nix): vis.cmd for cmd, pwsh and what they start,
-# vis for Git for Windows' sh. .local\bin is on the user PATH.
+# vis for Git for Windows' sh, vis-open.cmd for Explorer (win-host/register-vis.ps1). .local\bin
+# is on the user PATH.
 file    win-host/.local/bin/vis.cmd                         .local/bin/vis.cmd
 file    win-host/.local/bin/vis                             .local/bin/vis
+file    win-host/.local/bin/vis-open.cmd                    .local/bin/vis-open.cmd
 
 # Shell
 file    win-host/Documents/PowerShell/profile.ps1           Documents/PowerShell/profile.ps1
