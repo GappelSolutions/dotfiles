@@ -2,7 +2,8 @@
 #
 # file    copied both ways. Paths outside win-host/ are shared with the unix
 #         hosts: stored LF in the repo, CRs stripped on pull.
-# dir     like file, for every file in the directory. Never deletes.
+# dir     like file, for every file in the directory. Never deletes; skips
+#         Windows-only files git ignores (.git/info/exclude works too).
 # render  push generates the Windows file from the shared one (see
 #         render_zellij in sync.sh); pull only reports drift.
 # seed    app-owned state (T3 Code rewrites these itself). Push only

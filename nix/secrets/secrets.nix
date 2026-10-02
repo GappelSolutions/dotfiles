@@ -23,4 +23,8 @@ in
 
   # Tokens
   "azure-devops-pat.age".publicKeys = [ masterKey ];
+
+  # Work config, kept out of this public repo
+  "work-zsh.age".publicKeys = [ masterKey ];
+  "lazyops-config.age".publicKeys = [ masterKey ];
 }

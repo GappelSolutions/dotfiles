@@ -145,13 +145,9 @@
       # logins stay TLS-verified instead of --insecure-skip-tls-verify.
       # A bundle needs two roots: the kube-apiserver signer for api.<domain>
       # and the ingress-operator CA for the oauth route on *.apps.<domain>.
-      # Cluster domain -> short kubeconfig context name. oc login generates
+      # The clusters come from ~/.work.zsh: OKD_CLUSTERS (domains) and
+      # OKD_CONTEXTS (domain -> short kubeconfig context name). oc login generates
       # namespace/cluster/user names, so ocl renames them back after each login.
-      OKD_CLUSTERS=(okd.example.test dev.example.test)
-      typeset -gA OKD_CONTEXTS=(
-        okd.example.test app-stage
-        dev.example.test app-dev
-      )
 
       _ocl_root_cert() {
         openssl s_client -showcerts -connect "$1" </dev/null 2>/dev/null \
@@ -188,6 +184,11 @@
       ocl() {
         local creds=~/.okd-credentials cadir=~/.okd-ca
         local user password save
+
+        if (( ! $#OKD_CLUSTERS )); then
+          echo "ocl: no clusters, OKD_CLUSTERS comes from ~/.work.zsh" >&2
+          return 1
+        fi
 
         if [[ -r $creds ]]; then
           user=$(sed -n 's/^OKD_USER=//p' "$creds" | head -1)
@@ -229,11 +230,14 @@
       }
 
       # --- Zellij session helpers ---
+      # $2: the layout as a KDL string instead of layouts/$1.kdl (~/.work.zsh's)
       _zj() {
         local layout="$1"
         local existing=$(zellij list-sessions 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' | grep "^$layout-" | grep -v "EXITED" | awk '{print $1}' | head -1)
         if [[ -n "$existing" ]]; then
           zellij action switch-session "$existing"
+        elif [[ -n $2 ]]; then
+          zellij action switch-session "$layout-$(date +%Y%m%d-%H%M%S)" --layout-string "$2"
         else
           zellij action switch-session "$layout-$(date +%Y%m%d-%H%M%S)" -l "$layout"
         fi
@@ -259,6 +263,10 @@
       # if [[ -z "$ZELLIJ" ]]; then
       #   zellij attach welcome || zellij --session welcome --new-session-with-layout welcome-custom
       # fi
+
+      # Work config kept out of this public repo (OpenShift clusters, work zellij sessions):
+      # agenix secret work-zsh, on the hosts that deploy it
+      [[ -r ~/.work.zsh ]] && source ~/.work.zsh
 
       clear
       $HOME/.local/bin/nerdfetch

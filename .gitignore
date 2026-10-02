@@ -5,3 +5,6 @@ windows/.config/windows/.env
 t3/.t3/userdata/secrets/
 t3/**/clerk-tokens.json
 t3/**/state.sqlite*
+
+# Local only: lists work projects. win-host/sync.sh pull rewrites it.
+win-host/.t3/projects.txt

@@ -651,15 +651,6 @@ fn cleanup_old_sessions() -> Result<()> {
 
     let sessions = String::from_utf8_lossy(&output.stdout);
 
-    // Valid session prefixes
-    let valid_prefixes = [
-        "colony-",
-        "gappel-solutions-",
-        "decon-",
-        "elixir-",
-        "dev",
-        "new-",
-    ];
 
     for line in sessions.lines() {
         // Remove ANSI color codes
@@ -672,10 +663,7 @@ fn cleanup_old_sessions() -> Result<()> {
 
         // Extract session name (first word)
         if let Some(session_name) = clean_line.split_whitespace().next() {
-            // Check if it matches any valid prefix
-            let is_valid = valid_prefixes
-                .iter()
-                .any(|&prefix| session_name.starts_with(prefix));
+            let is_valid = session_name.starts_with("dev") || from_layout(session_name);
 
             if !is_valid {
                 // Kill session that doesn't match template
@@ -687,6 +675,17 @@ fn cleanup_old_sessions() -> Result<()> {
     }
 
     Ok(())
+}
+
+/// `<layout>-%Y%m%d-%H%M%S`, as launch_session and the shell's `_zj` name sessions
+fn from_layout(name: &str) -> bool {
+    let b = name.as_bytes();
+    b.len() > 16
+        && b[b.len() - 16] == b'-'
+        && b[b.len() - 15..]
+            .iter()
+            .enumerate()
+            .all(|(i, &c)| if i == 8 { c == b'-' } else { c.is_ascii_digit() })
 }
 
 fn strip_ansi_codes(s: &str) -> String {

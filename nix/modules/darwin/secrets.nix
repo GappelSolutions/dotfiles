@@ -22,5 +22,11 @@
       owner = "cgpp";
       mode = "600";
     };
+    # Work config, kept out of this public repo
+    work-zsh = {
+      file = ../../secrets/work-zsh.age;
+      path = "/Users/cgpp/.work.zsh";
+      owner = "cgpp";
+    };
   };
 }

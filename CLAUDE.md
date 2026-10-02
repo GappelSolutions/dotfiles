@@ -59,7 +59,7 @@ windows/     # Dockur Windows VM for the T14 (medtronic.md: CareLink setup insid
 wife/        # helper script + cheatsheet for the T14 `wife` user
 zellij/      # config.kdl, per-project layouts/, plugins/
 vis/ television/ bat/                                # vis editor + its picker (tv) and preview theme
-nvim/ vim/ alacritty/ yazi/ lazygit/ lazyops/ k9s/   # shared CLI/terminal configs
+nvim/ vim/ alacritty/ yazi/ lazygit/ k9s/   # shared CLI/terminal configs
 aerospace/ jetbrains/ vscode/                        # macOS only
 ```
 
@@ -80,6 +80,10 @@ vis picked there once.
 
 agenix with an age master key at `~/.age/master.key` (passphrase-protected backup
 `~/.age/master.key.age`); secrets are decrypted at activation time to `/run/agenix/`.
+
+This repo is public: work config lives only in secrets. `work-zsh` (→ `~/.work.zsh`: OpenShift
+clusters for `ocl`, work zellij sessions) and `lazyops-config`. Edit with
+`cd nix/secrets && agenix -i ~/.age/master.key -e <name>.age`.
 
 ## Zellij Layouts
 

@@ -16,6 +16,7 @@ in
   # Consequence: changes made in the T3 UI do not flow back. Refresh the repo
   # copy by hand when you want to keep them:
   #   cp ~/.t3/userdata/settings.json <repo>/t3/.t3/userdata/settings.json
+  # then drop work projects' entries again: this repo is public.
   #
   # t3/projects.txt maps the UUIDs used as keys in settings.json to project
   # names. The project list itself lives only in state.sqlite and cannot be

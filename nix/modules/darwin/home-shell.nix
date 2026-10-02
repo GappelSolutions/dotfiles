@@ -161,11 +161,14 @@
       fi
 
       # --- Zellij session helpers ---
+      # $2: the layout as a KDL string instead of layouts/$1.kdl (~/.work.zsh's)
       _zj() {
         local layout="$1"
         local existing=$(zellij list-sessions 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' | grep "^$layout-" | grep -v "EXITED" | awk '{print $1}' | head -1)
         if [[ -n "$existing" ]]; then
           zellij action switch-session "$existing"
+        elif [[ -n $2 ]]; then
+          zellij action switch-session "$layout-$(date +%Y%m%d-%H%M%S)" --layout-string "$2"
         else
           zellij action switch-session "$layout-$(date +%Y%m%d-%H%M%S)" -l "$layout"
         fi
@@ -187,6 +190,9 @@
         fi
         rm -f -- "$tmp"
       }
+
+      # Work config kept out of this public repo (work zellij sessions): agenix secret work-zsh
+      [[ -r ~/.work.zsh ]] && source ~/.work.zsh
 
       clear
       $HOME/.local/bin/nerdfetch

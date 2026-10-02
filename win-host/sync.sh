@@ -148,6 +148,9 @@ while read -r mode rp wp; do
   have_repo=0; have_win=0
   [ -e "$repo/$rp" ] && have_repo=1
   [ -e "$home/$wp" ] && have_win=1
+  # Windows-only files git ignores stay out of the repo: work layouts listed in the untracked
+  # .git/info/exclude, as this repo is public
+  [ $have_repo = 0 ] && git -C "$repo" check-ignore -q "$rp" && continue
 
   if [ $have_repo = 1 ] && [ $have_win = 1 ] && same "$mode" "$rp" "$wp"; then
     continue
