@@ -64,6 +64,7 @@ in
   xdg.configFile."vis/visrc.lua".source = ../../../vis/.config/vis/visrc.lua;
   xdg.configFile."vis/lua".source = ../../../vis/.config/vis/lua;
   xdg.configFile."vis/themes".source = ../../../vis/.config/vis/themes;
+  xdg.configFile."vis/lexers".source = ../../../vis/.config/vis/lexers;
 
   # telescope for vis's pickers, iceberg like the rest
   xdg.configFile."television/config.toml".source = ../../../television/.config/television/config.toml;
