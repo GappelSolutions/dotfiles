@@ -8,10 +8,9 @@
 # seed    app-owned state (T3 Code rewrites these itself). Push only
 #         installs when absent; pull always captures the live copy.
 
-# Alacritty -- base.toml is shared with macOS/NixOS
-file    alacritty/.config/alacritty/base.toml               AppData/Roaming/alacritty/base.toml
-file    win-host/AppData/Roaming/alacritty/alacritty.toml   AppData/Roaming/alacritty/alacritty.toml
-file    win-host/AppData/Roaming/alacritty/entry.cmd        AppData/Roaming/alacritty/entry.cmd
+# Rio
+file    win-host/AppData/Local/rio/config.toml              AppData/Local/rio/config.toml
+file    win-host/AppData/Local/rio/entry.cmd                AppData/Local/rio/entry.cmd
 
 # Zellij (native Windows build reads %APPDATA%\Zellij\config)
 render  zellij/.config/zellij/config.kdl                    AppData/Roaming/Zellij/config/config.kdl

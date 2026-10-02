@@ -9,7 +9,7 @@
 #                               backed up to %USERPROFILE%\.dotfiles-sync-backup\
 #
 # Why copies and not symlinks: Windows apps cannot follow WSL symlinks, and
-# \\wsl$\ paths are slow and flaky for things like Alacritty and komorebi.
+# \\wsl$\ paths are slow and flaky for things like Rio and komorebi.
 #
 # WIN_HOME overrides the Windows profile path (default: %USERPROFILE%).
 set -euo pipefail

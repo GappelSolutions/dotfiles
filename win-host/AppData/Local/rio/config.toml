@@ -1,0 +1,102 @@
+# Windows-native Rio, for its cursor trail (kitty's, ported): vis puts the terminal's cursor on
+# its primary one (nix/modules/shared/patches/vis.patch). Look and keys follow the unix hosts'
+# Alacritty (alacritty/.config/alacritty). Synced to %USERPROFILE%\AppData\Local\rio\ by
+# win-host/sync.sh.
+
+confirm-before-quit = false
+margin = [4]
+
+# Transparency: this laptop's Vulkan and DX12 drivers (AMD and NVIDIA) present opaque only, wgpu's
+# GL surface blends. Rio sets these on itself before the renderer starts; the shell inherits them.
+env-vars = ["WGPU_BACKEND=gl"]
+
+# The trail needs whole frames. Windows' own ConPTY moves the cursor out of vis's synchronized
+# updates and answers zellij's 2026 query itself (so zellij never syncs), and the trail smears
+# from mid-redraw cursors. Rio loads Microsoft's conpty.dll + OpenConsole.exe (NuGet
+# Microsoft.Windows.Console.ConPTY 1.24) from C:\Program Files\Rio instead; a reinstall may drop them.
+[effects]
+trail-cursor = true
+
+[cursor]
+shape = "block"
+blinking = false
+
+# zellij has the tabs
+[navigation]
+mode = "Plain"
+
+[window]
+opacity = 0.8
+
+[bell]
+audio = false
+
+# 19 px = 14.25 pt at 96 DPI. Rio draws powerline and box glyphs itself.
+[fonts]
+size = 19
+family = "FiraCode Nerd Font Mono"
+
+[fonts.regular]
+family = "FiraCode Nerd Font Mono"
+weight = 500
+
+# Medium is the only weight installed on Windows: without an explicit weight Rio fakes bold on it
+# and smears the strokes, with one it draws bold as Medium
+[fonts.bold]
+family = "FiraCode Nerd Font Mono"
+weight = 500
+
+[fonts.bold-italic]
+family = "FiraCode Nerd Font Mono"
+weight = 500
+
+# entry.cmd prompts for native pwsh + Windows zellij or WSL
+[shell]
+program = "cmd.exe"
+args = ["/c", "%LOCALAPPDATA%\\rio\\entry.cmd"]
+
+# iceberg
+[colors]
+background = "#000000"
+foreground = "#c6c8d1"
+cursor = "#d2d4de"
+selection-background = "#1e2132"
+selection-foreground = "#c6c8d1"
+black = "#161821"
+red = "#e27878"
+green = "#b4be82"
+yellow = "#e2a478"
+blue = "#84a0c6"
+magenta = "#a093c7"
+cyan = "#89b8c2"
+white = "#c6c8d1"
+light-black = "#6b7089"
+light-red = "#e98989"
+light-green = "#c0ca8e"
+light-yellow = "#e9b189"
+light-blue = "#91acd1"
+light-magenta = "#ada0d3"
+light-cyan = "#95c4ce"
+light-white = "#d2d4de"
+
+# ConPTY collapses Ctrl+Shift to Ctrl, so zellij gets Alt (ESC + key) instead. Rio matches
+# Shift bindings on the unshifted key: "1", not "!".
+[bindings]
+keys = [
+  { key = "h", with = "control | shift", esc = "\u001bh" },
+  { key = "j", with = "control | shift", esc = "\u001bj" },
+  { key = "k", with = "control | shift", esc = "\u001bk" },
+  { key = "l", with = "control | shift", esc = "\u001bl" },
+  { key = "m", with = "control | shift", esc = "\u001bm" },
+  { key = "n", with = "control | shift", esc = "\u001bn" },
+  { key = "1", with = "control | shift", esc = "\u001b1" },
+  { key = "2", with = "control | shift", esc = "\u001b2" },
+  { key = "3", with = "control | shift", esc = "\u001b3" },
+  { key = "4", with = "control | shift", esc = "\u001b4" },
+  { key = "5", with = "control | shift", esc = "\u001b5" },
+  { key = "6", with = "control | shift", esc = "\u001b6" },
+  { key = "7", with = "control | shift", esc = "\u001b7" },
+  { key = "8", with = "control | shift", esc = "\u001b8" },
+  { key = "9", with = "control | shift", esc = "\u001b9" },
+  { key = "0", with = "control | shift", esc = "\u001b0" },
+]
