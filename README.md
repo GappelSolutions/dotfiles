@@ -42,7 +42,7 @@ sudo nixos-rebuild switch --flake .#dev
 ```
 
 `dev` is meant as a clean VM/thin dev host: SSH, Tailscale, Podman, Samba,
-CLI tools, shell, Neovim, Zellij, and shared dotfiles.
+CLI tools, shell, vis, Zellij, and shared dotfiles.
 
 The desktop host is the current ThinkPad NixOS system:
 
@@ -116,7 +116,7 @@ nix/scripts/cgpp-windows      Windows VM restore/start/TUI
 nix/secrets/                  encrypted SSH key material for macOS
 windows/.config/windows/      Dockur Windows compose for CareLink
 wife/                         shortcut reference helper and cheatsheet
-nvim/ zellij/ alacritty/      source dotfiles linked by Home Manager
+vis/ nvim/ zellij/ alacritty/ source dotfiles linked by Home Manager
 ```
 
 ## Rules

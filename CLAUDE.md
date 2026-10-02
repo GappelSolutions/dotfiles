@@ -27,7 +27,7 @@ Fresh Mac: `curl -fsSL https://raw.githubusercontent.com/GappelSolutions/dotfile
 | Host | Flake attr | Notes |
 |------|------------|-------|
 | MacBook | `darwinConfigurations.Christians-MacBook-Pro` | nix-darwin + Homebrew |
-| WSL (Windows laptop) | `nixosConfigurations.wsl` | NixOS-WSL; Windows side via `win-host/` |
+| WSL (Windows laptop) | `nixosConfigurations.wsl` | NixOS-WSL; Windows side via `win-host/` (Rio, komorebi, pwsh, native zellij) |
 | ThinkPad T14 | `nixosConfigurations.cgpp-t14-nix` (`-lite`: no Caelestia) | Hyprland desktop, users `cgpp` + `wife`; `cgpp-t14-recovery` / `cgpp-recovery-iso` for recovery |
 | dev, minix, nix-cc | `nixosConfigurations.<name>` (`minix-iso` installer) | headless servers; nix-cc user is `cga` |
 
@@ -58,12 +58,21 @@ win-host/    # Windows-native configs + sync.sh (copied, not symlinked)
 windows/     # Dockur Windows VM for the T14 (medtronic.md: CareLink setup inside it)
 wife/        # helper script + cheatsheet for the T14 `wife` user
 zellij/      # config.kdl, per-project layouts/, plugins/
+vis/ television/ bat/                                # vis editor + its picker (tv) and preview theme
 nvim/ vim/ alacritty/ yazi/ lazygit/ lazyops/ k9s/   # shared CLI/terminal configs
 aerospace/ jetbrains/ vscode/                        # macOS only
 ```
 
 Not deployed by nix: `init.sh` (pre-nix setup). The pre-nix Stow
 setup lives on the `stow` branch.
+
+## Editor
+
+vis (`nix/modules/shared/home-vis.nix`, patched) is `$EDITOR`/`$VISUAL`, `vi`/`vim`, and the editor
+in lazygit, yazi and zellij on every host but the slim servers (vim). nvim stays installed, not
+default. Windows has no vis build: `%USERPROFILE%\.local\bin\vis.cmd` (cmd, pwsh, lazygit, yazi)
+and `vis` (Git for Windows' sh) run WSL's through `vis-win` (`nix/hosts/wsl/home.nix`), which
+turns Windows paths into WSL ones.
 
 ## Secrets
 
@@ -73,4 +82,4 @@ agenix with an age master key at `~/.age/master.key` (passphrase-protected backu
 ## Zellij Layouts
 
 One layout per project in `zellij/.config/zellij/layouts/<project>.kdl` (+ `.swap.kdl`). Tabs are
-named by number key: `1-aoe` (agents), `2-nvim`, `3-tools`, then empty `4`–`0`.
+named by number key: `1-aoe` (agents), `2-vis`, `3-tools`, then empty `4`–`0`.
