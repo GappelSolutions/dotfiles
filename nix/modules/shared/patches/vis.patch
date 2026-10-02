@@ -1,0 +1,263 @@
+--- a/ui-terminal-vt100.c
++++ b/ui-terminal-vt100.c
+@@ -37,6 +37,8 @@
+  * for further information.
+  */
+ #include <stdio.h>
++#include <signal.h>
++#include <sys/time.h>
+ #include "buffer.h"
+ 
+ #define UI_TERMKEY_FLAGS TERMKEY_FLAG_UTF8
+@@ -105,18 +107,23 @@
+ }
+ 
+ static void cursor_visible(bool visible) {
+-	output_literal(visible ? "\x1b[?25h" : "\x1b[?25l");
++	/* a shown cursor goes back to the terminal's default shape, for programs and the shell */
++	output_literal(visible ? "\x1b[0 q" "\x1b[?25h" : "\x1b[?25l");
+ }
+ 
+ static void ui_vt100_blit(UiTerm *tui) {
++	/* held while vis rearranges windows, so :e never shows the old and the new one stacked */
++	if (!tui->doupdate)
++		return;
+ 	Buffer *buf = &((UiVt100*)tui)->buf;
+ 	buffer_clear(buf);
+ 	CellAttr attr = CELL_ATTR_NORMAL;
+ 	CellColor fg = CELL_COLOR_DEFAULT, bg = CELL_COLOR_DEFAULT;
+ 	int w = tui->width, h = tui->height;
+ 	Cell *cell = tui->cells;
+-	/* reposition cursor, erase screen, reset attributes */
+-	buffer_append0(buf, "\x1b[H" "\x1b[J" "\x1b[0m");
++	/* one synchronized update (DEC mode 2026), so neither the terminal nor zellij shows the
++	 * erased screen; reposition cursor, erase screen, reset attributes */
++	buffer_append0(buf, "\x1b[?2026h" "\x1b[?25l" "\x1b[H" "\x1b[J" "\x1b[0m");
+ 	for (int y = 0; y < h; y++) {
+ 		for (int x = 0; x < w; x++) {
+ 			CellStyle *style = &cell->style;
+@@ -171,6 +178,15 @@
+ 			cell++;
+ 		}
+ 	}
++	/* the terminal's cursor on vis' primary one, as nvim's: so a terminal's cursor trail (Rio's)
++	 * follows it, steady block, insert bar, replace underline */
++	if (tui->cursor_y >= 0) {
++		enum VisMode mode = vis_mode_get(tui->vis);
++		int shape = mode == VIS_MODE_INSERT ? 6 : mode == VIS_MODE_REPLACE ? 4 : 2;
++		buffer_appendf(buf, "\x1b[%d;%dH" "\x1b[%d q" "\x1b[?25h",
++		               tui->cursor_y + 1, tui->cursor_x + 1, shape);
++	}
++	buffer_append0(buf, "\x1b[?2026l");
+ 	output(buffer_content(buf), buffer_length0(buf));
+ }
+ 
+@@ -180,11 +196,39 @@
+ 	return true;
+ }
+ 
++/* a program given the terminal gets the normal screen, as curses' endwin() does: switching to
++ * and from the alternate screen itself would otherwise leave vis drawing on the normal one.
++ * Both switches are synchronized updates, so the normal screen doesn't flash in between: the
++ * program's first synchronized frame ends the first (lazygit, yazi and tv have them); for one
++ * without (less, scooter) a timer does, as zellij would hold the screen for good, set past
++ * lazygit's ~330 ms startup. vis' next frame ends the second */
++static bool screen_handed_over;
++
++static void sync_end(int sig) {
++	static const char end[] = "\x1b[?2026l";
++	int err = errno;
++	while (write(STDERR_FILENO, end, sizeof end - 1) == -1 && errno == EINTR);
++	errno = err;
++}
++
+ static void ui_vt100_save(UiTerm *tui, bool fscr) {
++	if (fscr) {
++		sigaction(SIGALRM, &(struct sigaction){ .sa_handler = sync_end, .sa_flags = SA_RESTART }, NULL);
++		output_literal("\x1b[?2026h");
++		screen_alternate(false);
++		screen_handed_over = true;
++		setitimer(ITIMER_REAL, &(struct itimerval){ .it_value = { .tv_usec = 500000 } }, NULL);
++	}
+ 	cursor_visible(true);
+ }
+ 
+ static void ui_vt100_restore(UiTerm *tui) {
++	if (screen_handed_over) {
++		setitimer(ITIMER_REAL, &(struct itimerval){ 0 }, NULL);
++		output_literal("\x1b[?2026h");
++		screen_alternate(true);
++		screen_handed_over = false;
++	}
+ 	cursor_visible(false);
+ }
+ 
+@@ -196,6 +240,7 @@
+ static void ui_vt100_suspend(UiTerm *tui) {
+ 	if (!tui->termkey) return;
+ 	termkey_stop(tui->termkey);
++	output_literal("\x1b[?2026l");
+ 	cursor_visible(true);
+ 	screen_alternate(false);
+ }
+--- a/vis.c
++++ b/vis.c
+@@ -398,7 +398,9 @@
+ 	int col = view_cursors_cell_get(cur);
+ 	if (!line || col == -1)
+ 		return;
+-	win->ui->style_set(win->ui, &line->cells[col], UI_STYLE_CURSOR);
++	/* the terminal's own cursor is the primary one (ui-terminal.c) */
++	if (cur != view_selections_primary_get(win->view))
++		win->ui->style_set(win->ui, &line->cells[col], UI_STYLE_CURSOR);
+ 	window_draw_cursor_matching(win, cur);
+ 	return;
+ }
+@@ -508,8 +510,10 @@
+ bool vis_window_split(Win *original) {
+ 	vis_doupdates(original->vis, false);
+ 	Win *win = window_new_file(original->vis, original->file, UI_OPTION_STATUSBAR);
+-	if (!win)
++	if (!win) {
++		vis_doupdates(original->vis, true);
+ 		return false;
++	}
+ 	for (size_t i = 0; i < LENGTH(win->modes); i++) {
+ 		if (original->modes[i].bindings)
+ 			win->modes[i].bindings = map_new();
+@@ -590,6 +594,7 @@
+ 	Win *win = window_new_file(vis, file, UI_OPTION_STATUSBAR|UI_OPTION_SYMBOL_EOF);
+ 	if (!win) {
+ 		file_free(vis, file);
++		vis_doupdates(vis, true);
+ 		return false;
+ 	}
+ 	vis_doupdates(vis, true);
+@@ -863,6 +868,10 @@
+ 	if (vis->mode->visual && a->op)
+ 		window_selection_save(win);
+ 
++	/* the jump's start too, as vim records it, so the jumplist leads back to it */
++	if (a->movement && (a->movement->type & JUMP))
++		vis_jumplist_save(vis);
++
+ 	for (Selection *sel = view_selections(view), *next; sel; sel = next) {
+ 		if (vis->interrupted)
+ 			break;
+@@ -1740,7 +1749,7 @@
+ 		return -1;
+ 	}
+ 
+-	vis->ui->terminal_save(vis->ui, fullscreen);
++	vis->ui->terminal_save(vis->ui, fullscreen || interactive);
+ 	pid_t pid = fork();
+ 
+ 	if (pid == -1) {
+--- a/sam.c
++++ b/sam.c
+@@ -1242,6 +1242,7 @@
+ 	}
+ 
+ 	bool visual = vis->mode->visual;
++	Win *win = vis->win;
+ 	size_t primary_pos = vis->win ? view_cursor_get(vis->win->view) : EPOS;
+ 	Filerange range = text_range_empty();
+ 	sam_execute(vis, vis->win, cmd, NULL, &range);
+@@ -1307,7 +1308,10 @@
+ 		if (primary_pos != EPOS && view_selection_disposed(vis->win->view))
+ 			view_cursor_to(vis->win->view, primary_pos);
+ 		view_selections_primary_set(view_selections(vis->win->view));
+-		vis_jumplist_save(vis);
++		/* only a command that moved the cursor (:123, :/re/) is a jump, as in vim: not :w, or
++		 * the :e of a new window, whose cursor is still at the start */
++		if (vis->win == win && view_cursor_get(win->view) != primary_pos)
++			vis_jumplist_save(vis);
+ 		bool completed = true;
+ 		for (Selection *s = view_selections(vis->win->view); s; s = view_selections_next(s)) {
+ 			if (view_selections_anchored(s)) {
+--- a/ui-terminal.c
++++ b/ui-terminal.c
+@@ -49,6 +49,8 @@
+ 	size_t cells_size;        /* #bytes allocated for 2D grid (grows only) */
+ 	Cell *cells;              /* 2D grid of cells, at least as large as current terminal size */
+ 	bool doupdate;            /* Whether to update the screen after refreshing contents */
++	int holds;                /* nested doupdates(false) calls not yet undone */
++	int cursor_x, cursor_y;   /* primary cursor of the window taking input, which the terminal shows; -1 if hidden */
+ } UiTerm;
+ 
+ struct UiTermWin {
+@@ -248,7 +250,18 @@
+ 	bool nu = win->options & UI_OPTION_LINE_NUMBERS_ABSOLUTE;
+ 	bool rnu = win->options & UI_OPTION_LINE_NUMBERS_RELATIVE;
+ 	bool sidebar = nu || rnu;
+-	int sidebar_width = sidebar ? snprintf(NULL, 0, "%zd ", line->lineno + height - 2) : 0;
++	/* nvim's numberwidth: at least 3 digits, as many as the file's last line needs, where vis
++	 * took the last visible line's and shifted the text while scrolling */
++	size_t last_lineno = line->lineno + height - 2;
++	if (sidebar && !(win->options & UI_OPTION_LARGE_FILE)) {
++		Text *txt = win->win->file->text;
++		size_t size = text_size(txt);
++		char last = '\0';
++		last_lineno = text_lineno_by_pos(txt, size);
++		if (last_lineno > 1 && text_byte_get(txt, size - 1, &last) && last == '\n')
++			last_lineno--;
++	}
++	int sidebar_width = sidebar ? MAX(snprintf(NULL, 0, "%zu", last_lineno), 3) + 1 : 0;
+ 	if (sidebar_width != win->sidebar_width) {
+ 		view_resize(view, width - sidebar_width, status ? height - 1 : height);
+ 		win->sidebar_width = sidebar_width;
+@@ -285,6 +298,10 @@
+ 				(l->lineno == cursor_lineno) ? UI_STYLE_LINENUMBER_CURSOR : UI_STYLE_LINENUMBER);
+ 			prev_lineno = l->lineno;
+ 		}
++		if (win->win == ui->vis->win && l == cursor_line && view_cursors_cell_get(sel) >= 0) {
++			ui->cursor_x = x + sidebar_width + view_cursors_cell_get(sel);
++			ui->cursor_y = y;
++		}
+ 		debug("draw-window: [%d][%d] ... cells[%d][%d]\n", y, x+sidebar_width, y, view_width);
+ 		memcpy(&cells[x+sidebar_width], l->cells, sizeof(Cell) * view_width);
+ 		cells += ui->width;
+@@ -381,13 +398,19 @@
+ 
+ static void ui_doupdates(Ui *ui, bool doupdate) {
+ 	UiTerm *tui = (UiTerm*)ui;
+-	tui->doupdate = doupdate;
++	/* nests, so a hold spans calls that hold and release their own (:e around vis_window_new) */
++	if (!doupdate)
++		tui->holds++;
++	else if (tui->holds > 0)
++		tui->holds--;
++	tui->doupdate = tui->holds == 0;
+ }
+ 
+ static void ui_draw(Ui *ui) {
+ 	debug("ui-draw\n");
+ 	UiTerm *tui = (UiTerm*)ui;
+ 	ui_arrange(ui, tui->layout);
++	tui->cursor_x = tui->cursor_y = -1;
+ 	for (UiTermWin *win = tui->windows; win; win = win->next)
+ 		ui_window_draw((UiWin*)win);
+ 	if (tui->info[0])
+--- a/vis-cmds.c
++++ b/vis-cmds.c
+@@ -477,14 +477,19 @@
+ 		}
+ 		return vis_window_reload(oldwin);
+ 	}
+-	if (!openfiles(vis, &argv[1]))
++	/* one frame for the swap: the new window opens below the old one before it replaces it */
++	vis_doupdates(vis, false);
++	if (!openfiles(vis, &argv[1])) {
++		vis_doupdates(vis, true);
+ 		return false;
++	}
+ 	if (vis->win != oldwin) {
+ 		Win *newwin = vis->win;
+ 		vis_window_swap(oldwin, newwin);
+ 		vis_window_close(oldwin);
+ 		vis_window_focus(newwin);
+ 	}
++	vis_doupdates(vis, true);
+ 	return vis->win != oldwin;
+ }
+ 

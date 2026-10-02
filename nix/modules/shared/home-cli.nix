@@ -5,6 +5,7 @@
     ./home-programs.nix
     ./home-bash.nix
     ./home-zsh.nix
+    ./home-vis.nix
     ./home-agent-tools.nix
     ./home-codex-config.nix
     ./home-humanlayer.nix

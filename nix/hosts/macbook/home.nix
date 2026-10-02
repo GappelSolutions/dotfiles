@@ -7,6 +7,7 @@
     ../../modules/darwin/home-programs.nix
     ../../modules/darwin/home-launchd.nix
     ../../modules/darwin/home-files.nix
+    ../../modules/shared/home-vis.nix
   ];
 
   home.username = "cgpp";

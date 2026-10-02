@@ -1,0 +1,22 @@
+# laid out like nvim's telescope (nvim/.config/nvim/lua/config/telescope.lua); vis's pickers
+# set the rest per call (vis/.config/vis/lua/config/telescope.lua)
+# no frecency: it lifts picked entries over better matches, which telescope doesn't do
+frecency_max_entries = 0
+
+[ui]
+theme = "iceberg"
+
+[ui.input_bar]
+position = "bottom"
+prompt = ">"
+
+[ui.status_bar]
+hidden = true
+
+[ui.preview_panel]
+size = 60
+
+# telescope's preview scrolling
+[keybindings]
+ctrl-d = "scroll_preview_half_page_down"
+ctrl-u = "scroll_preview_half_page_up"
