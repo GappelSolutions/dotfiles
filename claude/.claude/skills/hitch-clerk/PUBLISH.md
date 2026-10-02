@@ -17,6 +17,7 @@ Input: `[task-id | story-id] [branch]`, both optional.
 4. **Write**: `git fetch origin`, then read `git diff origin/<default>...<branch>` in full.
    - Title and description as in **PR**. The overview is about the diff, not the commit messages.
    - Annotations as in **PR**: `<path>:<line><TAB><text>`, the line in the branch's version of the file.
+   - A UI change: ask for the deployed URL and a screenshot (path, or the user's go to take one as in `hitch-mechanic`). None: leave both out. Upload after create, as in **PR**.
 5. **Show** in chat: title, description, annotations as `path:line: text`. Wait for the user's OK. They may edit, drop or add. Then:
    ```bash
    git push -u origin <branch>                    # never force; rejected: report and ask
