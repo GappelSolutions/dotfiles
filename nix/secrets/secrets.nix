@@ -24,6 +24,9 @@ in
   # Tokens
   "azure-devops-pat.age".publicKeys = [ masterKey ];
 
+  # Proxmox root password, pve1 (ers-srvprox-001, 172.25.65.5)
+  "pve-root-password.age".publicKeys = [ masterKey ];
+
   # Work config, kept out of this public repo
   "work-zsh.age".publicKeys = [ masterKey ];
   "lazyops-config.age".publicKeys = [ masterKey ];
