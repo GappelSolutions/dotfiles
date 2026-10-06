@@ -44,9 +44,10 @@ let
   # DNS name, and it is reachable from macOS and WSL alike.
   nixHitchOneUrl = "http://172.25.65.31:8080/v1";
 
-  # Local llama-swap box (nix-hitch-one, gfx1201). `agentic` is Qwen3.8-27B Q4_K_XL,
-  # `chat` is the fast MoE. The API is unauthenticated and reachable only from
-  # the allowlisted LAN range, hence `auth: none`.
+  # Local llama-swap box (nix-hitch-one, gfx1201). `agentic` is
+  # Qwen3.8-Flash-Next on Strata, `chat` is the fast MoE. The API is
+  # unauthenticated and reachable only from the allowlisted LAN range, hence
+  # `auth: none`.
   ompModelsSeed = pkgs.writeText "omp-models.yml" ''
     providers:
       nix-hitch-one:
@@ -55,7 +56,7 @@ let
         auth: none
         models:
           - id: agentic
-            name: Qwen3.8-27B Q4_K_XL (nix-hitch-one)
+            name: Qwen3.8-Flash-Next IQ3_XXS (nix-hitch-one)
             reasoning: true
             input: [text]
             contextWindow: 131072
@@ -94,7 +95,7 @@ in
       options.baseURL = nixHitchOneUrl;
       models = {
         agentic = {
-          name = "Qwen3.8-27B Q4_K_XL";
+          name = "Qwen3.8-Flash-Next IQ3_XXS";
           limit = { context = 131072; output = 32768; };
         };
         chat = {
