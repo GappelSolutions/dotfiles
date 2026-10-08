@@ -1,0 +1,143 @@
+#!/usr/bin/env python3
+"""Resume T3 Code threads whose Claude session stopped on a usage limit, once the limit has reset.
+
+A session is stopped when its last user/assistant entry is Claude Code's synthetic `rate_limit`
+message. Limit open again = the usage API (cache shared with hooks/usage-limit.sh) shows both
+windows under 100%; without the API, the reset time in the message itself. The resume is the
+T3 webhook task titled TASK_TITLE, posted on the local server; it sends each thread "continue".
+"""
+import datetime as dt, json, os, re, sqlite3, sys, time, urllib.parse, urllib.request
+from pathlib import Path
+from zoneinfo import ZoneInfo
+
+HOME = Path.home()
+PROJECTS = HOME / ".claude/projects"
+T3 = HOME / ".t3/userdata"
+TASK_TITLE = "Resume threads after usage limit"
+STATE = Path(os.environ.get("XDG_STATE_HOME", HOME / ".local/state")) / "claude-limit-resume"
+CACHE = Path(f"/tmp/.claude-usage-cache-{os.getuid()}")
+MAX_AGE = 24 * 3600  # older stops are left alone
+
+
+def log(msg):
+    print(f"claude-limit-resume: {msg}", file=sys.stderr)
+
+
+def last_turn(path):
+    """Last non-sidechain user/assistant entry of a transcript (tail read)."""
+    with open(path, "rb") as f:
+        f.seek(0, 2)
+        f.seek(max(0, f.tell() - 256 * 1024))
+        lines = f.read().splitlines()
+    for raw in reversed(lines):
+        try:
+            e = json.loads(raw)
+        except ValueError:  # partial line of a live session, or the cut first line
+            continue
+        if e.get("type") in ("user", "assistant") and not e.get("isSidechain"):
+            return e
+    return None
+
+
+def stopped_sessions():
+    now = time.time()
+    for path in PROJECTS.glob("*/*.jsonl"):
+        if now - path.stat().st_mtime > MAX_AGE:
+            continue
+        e = last_turn(path)
+        if e and e.get("error") == "rate_limit" and e.get("message", {}).get("model") == "<synthetic>":
+            yield path.stem, e
+
+
+def usage():
+    """Usage API json, from the 60s cache when fresh; None when unavailable."""
+    if CACHE.exists() and time.time() - CACHE.stat().st_mtime < 60:
+        try:
+            return json.loads(CACHE.read_text())
+        except ValueError:
+            pass
+    try:
+        token = json.loads((HOME / ".claude/.credentials.json").read_text())["claudeAiOauth"]["accessToken"]
+        req = urllib.request.Request("https://api.anthropic.com/api/oauth/usage", headers={
+            "Authorization": f"Bearer {token}", "anthropic-beta": "oauth-2025-04-20"})
+        data = json.loads(urllib.request.urlopen(req, timeout=5).read())
+        data["five_hour"]["utilization"]
+    except Exception as err:  # offline, expired token, changed shape
+        log(f"usage API unavailable ({err.__class__.__name__}), using reset times from the messages")
+        return None
+    CACHE.write_text(json.dumps(data))
+    return data
+
+
+def message_reset(e):
+    """Reset time from 'resets 6:10pm (Europe/Zurich)' / 'resets Oct 9, 3am (...)', as epoch."""
+    text = e["message"]["content"][0].get("text", "")
+    m = re.search(r"resets (?:([A-Z][a-z]{2} \d{1,2}), )?(\d{1,2})(?::(\d\d))?([ap]m) \(([^)]+)\)", text)
+    if not m:
+        return None
+    day, hour, minute, ampm, tz = m.groups()
+    tz = ZoneInfo(tz)
+    sent = dt.datetime.fromisoformat(e["timestamp"].replace("Z", "+00:00")).astimezone(tz)
+    hour = int(hour) % 12 + (12 if ampm == "pm" else 0)
+    reset = sent.replace(hour=hour, minute=int(minute or 0), second=0, microsecond=0)
+    if day:
+        d = dt.datetime.strptime(f"{day} {sent.year}", "%b %d %Y")
+        reset = reset.replace(month=d.month, day=d.day)
+        if reset < sent:
+            reset = reset.replace(year=sent.year + 1)
+    elif reset <= sent:
+        reset += dt.timedelta(days=1)
+    return reset.timestamp()
+
+
+def limit_open(e, api):
+    if api is not None:
+        return all((api.get(k) or {}).get("utilization", 0) < 100 for k in ("five_hour", "seven_day"))
+    reset = message_reset(e)
+    return reset is not None and time.time() > reset + 60
+
+
+def main():
+    stopped = list(stopped_sessions())
+    done = set((STATE / "done").read_text().split()) if (STATE / "done").exists() else set()
+    stopped = [(sid, e) for sid, e in stopped if e["uuid"] not in done]
+    if not stopped:
+        return
+    api = usage()
+    ready = [(sid, e) for sid, e in stopped if limit_open(e, api)]
+    if not ready:
+        log(f"{len(stopped)} stopped session(s), limit not reset yet")
+        return
+
+    db = sqlite3.connect(f"file:{T3}/statev2.sqlite?mode=ro", uri=True)
+    threads = {}
+    for sid, e in ready:
+        row = db.execute("""
+            select t.thread_id from orchestration_v2_projection_provider_threads p
+            join orchestration_v2_projection_threads t
+              on t.active_provider_thread_id = p.provider_thread_id
+            where json_extract(p.payload_json, '$.nativeThreadRef.nativeId') = ?
+              and t.archived_at is null and t.deleted_at is null""", (sid,)).fetchone()
+        if row:  # not a T3 thread (plain terminal session), or no longer its active session
+            threads[row[0]] = e["uuid"]
+    task = db.execute("select task_id, webhook_token from scheduled_tasks where title = ? and enabled = 1",
+                      (TASK_TITLE,)).fetchone()
+    db.close()
+    if not threads:
+        return
+    if not task:
+        sys.exit(f"claude-limit-resume: no enabled T3 task titled '{TASK_TITLE}'")
+
+    origin = json.loads((T3 / "server-runtime.json").read_text())["origin"]
+    url = f"{origin}/api/hooks/{urllib.parse.quote(task[0], safe='')}/{task[1]}"
+    body = json.dumps({"threads": ",".join(threads), "stamp": int(time.time())}).encode()
+    req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
+    urllib.request.urlopen(req, timeout=10).read()
+    STATE.mkdir(parents=True, exist_ok=True)
+    with open(STATE / "done", "a") as f:
+        f.writelines(f"{u}\n" for u in threads.values())
+    log(f"resumed {', '.join(threads)}")
+
+
+if __name__ == "__main__":
+    main()

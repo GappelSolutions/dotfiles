@@ -128,6 +128,9 @@
       # --- Tools ---
       # Agents (Claude Code's Bash) get GNU ls: eza rejects flags like -t.
       [[ -n $CLAUDECODE ]] || alias ls='eza --icons=auto'
+      # ...and bash glob/word-split semantics: zsh's nomatch aborts `grep --include=*.cs`, and
+      # `K="oc --context x"; $K get po` runs a command literally named "oc --context x".
+      [[ -n $CLAUDECODE ]] && setopt no_nomatch sh_word_split
       eval "$(${pkgs.zoxide}/bin/zoxide init zsh)"
       setopt nocaseglob
       [[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh

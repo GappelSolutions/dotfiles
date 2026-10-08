@@ -39,12 +39,7 @@ here or anywhere else - see the Playwright section of the root CLAUDE.md.
 
 ## Keeping the version pin correct
 
-If you bump the `nixpkgs` flake input, `pkgs.playwright-driver`'s version can
-change. After a `rebuild`, re-sync this project's pin:
-
-```bash
-nix eval --raw nixpkgs#playwright-driver.version   # after the rebuild
-```
-
-Update `devDependencies.playwright` in `package.json` to match, then
-`rm -rf node_modules && bun install`.
+`nix/scripts/update-flake-lock` (daily timer) rewrites the pin to
+`pkgs.playwright-driver.version` after each successful switch and commits it with
+the lock; `nix/scripts/check-hosts` fails while they differ. After a pin change,
+`bun install` here picks up the new version.

@@ -32,5 +32,7 @@ in
 
   # Work config, kept out of this public repo
   "work-zsh.age".publicKeys = [ masterKey ];
+  # OpenBao root tokens per oc context (`<context>=<token>` lines), read by `kbao` in work-zsh
+  "openbao-tokens.age".publicKeys = [ masterKey ];
   "lazyops-config.age".publicKeys = [ masterKey ];
 }

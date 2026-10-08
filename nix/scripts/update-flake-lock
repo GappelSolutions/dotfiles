@@ -53,7 +53,15 @@ if [[ -e "$git_dir/MERGE_HEAD" || -d "$git_dir/rebase-merge" || -d "$git_dir/reb
   echo "flake.lock: merge/rebase in progress, leaving the lock uncommitted" >&2
   exit 0
 fi
-if git commit --only flake.lock -m "chore(flake): update flake.lock" -m "Automated by update-flake-lock after a successful switch of $FLAKE_ATTR."; then
+# browser-scratch pins the playwright npm package to nixpkgs' browser revision;
+# follow it so the pin never drifts behind the deployed browsers.
+pin=scripts/browser-scratch/package.json
+pw=$(nix eval --raw ".#nixosConfigurations.$FLAKE_ATTR.pkgs.playwright-driver.version" 2>/dev/null || true)
+if [[ -n "$pw" && "$(jq -r .devDependencies.playwright "$pin")" != "$pw" ]]; then
+  jq --arg v "$pw" '.devDependencies.playwright = $v' "$pin" >"$pin.tmp" && mv "$pin.tmp" "$pin"
+  echo "browser-scratch: playwright pin -> $pw"
+fi
+if git commit --only flake.lock "$pin" -m "chore(flake): update flake.lock" -m "Automated by update-flake-lock after a successful switch of $FLAKE_ATTR."; then
   echo "flake.lock: committed"
 else
   echo "flake.lock: commit failed, lock left uncommitted" >&2

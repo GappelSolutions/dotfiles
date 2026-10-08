@@ -22,6 +22,11 @@
       path = "/home/cgpp/.work.zsh";
       owner = "cgpp";
     };
+    openbao-tokens = {
+      file = ../../secrets/openbao-tokens.age;
+      owner = "cgpp";
+      mode = "400";
+    };
     lazyops-config = {
       file = ../../secrets/lazyops-config.age;
       path = "/home/cgpp/.config/lazyops/config.toml";

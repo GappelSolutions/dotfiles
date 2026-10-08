@@ -4,6 +4,7 @@
   imports = [
     ../dev/home.nix
     ./p-backup.nix
+    ./limit-resume.nix
   ];
 
   # Hand git credentials to the Windows GCM, which keeps them in Windows

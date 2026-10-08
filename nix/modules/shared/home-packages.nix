@@ -70,6 +70,11 @@ in
     tree-sitter
     gh
     jq
+    yq-go
+    file
+    lua # luac, for checking vis config
+    postgresql # psql, pg_isready
+    age
     bc
     unzip
     zip

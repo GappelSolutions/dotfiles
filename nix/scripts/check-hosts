@@ -34,4 +34,10 @@ for host in $(nix eval --json .#darwinConfigurations --apply builtins.attrNames 
     || { echo FAILED; grep -E '^error' /tmp/check-hosts-darwin.log >&2; exit 1; }
 done
 
+echo "==> browser-scratch playwright pin"
+pw=$(nix eval --raw .#nixosConfigurations.wsl.pkgs.playwright-driver.version 2>/dev/null)
+pin=$(jq -r .devDependencies.playwright scripts/browser-scratch/package.json)
+[ "$pw" = "$pin" ] || { echo "    FAILED: package.json pins $pin, nixpkgs ships $pw" >&2; exit 1; }
+echo "    ok ($pw)"
+
 echo "==> all hosts evaluate"

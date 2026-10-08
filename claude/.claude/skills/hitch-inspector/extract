@@ -97,7 +97,10 @@ class Transcript:
         for line_no, raw in enumerate(self.path.open(), 1):
             for skill in HITCH_SKILL.findall(raw):
                 self.skills.add(skill)
-            entry = json.loads(raw)
+            try:
+                entry = json.loads(raw)
+            except json.JSONDecodeError:  # partial last line of a live session
+                continue
             kind = entry.get("type")
             if kind == "cost-state":
                 self.cost = entry.get("totalCostUSD")

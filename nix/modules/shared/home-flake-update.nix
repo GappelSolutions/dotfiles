@@ -3,7 +3,7 @@
 let
   update-flake-lock = pkgs.writeShellApplication {
     name = "update-flake-lock";
-    runtimeInputs = with pkgs; [ git nix nixos-rebuild coreutils hostname ];
+    runtimeInputs = with pkgs; [ git nix nixos-rebuild coreutils hostname jq ];
     text = builtins.readFile ../../scripts/update-flake-lock;
   };
 in
