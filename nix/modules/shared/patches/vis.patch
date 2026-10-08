@@ -9,9 +9,16 @@
  #include "buffer.h"
  
  #define UI_TERMKEY_FLAGS TERMKEY_FLAG_UTF8
-@@ -105,18 +107,23 @@
+@@ -104,19 +106,30 @@
+ 	output_literal(alternate ? "\x1b[?1049h" : "\x1b[0m" "\x1b[?1049l" "\x1b[0m" );
  }
  
++/* the terminal reports clicks, drags with a button held and the wheel, SGR encoded (no
++ * 223-column limit); most terminals keep shift-drag for their own selection */
++static void mouse_reporting(bool on) {
++	output_literal(on ? "\x1b[?1002h" "\x1b[?1006h" : "\x1b[?1006l" "\x1b[?1002l");
++}
++
  static void cursor_visible(bool visible) {
 -	output_literal(visible ? "\x1b[?25h" : "\x1b[?25l");
 +	/* a shown cursor goes back to the terminal's default shape, for programs and the shell */
@@ -36,7 +43,7 @@
  	for (int y = 0; y < h; y++) {
  		for (int x = 0; x < w; x++) {
  			CellStyle *style = &cell->style;
-@@ -171,6 +178,15 @@
+@@ -171,6 +184,15 @@
  			cell++;
  		}
  	}
@@ -52,7 +59,7 @@
  	output(buffer_content(buf), buffer_length0(buf));
  }
  
-@@ -180,11 +196,39 @@
+@@ -180,11 +202,41 @@
  	return true;
  }
  
@@ -79,6 +86,7 @@
 +		screen_handed_over = true;
 +		setitimer(ITIMER_REAL, &(struct itimerval){ .it_value = { .tv_usec = 500000 } }, NULL);
 +	}
++	mouse_reporting(false);
  	cursor_visible(true);
  }
  
@@ -89,16 +97,25 @@
 +		screen_alternate(true);
 +		screen_handed_over = false;
 +	}
++	mouse_reporting(true);
  	cursor_visible(false);
  }
  
-@@ -196,6 +240,7 @@
+@@ -196,12 +248,15 @@
  static void ui_vt100_suspend(UiTerm *tui) {
  	if (!tui->termkey) return;
  	termkey_stop(tui->termkey);
 +	output_literal("\x1b[?2026l");
++	mouse_reporting(false);
  	cursor_visible(true);
  	screen_alternate(false);
+ }
+ 
+ static void ui_vt100_resume(UiTerm *tui) {
+ 	screen_alternate(true);
++	mouse_reporting(true);
+ 	cursor_visible(false);
+ 	termkey_start(tui->termkey);
  }
 --- a/vis.c
 +++ b/vis.c
@@ -144,7 +161,68 @@
  	for (Selection *sel = view_selections(view), *next; sel; sel = next) {
  		if (vis->interrupted)
  			break;
-@@ -1740,7 +1749,7 @@
+@@ -1289,6 +1298,48 @@
+ 		vis_keys_process(vis, pos);
+ }
+ 
++/* as nvim's mouse=a: a click focuses the window under it and puts its only cursor there,
++ * ending visual mode, a drag from it selects in visual mode, the wheel scrolls the window
++ * under it 3 lines. Not while a prompt (:, /) is open */
++static void mouse(Vis *vis, const TermKeyKey *key) {
++	static bool pressed; /* in the focused window's text, so a drag selects */
++	TermKeyMouseEvent event;
++	int button, line, col, row, cell;
++	termkey_interpret_mouse(vis->ui->termkey_get(vis->ui), key, &event, &button, &line, &col);
++	Win *win = vis->ui->window_at(vis->ui, col - 1, line - 1, &row, &cell);
++	if (event == TERMKEY_MOUSE_RELEASE)
++		pressed = false;
++	if (event == TERMKEY_MOUSE_RELEASE || !win || !vis->win || vis->win->parent)
++		return;
++	View *view = win->view;
++	if (event == TERMKEY_MOUSE_PRESS && (button == 4 || button == 5)) {
++		if (button == 4)
++			view_slide_down(view, 3);
++		else
++			view_slide_up(view, 3);
++		return;
++	}
++	if (button != 1 || (event == TERMKEY_MOUSE_DRAG && (!pressed || win != vis->win)))
++		return;
++	if (event == TERMKEY_MOUSE_PRESS) {
++		pressed = row >= 0;
++		if (win != vis->win)
++			vis_window_focus(win);
++		if (vis->mode->visual)
++			vis_mode_switch(vis, VIS_MODE_NORMAL);
++		view_selections_dispose_all(view);
++		if (!pressed)
++			return;
++	} else if (!vis->mode->visual) {
++		vis_mode_switch(vis, VIS_MODE_VISUAL);
++	}
++	if (row < 0)
++		return;
++	Selection *sel = view_selections_primary_get(view);
++	view_cursors_to(sel, view_screenline_goto(view, row + 1));
++	view_cursors_cell_set(sel, cell);
++}
++
+ static const char *getkey(Vis *vis) {
+ 	TermKeyKey key = { 0 };
+ 	if (!vis->ui->getkey(vis->ui, &key))
+@@ -1307,6 +1358,11 @@
+ 		}
+ 	}
+ 
++	if (key.type == TERMKEY_TYPE_MOUSE) {
++		mouse(vis, &key);
++		return getkey(vis);
++	}
++
+ 	TermKey *termkey = vis->ui->termkey_get(vis->ui);
+ 	if (key.type == TERMKEY_TYPE_UNKNOWN_CSI) {
+ 		long args[18];
+@@ -1740,7 +1796,7 @@
  		return -1;
  	}
  
@@ -217,8 +295,25 @@
  		debug("draw-window: [%d][%d] ... cells[%d][%d]\n", y, x+sidebar_width, y, view_width);
  		memcpy(&cells[x+sidebar_width], l->cells, sizeof(Cell) * view_width);
  		cells += ui->width;
-@@ -381,13 +398,19 @@
+@@ -379,15 +396,36 @@
+ 	}
+ }
  
++/* the window at screen cell x, y and the text cell there: row -1 on its status bar, col 0 on
++ * its line numbers */
++static Win *ui_window_at(Ui *ui, int x, int y, int *row, int *col) {
++	UiTerm *tui = (UiTerm*)ui;
++	for (UiTermWin *win = tui->windows; win; win = win->next) {
++		if (x < win->x || x >= win->x + win->width || y < win->y || y >= win->y + win->height)
++			continue;
++		bool status = (win->options & UI_OPTION_STATUSBAR) && y == win->y + win->height - 1;
++		*row = status ? -1 : y - win->y;
++		*col = MAX(x - win->x - win->sidebar_width, 0);
++		return win->win;
++	}
++	return NULL;
++}
++
  static void ui_doupdates(Ui *ui, bool doupdate) {
  	UiTerm *tui = (UiTerm*)ui;
 -	tui->doupdate = doupdate;
@@ -238,6 +333,14 @@
  	for (UiTermWin *win = tui->windows; win; win = win->next)
  		ui_window_draw((UiWin*)win);
  	if (tui->info[0])
+@@ -734,6 +772,7 @@
+ 		.init = ui_init,
+ 		.free = ui_term_free,
+ 		.termkey_get = ui_termkey_get,
++		.window_at = ui_window_at,
+ 		.suspend = ui_suspend,
+ 		.resume = ui_resume,
+ 		.resize = ui_resize,
 --- a/vis-cmds.c
 +++ b/vis-cmds.c
 @@ -477,14 +477,19 @@
@@ -260,4 +363,14 @@
 +	vis_doupdates(vis, true);
  	return vis->win != oldwin;
  }
+ 
+--- a/ui.h
++++ b/ui.h
+@@ -92,6 +92,7 @@
+ 	void (*terminal_save)(Ui*, bool fscr);
+ 	void (*terminal_restore)(Ui*);
+ 	TermKey* (*termkey_get)(Ui*);
++	Win* (*window_at)(Ui*, int x, int y, int *row, int *col);
+ 	int (*colors)(Ui*);
+ };
  

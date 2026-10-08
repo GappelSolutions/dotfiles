@@ -8,10 +8,17 @@ let
   # draws every frame and that handover as synchronized updates (no flicker), draws :e once
   # (not the new window stacked below the old one first), makes <C-o> vim's: the jumplist gets
   # a jump's start, but not every : command (:w, :e), gives line numbers nvim's fixed width, and
-  # shows the terminal's cursor on the primary one in nvim's shapes, for Rio's cursor trail.
+  # shows the terminal's cursor on the primary one in nvim's shapes, for Rio's cursor trail,
+  # and adds mouse support (none upstream): a click places the cursor and focuses its window,
+  # a drag selects in visual mode, the wheel scrolls. libtermkey read SGR mouse reports as X10
+  # ones (garbage coordinates) wherever terminfo's kmous is \E[< (xterm, rio, alacritty); its
+  # CSI driver decodes both by itself.
   # dkjson for vis-lspc, whose fallback JSON decoder is quadratic in string length: tailwind's
   # 400 KB startup log froze vis for ~15s
-  vis = pkgs.vis.overrideAttrs (old: {
+  libtermkey = pkgs.libtermkey.overrideAttrs (old: {
+    patches = (old.patches or [ ]) ++ [ ./patches/libtermkey-mouse.patch ];
+  });
+  vis = (pkgs.vis.override { inherit libtermkey; }).overrideAttrs (old: {
     configureFlags = (old.configureFlags or [ ]) ++ [ "--disable-curses" ];
     patches = (old.patches or [ ]) ++ [ ./patches/vis.patch ];
     postInstall = old.postInstall + ''

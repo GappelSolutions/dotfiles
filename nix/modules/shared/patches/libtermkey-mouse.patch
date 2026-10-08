@@ -1,0 +1,14 @@
+--- a/driver-ti.c
++++ b/driver-ti.c
+@@ -331,11 +331,6 @@
+       break;
+   }
+ 
+-  /* Finally mouse mode */
+-  try_load_terminfo_key(ti, "key_mouse", &(struct keyinfo){
+-      .type = TERMKEY_TYPE_MOUSE,
+-  });
+-
+   /* Take copies of these terminfo strings, in case we build multiple termkey
+    * instances for multiple different termtypes, and it's different by the
+    * time we want to use it
