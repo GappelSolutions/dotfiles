@@ -16,8 +16,12 @@ alt + z                 : if (Get-Process zen -ErrorAction SilentlyContinue) { k
 
 alt + q                 : komorebic close
 
+# In any app's Open/Save dialog: pick the files in yazi instead (~\.local\bin\yazi-pick.ps1). Detached:
+# whkd runs every binding in one shell, a picker waiting on yazi would hold up all the others.
+alt + e                 : Start-Process conhost.exe -ArgumentList '--headless', "$env:LOCALAPPDATA\Microsoft\WindowsApps\pwsh.exe", '-NoProfile', '-NonInteractive', '-File', "$env:USERPROFILE\.local\bin\yazi-pick.ps1"
+
 # Focus windows
-alt + t                 : komorebic toggle-float
+alt + w                 : komorebic toggle-float # like hyprland's $mod, W
 alt + shift + f         : komorebic toggle-monocle
 alt + p                 : komorebic toggle-pause
 alt + i                 : komorebic toggle-shortcuts

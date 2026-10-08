@@ -22,6 +22,19 @@ file    yazi/.config/yazi/yazi.toml                         AppData/Roaming/yazi
 file    lazygit/.config/lazygit/config.yml                  AppData/Roaming/lazygit/config.yml
 file    vim/.vimrc                                          _vimrc
 
+# yazi on Windows: drive/dir jumps (g + lowercase letter) and `z` = fzf over fidx's prebuilt file
+# lists of the network drives. fidx.ps1 crawls them (task: win-host/register-fidx.ps1); the lists
+# stay local. Win+E opening yazi instead of Explorer: win-host/register-yazi-wine.ps1.
+file    win-host/AppData/Roaming/yazi/config/keymap.toml    AppData/Roaming/yazi/config/keymap.toml
+dir     win-host/AppData/Roaming/yazi/config/plugins/fidx.yazi  AppData/Roaming/yazi/config/plugins/fidx.yazi
+file    win-host/AppData/Local/fidx/fidx.ps1                AppData/Local/fidx/fidx.ps1
+# yazi as a full-width tile (top third) for Win+E and Raycast; as the picker for any app's
+# Open/Save dialog (alt+e in whkdrc); Y / ctrl+v in yazi for the Windows clipboard
+file    win-host/.local/bin/yazi-wide.ps1                   .local/bin/yazi-wide.ps1
+file    win-host/.local/bin/yazi-pick.ps1                   .local/bin/yazi-pick.ps1
+file    win-host/.local/bin/win-clip.ps1                    .local/bin/win-clip.ps1
+dir     win-host/AppData/Roaming/yazi/config/plugins/winclip.yazi  AppData/Roaming/yazi/config/plugins/winclip.yazi
+
 # Window management: komorebi (KOMOREBI_CONFIG_HOME=%USERPROFILE%\assets),
 # whkd hotkeys, YASB bar
 file    win-host/assets/komorebi.json                       assets/komorebi.json

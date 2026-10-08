@@ -31,3 +31,14 @@ play = [
 prepend_rules = [
 	{ mime = "video/*", use = "play" },
 ]
+
+# Windows network drives: don't preview/preload files there - each preview downloads the file over
+# SMB. Folder previews (patterns ending in /) stay on. Windows paths are matched with / separators;
+# drive-letter patterns never match on the unix hosts.
+[plugin]
+prepend_preloaders = [
+	{ url = "{L,M,P,T,X,Y,Z}:/**", run = "noop" },
+]
+prepend_previewers = [
+	{ url = "{L,M,P,T,X,Y,Z}:/**", run = "noop" },
+]

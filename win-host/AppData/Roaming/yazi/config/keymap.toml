@@ -1,0 +1,61 @@
+[[mgr.prepend_keymap]]
+on   = "z"
+run  = "plugin fidx"
+desc = "fzf via prebuilt drive index (falls back to plain fzf)"
+
+# g + lowercase only. yazi's defaults keep gg gh gc gd gf g<Space>, so C: is gw (Windows) and L: is
+# ga, as gl is the WSL dev dir.
+[[mgr.prepend_keymap]]
+on = [ "g", "w" ]
+run = "cd 'C:\\'"
+desc = "Go to drive C:"
+[[mgr.prepend_keymap]]
+on = [ "g", "a" ]
+run = "cd 'L:\\'"
+desc = "Go to drive L:"
+[[mgr.prepend_keymap]]
+on = [ "g", "m" ]
+run = "cd 'M:\\'"
+desc = "Go to drive M:"
+[[mgr.prepend_keymap]]
+on = [ "g", "p" ]
+run = "cd 'P:\\'"
+desc = "Go to drive P:"
+[[mgr.prepend_keymap]]
+on = [ "g", "t" ]
+run = "cd 'T:\\'"
+desc = "Go to drive T:"
+[[mgr.prepend_keymap]]
+on = [ "g", "x" ]
+run = "cd 'X:\\'"
+desc = "Go to drive X:"
+[[mgr.prepend_keymap]]
+on = [ "g", "y" ]
+run = "cd 'Y:\\'"
+desc = "Go to drive Y:"
+[[mgr.prepend_keymap]]
+on = [ "g", "z" ]
+run = "cd 'Z:\\'"
+desc = "Go to drive Z:"
+
+[[mgr.prepend_keymap]]
+on = [ "g", "l" ]
+run = "cd '\\\\wsl.localhost\\NixOS\\home\\cgpp\\dev'"
+desc = "Go to WSL ~/dev"
+
+# bookmarks: paths come from user env vars, so work paths stay out of this public repo
+[[mgr.prepend_keymap]]
+on = [ "g", "s" ]
+run = "cd '%YAZI_SPECS%'"
+desc = "Go to specs (%YAZI_SPECS%)"
+
+# Windows clipboard (plugins/winclip.yazi): Y copies the selection as files (ctrl+v in Teams,
+# browsers, Explorer), ctrl+v pastes files or a copied image here. Y was a duplicate of X (unyank).
+[[mgr.prepend_keymap]]
+on = "Y"
+run = "plugin winclip copy"
+desc = "Copy to the Windows clipboard"
+[[mgr.prepend_keymap]]
+on = "<C-v>"
+run = "plugin winclip paste"
+desc = "Paste from the Windows clipboard"
