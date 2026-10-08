@@ -7,6 +7,15 @@ Personal workstation config. Current path is Nix first:
   CLI/dotfiles.
 - WSL: use plain Nix for now; no dedicated `hosts/wsl` flake output yet.
 
+## Windows, tiling and terminal first
+
+This repo is proof that a tiling, terminal-first setup works on Windows for day-to-day work, not
+just as a proof of concept. It runs a managed work laptop: komorebi + whkd tile every window, YASB
+is the bar, Rio + zellij + vis are terminal and editor, and yazi replaces Explorer: Win+E, the
+company network drives (with prebuilt indexes for instant fuzzy search) and the Open/Save dialogs
+of other apps (alt+e). NixOS-WSL carries the same CLI config as the other hosts; the
+Windows-native side lives in `win-host/` and is synced with `win-host/sync.sh`.
+
 ## macOS
 
 Fresh Mac:
