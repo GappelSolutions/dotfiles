@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
-"""Resume T3 Code threads whose Claude session stopped on a usage limit, once the limit has reset.
+"""Resume Claude Code sessions that stopped on a usage limit, once the limit has reset.
 
 A session is stopped when its last user/assistant entry is Claude Code's synthetic `rate_limit`
 message. Limit open again = the usage API (cache shared with hooks/usage-limit.sh) shows both
-windows under 100%; without the API, the reset time in the message itself. The resume is the
-T3 webhook task titled TASK_TITLE, posted on the local server; it sends each thread "continue".
+windows under 100%; without the API, the reset time in the message itself. The resume is a
+headless `claude --resume <id> -p` in the session's cwd, as its own transient systemd user unit.
 """
-import datetime as dt, json, os, re, sqlite3, sys, time, urllib.parse, urllib.request
+import datetime as dt, json, os, re, subprocess, sys, time, urllib.request
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 HOME = Path.home()
 PROJECTS = HOME / ".claude/projects"
-T3 = HOME / ".t3/userdata"
-TASK_TITLE = "Resume threads after usage limit"
+MESSAGE = "The usage limit has reset. Continue where you left off."
 STATE = Path(os.environ.get("XDG_STATE_HOME", HOME / ".local/state")) / "claude-limit-resume"
 CACHE = Path(f"/tmp/.claude-usage-cache-{os.getuid()}")
 MAX_AGE = 24 * 3600  # older stops are left alone
@@ -98,9 +97,8 @@ def limit_open(e, api):
 
 
 def main():
-    stopped = list(stopped_sessions())
     done = set((STATE / "done").read_text().split()) if (STATE / "done").exists() else set()
-    stopped = [(sid, e) for sid, e in stopped if e["uuid"] not in done]
+    stopped = [(sid, e) for sid, e in stopped_sessions() if e["uuid"] not in done]
     if not stopped:
         return
     api = usage()
@@ -109,34 +107,19 @@ def main():
         log(f"{len(stopped)} stopped session(s), limit not reset yet")
         return
 
-    db = sqlite3.connect(f"file:{T3}/statev2.sqlite?mode=ro", uri=True)
-    threads = {}
-    for sid, e in ready:
-        row = db.execute("""
-            select t.thread_id from orchestration_v2_projection_provider_threads p
-            join orchestration_v2_projection_threads t
-              on t.active_provider_thread_id = p.provider_thread_id
-            where json_extract(p.payload_json, '$.nativeThreadRef.nativeId') = ?
-              and t.archived_at is null and t.deleted_at is null""", (sid,)).fetchone()
-        if row:  # not a T3 thread (plain terminal session), or no longer its active session
-            threads[row[0]] = e["uuid"]
-    task = db.execute("select task_id, webhook_token from scheduled_tasks where title = ? and enabled = 1",
-                      (TASK_TITLE,)).fetchone()
-    db.close()
-    if not threads:
-        return
-    if not task:
-        sys.exit(f"claude-limit-resume: no enabled T3 task titled '{TASK_TITLE}'")
-
-    origin = json.loads((T3 / "server-runtime.json").read_text())["origin"]
-    url = f"{origin}/api/hooks/{urllib.parse.quote(task[0], safe='')}/{task[1]}"
-    body = json.dumps({"threads": ",".join(threads), "stamp": int(time.time())}).encode()
-    req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
-    urllib.request.urlopen(req, timeout=10).read()
     STATE.mkdir(parents=True, exist_ok=True)
-    with open(STATE / "done", "a") as f:
-        f.writelines(f"{u}\n" for u in threads.values())
-    log(f"resumed {', '.join(threads)}")
+    for sid, e in ready:
+        # Own unit: outlives this oneshot, output in `journalctl --user -u claude-resume-<id>`.
+        r = subprocess.run(["systemd-run", "--user", "--collect", "--quiet", "--setenv=PATH",
+                            f"--unit=claude-resume-{sid[:8]}",
+                            f"--working-directory={e['cwd']}", "claude", "--resume", sid, "-p", MESSAGE,
+                            "--dangerously-skip-permissions"], capture_output=True, text=True)
+        if r.returncode:
+            log(f"{sid}: {r.stderr.strip()}")
+            continue
+        with open(STATE / "done", "a") as f:
+            f.write(f"{e['uuid']}\n")
+        log(f"resumed {sid} in {e['cwd']}")
 
 
 if __name__ == "__main__":
