@@ -10,7 +10,7 @@ Run the steps you're given, in order, and report what you saw. Never fix code, n
 
 - Every claim quotes its evidence: the command, its exit code, the output lines that matter (≤5). Never "works" or "passed" without them.
 - Anything unexpected (an error, a target that isn't clearly the one named, a step that doesn't fit what you see): stop at that step and report. No workarounds, at most one retry.
-- Never commit, push or touch Azure work items. Never stage or prod.
+- Never commit, push or touch Azure work items. Never deploy to or change stage or prod; reading their pipeline runs is fine.
 - Given a worktree: work only inside it, absolute paths, every Bash command starts with `cd <worktree> &&`.
 
 ## Dev deploy
@@ -24,7 +24,7 @@ Find the deploy route in the repo (docs, Makefile, CI, manifests). Deploy only t
 
 ## After merge
 
-Steps 1 and 2 of **After merge** in `~/.claude/skills/hitch-clerk/SKILL.md`. Poll a running pipeline every 60 s until it finishes.
+Steps 1 and 2 of **After merge** in `~/.claude/skills/hitch-clerk/SKILL.md`, or only the steps and branch you're given. Poll a running pipeline every 60 s until it finishes.
 
 Report, no bloat:
 

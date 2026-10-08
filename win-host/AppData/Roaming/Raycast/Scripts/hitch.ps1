@@ -29,14 +29,19 @@ Row 'hitch-bouncer'  'agent' 'Readiness gate + Task brief; gaps -> duck'
 Row 'hitch-mechanic' 'agent' 'Builds one Task in its worktree, dev, annotations'
 Row 'hitch-skeptic'  'agent' 'Full review incl. comment slop; 2 run blind'
 Row 'hitch-referee'  'agent' '3rd review on top of both: the final fix list'
-Row 'hitch-janitor'  'agent' 'Story done: worktrees, branches, leftovers'
+Row 'hitch-janitor'  '/cmd'  'Session or Story done: debris, worktrees, leftovers'
 ''
 "$bold$cyan REVIEW + CHECK$reset"
 Row 'hitch-jury'     '/cmd'  "Review a colleague's PR: 2 skeptics + referee"
 Row 'hitch-inspector' '/cmd' 'Weekly scorecard: loops, slow, corrections, PRs'
 ''
+"$bold$cyan RELEASE$reset"
+Row 'hitch-pilot'    '/cmd'  'dev -> stage: zero-downtime review, release PR'
+''
 "  $dim" + 'plan   /hitch-duck <story-id | task-id | feature-id | text>' + $reset
 "  $dim" + 'run    /hitch-tower <story-id | task-id>' + $reset
+"  $dim" + 'clean  /hitch-janitor [story-id]   no id: this session' + $reset
+"  $dim" + 'ship   /hitch-pilot [repo]' + $reset
 "  $dim" + 'pr     /hitch-clerk [task-id] [branch]   again after a push: sync' + $reset
 "  $dim" + 'review /hitch-jury [pr-id]   no id: PRs waiting on you' + $reset
 "  $dim" + 'check  /hitch-inspector [since]   mark live: #flag <note>' + $reset
