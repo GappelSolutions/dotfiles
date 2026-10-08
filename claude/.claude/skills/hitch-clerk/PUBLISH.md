@@ -2,7 +2,7 @@
 
 Publish a branch the user built themselves as a PR, the hitch way: the description, annotations and work-item links from `SKILL.md`. No review crew, no dev deploy.
 
-Input: `[task-id | story-id] [branch]`, both optional.
+Input: `[task-id | story-id | ghost] [branch]`, all optional. `ghost` (or a `/hitch-duck ghost` earlier in this session): no work item, don't ask.
 
 ## Output rules
 
@@ -17,7 +17,7 @@ Input: `[task-id | story-id] [branch]`, both optional.
 4. **Write**: `git fetch origin`, then read `git diff origin/<default>...<branch>` in full.
    - Title and description as in **PR**. The overview is about the diff, not the commit messages.
    - Annotations as in **PR**: `<path>:<line><TAB><text>`, the line in the branch's version of the file.
-   - Ask whether the branch runs on a dev namespace, and its URL as in **PR**. A UI change: also a screenshot (path, or the user's go to take one as in `hitch-mechanic`). None: leave them out. Upload after create, as in **PR**.
+   - Ask whether the branch runs on a dev namespace, and its URL as in **PR**. A UI change: also a screenshot (path, or on the user's go a `hitch-gofer` takes one). None: leave them out. Upload after create, as in **PR**.
 5. **Show** in chat: title, description, annotations as `path:line: text`. Wait for the user's OK. They may edit, drop or add. Then:
    ```bash
    git push -u origin <branch>                    # never force; rejected: report and ask
@@ -33,3 +33,4 @@ Input: `[task-id | story-id] [branch]`, both optional.
    **#<id> <title>** → <pr-url>
    - <draft | published> · <n> annotations · work items: <task-id> <story-id> | none
    ```
+9. **Watch** (published): `~/.claude/skills/hitch-tower/hitch-pr wait <pr>` in the background, handled as hitch-tower's Wait step: comments → proposed reply or fix, gate READY → complete, `completed` → **After merge**, then close the Task (and the Story if it was the last one). The user says stop: stop.

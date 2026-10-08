@@ -1,7 +1,7 @@
 ---
 name: hitch-tower
 description: Execute the Tasks hitch-duck sliced, one PR each. Per Task a readiness gate, implementation in its own worktree, dev validation and an annotated draft PR for your feedback, with three reviews per batch; merges once someone else approves with no comment unaddressed, then starts the next batch until the Story is done.
-argument-hint: "<story-id | task-id...>"
+argument-hint: "<story-id | task-id... | ghost>"
 disable-model-invocation: true
 ---
 
@@ -22,8 +22,9 @@ Input: `$ARGUMENTS`
 
 | agent | does | model · effort |
 |---|---|---|
-| `hitch-bouncer` | loads a Task and its Story from Azure: brief + Ready verdict | sonnet · medium |
-| `hitch-mechanic` | builds one Task in its worktree: fixes, dev deploy, annotations | opus · high |
+| `hitch-bouncer` | loads a Task and its Story from Azure: brief + Ready verdict | haiku · medium |
+| `hitch-mechanic` | builds one Task in its worktree: fixes, dev deploy through a gofer, annotations | opus · high |
+| `hitch-gofer` | tool-call chains: dev deploy + checks, screenshot (for the mechanic), after-merge pipelines + check | haiku · medium |
 | `hitch-skeptic` | full review of a batch; two run independently | A opus · B sonnet (trial) · high |
 | `hitch-referee` | third review of a batch, with both as input: the final fix list per Task | opus · high |
 | `hitch-janitor` | cleanup once the Story is done | sonnet · medium |
@@ -36,7 +37,8 @@ Spawn them in the background with absolute paths. Keep only their reports in you
 2. Resolve the input into Tasks:
    - Story ID: its child Tasks that aren't `Closed` or `Removed`.
    - Task IDs: those.
-3. Rebuild the state from Azure and git, per Task: its PR and PR status, whether its worktree exists, which dev namespace it leases (step 5). Never keep a state file. A later session resumes the same way.
+   - `ghost`: the brief from this session's `/hitch-duck ghost`, one Task with no ID. No bouncer, no Azure states, links or Plan. Branch: the naming rule without the ID.
+3. Rebuild the state from Azure and git, per Task: its PR and PR status, whether its worktree exists, which dev namespace it leases (step 5); per Story, whether a `-full` worktree exists (step 10). Never keep a state file. A later session resumes the same way.
 4. Show `| Task | state | PR | blocked by |`, then enter the loop where each Task stands.
 
 ## Loop
@@ -61,7 +63,7 @@ The frontier is every Task whose Predecessors are all `Closed`. A batch is the f
    - Pool: your dev namespace `<ns>` on the dev cluster, plus its numbered siblings (`<ns>2`, `<ns>3`, …), each with its own DB, broker vhost and NodePorts. No siblings: `<ns>` alone, one Task at a time.
    - Lease: a namespace without a `hitch-lease` ConfigMap is free, and `<ns>` goes first. Take it with `oc create configmap hitch-lease -n <ns> --from-literal=task=<task-id>`. The lease lives in the cluster, so a later session finds it (Start, step 3). None free: the Task waits.
    - Keep it until the Task is closed, so feedback redeploys land in the same place. Then `oc delete configmap hitch-lease -n <ns>`.
-   - Tell the mechanic: "deploy to `<ns>`, run the dev checks, then the annotations".
+   - The mechanic, with `<ns>`, the Task's dev checks, and whether it's a UI change: it deploys, checks and screenshots through a gofer and fixes what fails. Then it writes the annotations.
 6. **Draft PR**: `git push -u origin <branch>`, create the draft as in `hitch-clerk`, then `hitch-pr annotate <pr> <file>` with the mechanic's annotations. Add the mechanic's deployed URL to the description, and for a UI change upload its screenshot, as in `hitch-clerk`. Again after a push with a new screenshot.
 7. **Report** per Task:
    ```
@@ -75,17 +77,19 @@ The frontier is every Task whose Predecessors are all `Closed`. A batch is the f
    - Change requests: to the mechanic, then checks, then push. If a change contradicts a decision, run the duck in Task mode first.
    - After every push, bring the description and the annotations up to date with the code, as in `hitch-clerk`. Colleagues must always see the full picture, and nothing may contradict.
    - Repeat until the user says `publish` or publishes it on Azure.
+   - The Plan (`hitch-clerk`): redraw it after every Task state change, on the Story and in the descriptions of the Story's open PRs.
 9. **Publish**: `az repos pr update --id <pr> --draft false`, then move the Task to the taskboard's review column, as in `hitch-clerk`.
-10. **Wait**: run `hitch-pr wait <pr-id>...` in the background on every open PR. It exits on any status, draft, vote or comment change. Then, per changed PR:
+10. **Ahead**, alongside step 11: while a batch waits for review, build the next batches on a `-full` branch instead of idling. It may be thrown away if review changes the concept: that's accepted.
+    - Branch: the Task naming rule with the Story ID and a `_full` suffix. Worktree `~/.local/state/hitch/wt/<repo>/<story-id>-full`, from `origin/<default>` with the waiting batch's branches merged in.
+    - One mechanic at a time, Task by Task in batch order, each Task its own commits (message prefix as its Task branch would use). Automated checks only: no review, no dev deploy, no PR, no push. Task states stay `New`.
+    - Feedback pushed on a waiting PR: the mechanic rebases `-full` onto it. Feedback that changes the Design: name the built-ahead Tasks it hits, the user says rebuild or drop.
+    - A Task's Predecessors close: step 2 cuts its branch from `origin/<default>` and the mechanic cherry-picks its commits from `-full` (resolves conflicts, re-runs the checks), then step 4 on. Done when every Task is cut: delete `-full` and its worktree.
+11. **Wait**: run `hitch-pr wait <pr-id>...` in the background on every open PR. It exits on any status, draft, vote or comment change. Then, per changed PR:
     - New comments from others: one line each, plus a proposed reply or fix. Post and push nothing without the user's OK. Resolve threads only as in `hitch-clerk`: `fixed` once the fix is pushed, `wontFix` with the reason. A reply alone leaves the thread open.
     - Then `hitch-pr gate <pr>`:
       - READY (someone else approved with 10, no negative vote, no unaddressed thread, no conflicts): complete the PR as in `hitch-clerk`. The user's approval of the workflow covers this. No need to ask.
       - BLOCKED: show the blockers unless they're only "no approval yet", and keep waiting.
-    - `completed`: **after-merge check**, a smoke test of what was merged, nothing more.
-      1. Wait for the pipeline run of the merge commit (`lastMergeCommit` in `az repos pr show`) on `<default>` to deploy to the shared dev environment: `az pipelines runs list --branch <default> --top 10`, then `az pipelines runs show --id <run>`.
-      2. Tell the mechanic: "run the dev checks against shared dev". It sends the input, reads the result and cleans up. It deploys, configures and fixes nothing.
-      3. Pass: close the Task as in `hitch-clerk`, release the dev namespace, `git worktree remove <path>`, `git branch -d <branch>` (never force). Recompute the frontier and go to step 1.
-      4. Fail, or the check needed setup: that's something the PR forgot. Report it, and the user decides: a follow-up Task or a revert. The Task stays open.
+    - `completed`: **After merge** as in `hitch-clerk`. Pass: close the Task, release the dev namespace, `git worktree remove <path>`, `git branch -d <branch>` (never force). Recompute the frontier and go to step 1.
     - Restart the wait with the PRs still open.
     - A user message cuts the wait short: check the PRs right away.
-11. **Done**: once every Task is `Closed`, close the Story as in `hitch-clerk`, run `hitch-janitor` with the Story ID and the repo path, and report its findings.
+12. **Done**: once every Task is `Closed`, close the Story as in `hitch-clerk`, run `hitch-janitor` with the Story ID and the repo path, and report its findings.

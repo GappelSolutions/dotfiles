@@ -1,7 +1,7 @@
 ---
 name: hitch-duck
 description: Plan a User Story by grilling the user. Blind code research, a decision-tree interview that challenges one-way-door decisions, then the Design on the Story and one Task per vertical slice in Azure DevOps for hitch-tower to execute.
-argument-hint: "[story-id | task-id | feature-id | free text]"
+argument-hint: "[mini | ghost] [story-id | task-id | feature-id | free text]"
 disable-model-invocation: true
 ---
 
@@ -18,6 +18,14 @@ Apply these to every message and every ticket.
 - No bloat: keywords, bullets, one line per fact. No preamble, no restating the user, no closing recap.
 - Sketches beat prose: contract, DDL + the query that uses it, type signature, call tree. ≤10 lines each.
 - `#flag <note>` from the user marks a moment for `hitch-inspector`. Reply `noted` and carry on.
+
+## Mini and ghost
+
+For ad hoc work, first word of the input:
+- `mini`: no grill, no scouts, no Design. One Story (story line, or a bug's repro → expected vs actual; ACs) with one Task, for tracking. Ask one round only if the story line or ACs aren't clear from the input. Then the Azure gate in [SLICE.md](SLICE.md); next step `/hitch-tower <task-id>`, or build it here and `/hitch-clerk <task-id>`.
+- `ghost`: the same, but nothing goes to Azure. Show the story line, ACs and checks as the brief; next step `/hitch-tower ghost`, or build it here and `/hitch-clerk ghost`.
+
+Everything below is the full duck.
 
 ## Start
 

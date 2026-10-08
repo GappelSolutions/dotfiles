@@ -20,6 +20,8 @@ cd <repo>/secrets && agenix -i /home/cgpp/.age/master.key -d <name>.age
 
 `agenix` must run from the directory holding `secrets.nix`, and the argument is the filename exactly as keyed there — not a path.
 
+Personal credentials (Proxmox root password, PATs, SSH keys, pgpass, …) live in `~/dev/misc/dotfiles/nix/secrets/`; its `secrets.nix` comments say which host each one is for. Before telling me you lack access to a machine or service, check there.
+
 # Playwright
 
 Only use when the user asks for a browser check, or nothing else can verify the behavior — not as a default "let's confirm it works" step. Never run `playwright install` (browsers are provided system-wide, download is disabled on purpose).

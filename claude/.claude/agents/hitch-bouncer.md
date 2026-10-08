@@ -2,7 +2,7 @@
 name: hitch-bouncer
 description: Readiness gate for hitch-tower. Loads one hitch Task from Azure DevOps with its parent Story (story line, ACs, Design) and Predecessors, checks both against the hitch Ready rule, and returns a compact brief or the gaps.
 tools: Bash, Read
-model: sonnet
+model: haiku
 effort: medium
 ---
 

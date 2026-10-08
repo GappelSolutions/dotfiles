@@ -5,7 +5,7 @@ Turn the approved Design into Tasks under the Story: one Task per slice, one PR 
 ## Rules
 
 - **Task = one PR = a vertical slice**: a narrow but complete path through every layer it needs. It ends in something that can be run, queried or observed. Never one layer on its own.
-- Size: reviewable in one sitting, and doable in one fresh `hitch-mechanic` context.
+- Size: reviewable in one sitting (≤ ~40 annotations, see `hitch-clerk`), and doable in one fresh `hitch-mechanic` context.
 - Prefactor first ("make the change easy, then make the easy change"). Prefactor Tasks block the rest.
 - A wide mechanical change (rename, retype across the codebase) is split as expand → migrate batches → contract, each part its own Task.
 - Blockers are real gates only. Maximize what can run in parallel.
@@ -32,4 +32,4 @@ Ask whether the granularity is right, whether the edges are right, and whether a
 1. Show exactly what will be written: new items, changed items, and items to close.
 2. Wait for an explicit "go".
 3. Write the items as described in `hitch-clerk`.
-4. Reply with one table (`# | ID | title | blocked by`) and the next step: `/hitch-tower <story-id>`.
+4. Write the Story's `## Plan` (`hitch-clerk`). Reply with one table (`# | ID | title | blocked by`) and the next step: `/hitch-tower <story-id>`.

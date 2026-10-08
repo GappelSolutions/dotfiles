@@ -25,6 +25,7 @@ project=$(az devops configure -l | sed -n 's/^project = //p')
 - Area: copy it from the parent or siblings.
 - Iteration: don't set it. Sprint planning is done by humans.
 - Tags: one component tag, reused from the siblings. Never invent one.
+- Assignee: every Story and Task hitch creates, starts or publishes gets the user if it's unassigned. Someone else holds it: ask, never reassign.
 - State: new items start as `New`. Never delete. Close obsolete items (`Removed`) only with the user's OK.
 - Lifecycle, set by hitch-tower. Nothing moves on its own: completing a PR doesn't change any state. `Resolved` isn't used.
 
@@ -41,17 +42,17 @@ project=$(az devops configure -l | sed -n 's/^project = //p')
   az boards work-item update --id <id> --state Active --assigned-to "$me"
   az boards work-item update --id <id> --state Closed
   ```
-  Don't reassign an item someone else already holds: ask.
-- Taskboard column: separate from the state, per team, and only for a Task in a sprint. Team: the project's default team if its area paths cover the Task's area, else the team whose area paths do. Column: the one whose name contains "review" (e.g. `Code Review`, `In Review`). Task without a sprint, or no such column: skip and say so.
+- Taskboard column: separate from the state, and only for a Task in a sprint. Every team keeps its own taskboard, with its own columns and its own column per Task, so set it on **every** team whose area paths cover the Task's area (equal, or a parent with `includeChildren`), not just one: a parent team (e.g. the project's default team) and the team that owns the area both show the Task. Column per team: the one whose name contains "review" (e.g. `Code Review`, `In Review`). Then read each board back: a Task not in that column is a failure to report, not a "please check". Task without a sprint, or no team with such a column: skip and say so.
 
   ```bash
   a=(-s -u ":$AZURE_DEVOPS_EXT_PAT")
-  team=$(curl "${a[@]}" "$org/_apis/projects/$project?api-version=7.1" | jq -r .defaultTeam.id)
+  curl "${a[@]}" "$org/_apis/projects/$project/teams?api-version=7.1"                             # every team
   curl "${a[@]}" "$org/$project/$team/_apis/work/teamsettings/teamfieldvalues?api-version=7.1"     # its area paths
   curl "${a[@]}" "$org/$project/$team/_apis/work/taskboardcolumns?api-version=7.1-preview.1"       # its columns
   curl "${a[@]}" "$org/$project/$team/_apis/work/teamsettings/iterations?api-version=7.1"          # ID of the Task's IterationPath
   curl "${a[@]}" -H 'Content-Type: application/json' -X PATCH -d '{"newColumn": "<column>"}' \
     "$org/$project/$team/_apis/work/taskboardworkitems/<iteration-id>/<task-id>?api-version=7.1-preview.1"
+  curl "${a[@]}" "$org/$project/$team/_apis/work/taskboardworkitems/<iteration-id>?api-version=7.1-preview.1"  # read back
   ```
 - Colleagues read these items, so write plain work items: no agent scaffolding, no bloat. Nothing they can't open: no refs to local ADRs or `~/.hitch/` files, in work items, PRs or annotations.
 
@@ -76,7 +77,28 @@ A Story:
   …
   ```
   ````
-  The role is someone who uses or runs the system (an operator, a meter admin), never "developer".
+  The role is someone who uses or runs the system (an operator, a meter admin), never "developer". A bug: repro → expected vs actual instead of the story line.
+- **Plan** (more than one Task): a `## Plan` section after the Design with the split as a rendered diagram. hitch-tower redraws it on every Task state change. Azure renders Mermaid only in wikis, so render it locally and attach the PNG. Source and PNG per step in `~/.hitch/<repo>/plan/<story-id>/<NN>.{mmd,png}`, `NN` counting up, never committed.
+  ```mermaid
+  graph LR
+    subgraph S["#101 Import meter reads"]
+      direction LR
+      T201["#201 Add reads table<br/>PR 2301"]:::done --> T202["#202 Ingest reads<br/>PR 2310"]:::review
+      T201 --> T203["#203 Reads endpoint"]:::build
+      T202 & T203 --> T204["#204 Reads tile"]:::todo
+    end
+    classDef done fill:#d3f9d8,stroke:#2b8a3e
+    classDef review fill:#fff3bf,stroke:#e67700
+    classDef build fill:#d0ebff,stroke:#1971c2
+    classDef todo fill:#f1f3f5,stroke:#868e96
+  ```
+  Arrow: blocks. `done` closed · `review` PR in review · `build` in progress · `todo` not started.
+  ```bash
+  mmdc -i <NN>.mmd -o <NN>.png -s 2 -b white
+  curl -s -u ":$AZURE_DEVOPS_EXT_PAT" -H 'Content-Type: application/octet-stream' --data-binary @<NN>.png \
+    "$org/$project/_apis/wit/attachments?fileName=plan-<NN>.png&api-version=7.1" | jq -r .url
+  ```
+  Then PATCH the Story: an `AttachedFile` relation to that URL, and `![Plan](<url>)` as the `## Plan` section.
 - `Acceptance Criteria` field: bullets of observable behavior. Tasks have no such field.
 
 A Task:
@@ -86,11 +108,12 @@ A Task:
   <1–2 lines: what works after this PR>
   - auto: `<command>`
   - dev: <input to send> → <what to read back> · cleanup: <what the check leaves behind>
+  - after: <what must happen once it's merged, e.g. run a job, set a flag, tell a team>   (only if any)
   ```
   No steps: the mechanic plans its own commits. The dev check runs against any deployed environment as is: it sends input and reads results, and never deploys or configures anything. A prefactor without behavior change: `dev: none, no behavior change`.
 
 **Ready** means (checked by `hitch-bouncer`, per Task):
-- Story: an "As a … I want … so that …" line with a real role, acceptance criteria, a `## Design`.
+- Story: an "As a … I want … so that …" line with a real role (or a bug's repro), acceptance criteria, a `## Design`. A mini Story (exactly one Task) needs no Design.
 - Task: the scope line, checks, every Predecessor `Closed`.
 
 ## Read
@@ -148,6 +171,8 @@ az repos pr list --status completed --top 5 --query '[].[title, completionOption
   ````
   <one line: what works after this PR>
 
+  ![Plan](<attachment url>)   <the Story's current Plan PNG, uploaded to the PR as plan-<NN>.png; only if the Story has one>
+
   ```text
   <sketch, only if the change spans components: call tree, file tree or data flow, `diff` block if the shape exists; only what matters>
   ```
@@ -163,7 +188,7 @@ az repos pr list --status completed --top 5 --query '[].[title, completionOption
   ````
   One-way: hard to walk back, e.g. a migration, deleted data, a published contract. Blast radius: a few words, e.g. `consumers of <topic>`, `none outside <component>`.
   URL: on every PR whose branch runs on a dev namespace, bare. Screenshot: only for a change a user sees in the UI. It is a PR attachment, so it's uploaded after the PR exists, then the description is updated.
-- Annotations: one thread per meaningful hunk, one sentence (what changed + intent), `Autogenerated` on generated files. They stay open: the author never resolves their own annotations.
+- Annotations: the thinking a reviewer can't read off the code. One sentence each (what changed + intent), only where the intent, a trade-off or a non-obvious why needs it. A change repeated across files: one, on its first hunk (`same in <n> files`). None on trivial, mechanical or self-explaining hunks. `Autogenerated` once per generated file. Aim for 20–40 per PR. Needing more than ~40 means the PR is too wide: say so, don't annotate it all. They stay open: the author never resolves their own annotations.
 
 ```bash
 az repos pr create --draft --repository <repo> --source-branch <branch> --target-branch <default> \
@@ -196,5 +221,18 @@ A thread with a colleague's comment is resolved only when the code shows it:
 - `fixed`: the fix is pushed, and the reply names the commit.
 - `wontFix`: the reply explains why not.
 - A reply that only answers or asks leaves it `active`. The colleague resolves it, or asks for a change.
+
+## After merge
+
+A PR is done when what it merged works, not when it's completed. Steps 1–2 go to a `hitch-gofer` (merge commit, dev check, `<default>`); you do step 3. Report one line each:
+1. **Pipelines**: every run of the merge commit (`lastMergeCommit` in `az repos pr show`), until each finishes. A failed run: its failing step and log tail.
+   ```bash
+   az pipelines runs list --branch <default> --top 20 --query "[?sourceVersion=='<sha>']" -o json
+   az pipelines runs show --id <run>
+   ```
+2. **Dev check** against the shared dev environment the default branch deploys to: send the input, read the result, clean up. Deploy, configure and fix nothing: a check that needs any of that is something the PR forgot.
+3. **After items** from the Task: do what's read-only or the user already approved, list the rest for the user.
+
+Fail: report it, the user decides (follow-up Task or revert). The Task stays open.
 
 Votes: 10 approved, 5 approved with suggestions, 0 none, -5 waiting for author, -10 rejected.
