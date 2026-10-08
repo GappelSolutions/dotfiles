@@ -10,6 +10,12 @@
       owner = "cgpp";
       mode = "600";
     };
+    pgpass = {
+      file = ../../secrets/pgpass.age;
+      path = "/home/cgpp/.pgpass";
+      owner = "cgpp";
+      mode = "600";
+    };
     # Work config, kept out of this public repo
     work-zsh = {
       file = ../../secrets/work-zsh.age;
