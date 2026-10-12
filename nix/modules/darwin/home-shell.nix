@@ -52,6 +52,7 @@
       dcd = "podman-compose down";
       ld = "lazydocker";
       lg = "lazygit";
+      "2fa" = "cotp";
 
       godot = "godot-mono";
       godot4 = "godot-mono";

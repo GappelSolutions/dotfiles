@@ -38,6 +38,7 @@ in
     btop
     bottom
     lazydocker
+    cotp # TOTP authenticator TUI (alias 2fa)
 
     zellij
     tmux

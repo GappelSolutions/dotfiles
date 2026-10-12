@@ -10,6 +10,7 @@
       lla = "eza -al --icons=auto";
       lta = "eza -a --tree --level=1 --icons=auto";
       lg = "lazygit";
+      "2fa" = "cotp";
       t3c = "t3-connect connect";
       t3d = "t3-connect disconnect";
       t3s = "t3-connect status";

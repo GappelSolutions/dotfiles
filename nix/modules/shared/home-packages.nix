@@ -90,6 +90,7 @@ in
     openbao
     k9s
     tealdeer
+    cotp # TOTP authenticator TUI (alias 2fa)
   ]);
 
   home.sessionVariables.DOTNET_ROOT = "${dotnet}/share/dotnet";
