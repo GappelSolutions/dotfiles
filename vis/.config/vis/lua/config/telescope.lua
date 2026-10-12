@@ -70,12 +70,9 @@ function M.pick(opts)
 end
 
 -- files as nvim's telescope path_display shows them, `name (dir)`, after their devicon
-local cwd = os.getenv('PWD') or ''
 local dimmed = M.fg('#6b7089')
 local function entry(path)
-	if path:sub(1, #cwd + 1) == cwd .. '/' then
-		path = path:sub(#cwd + 2)
-	end
+	path = util.relative(path)
 	local dir, name = path:match('^(.*)/([^/]*)$')
 	local icon = icons.path(path)
 	return M.fg(icon[2]) .. icon[1] .. '\27[0m ' .. (name or path) .. ' ' .. dimmed .. '(' .. (dir or '.') .. ')\27[0m'
@@ -95,15 +92,7 @@ local function pick_file(title, paths)
 	end
 end
 
-local function lines_of(command)
-	local p = io.popen(command)
-	local lines = {}
-	for line in p:lines() do
-		lines[#lines + 1] = line
-	end
-	p:close()
-	return lines
-end
+local lines_of = util.lines_of
 
 local last
 -- remembered for M.resume

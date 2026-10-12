@@ -1,5 +1,6 @@
 -- nvim/.config/nvim/lua/config/lualine.lua
-local chars = require('util').chars
+local util = require('util')
+local chars = util.chars
 local icons = require('icons')
 local crlf = require('config.crlf')
 local git = require('config.git')
@@ -23,7 +24,6 @@ local modes = {
 	[vis.modes.VISUAL_LINE] = { 'V-LINE', '#a093c7' },
 	[vis.modes.REPLACE] = { 'REPLACE', '#e27878' },
 }
-local cwd = os.getenv('PWD') or ''
 
 local function width(s)
 	return select(2, s:gsub('[^\128-\191]', ''))
@@ -71,10 +71,7 @@ end
 
 vis.events.subscribe(vis.events.WIN_STATUS, function(win)
 	local file, sel = win.file, win.selection
-	local path = file.path or '[No Name]'
-	if path:sub(1, #cwd + 1) == cwd .. '/' then
-		path = path:sub(#cwd + 2)
-	end
+	local path = file.path and util.relative(file.path) or '[No Name]'
 	local modified = file.modified and ' ●' or ''
 	if win ~= vis.win then
 		win:status(' ' .. path .. modified, sel.line .. ':' .. sel.col .. ' ')

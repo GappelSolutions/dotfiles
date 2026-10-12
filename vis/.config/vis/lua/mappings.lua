@@ -8,6 +8,7 @@ local clipboard = require('config.clipboard')
 local jumplist = require('config.jumplist')
 local telescope = require('config.telescope')
 local yazi = require('config.yazi')
+local worktree = require('config.worktree')
 
 local n, i, v, cmd = util.n, util.i, util.v, util.cmd
 local function map(modes, lhs, rhs)
@@ -77,6 +78,7 @@ map(n, ' gg', git.lazygit)
 map(n, ' gh', cmd('!LESS=R git -c pager.diff="delta --paging=always" diff -- "$vis_filepath"'))
 map(n, ' gb', cmd('!LESS=R git -c pager.blame="delta --paging=always" blame -- "$vis_filepath"'))
 map(n, ' gf', cmd('!lazygit -f "$vis_filepath"'))
+map(n, ' o', worktree.pick)
 
 -- LSP Mappings
 map(n, ' pe', diagnostics.pick)
