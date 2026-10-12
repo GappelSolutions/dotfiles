@@ -1,6 +1,6 @@
 # /hitch-clerk: publish
 
-Publish a branch the user built themselves as a PR, the hitch way: the description, annotations and work-item links from `SKILL.md`. No review crew, no dev deploy.
+Publish a branch the user built themselves as a PR, the hitch way: the description, annotations and work-item links from `SKILL.md`. No dev deploy. The review is `hitch-jury`'s, every time.
 
 Input: `[task-id | story-id | ghost] [branch]`, all optional. `ghost` (or a `/hitch-duck ghost` earlier in this session): no work item, don't ask.
 
@@ -23,9 +23,8 @@ Input: `[task-id | story-id | ghost] [branch]`, all optional. `ghost` (or a `/hi
    git push -u origin <branch>                    # never force; rejected: report and ask
    az repos pr create --draft ...                 # as in PR, --work-items <task-id> <story-id>
    ~/.claude/skills/hitch-tower/hitch-pr annotate <pr> annotations.tsv
-   az repos pr update --id <pr> --draft false     # only after the annotations: reviewers get notified here
    ```
-   The user says `draft`: skip the last line.
+   Then `hitch-jury <pr>`, at the tier it picks, with no other review agents: your own PR, so it applies every fix, pushes and syncs the description and annotations. Its Open items: ask before publishing. Then `az repos pr update --id <pr> --draft false` (reviewers get notified here). The user says `draft`: skip that.
 6. **Sync** (the PR exists, e.g. after a push): push unpushed commits (never force). Re-read the diff, then propose in one block: the new description, and the annotations to edit, delete and add, as in **PR**. Only your own annotation threads. Apply on the user's OK.
 7. **States**, as in the lifecycle table, and only if they aren't there yet: Task and Story `New` → `Active`, assigned to the user (someone else holds it: ask). Published: the Task to the taskboard's review column. No Task: the Story alone, no column.
 8. **Report**:

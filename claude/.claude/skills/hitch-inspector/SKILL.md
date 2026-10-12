@@ -34,7 +34,7 @@ Output: no bloat. Every claim cites a ref (`<file-key>:<line>`).
    - Outcome: their comments, pushes after publish, negative votes, publish→approve.
    - Your load: corrections + redos + avoidable, interrupts, draft→publish.
    - Comments: added per PR, over budget, tagged (`docstring→banned`, `history`, `banner`, ...) and `[-]` that fail the CODE.md test anyway.
-   - Reviews: referee fixes, dropped (skeptic false positives), found by `A+B`, `A` or `B` alone, and `referee` alone.
+   - Reviews: runs per tier (`none`/`one`/`full`, and reruns), fixes, dropped (skeptic false positives); at `full` found by `A+B`, `A` or `B` alone, and `referee` alone.
    - Cost: agent work time, main-session work time, $, compactions.
    - Friction: tool error rate, loops, error streaks, slow calls, rework files, denials.
 6. **Report**:
@@ -47,8 +47,8 @@ Output: no bloat. Every claim cites a ref (`<file-key>:<line>`).
    **No-ops**: hitch instructions the transcripts never show changing behavior: path:line, proposed deletion
    **Proposed edits**: <file>: <change>
    ```
-   Read the review metrics like this: a high `A` or `B` alone justifies two skeptics. `A+B` near 100% means one would do. A high `referee` alone means the lens misses things. A high dropped means noise.
-   Comments: every one on a tower PR that fails CODE.md got past the mechanic, both skeptics and the referee. Find which one saw it and let it through.
+   Read the review metrics like this: their comments on a `none` or `one` PR that a `full` review would have caught mean the tier triggers are too loose; `full` runs with few fixes mean too tight. A high `A` or `B` alone justifies two skeptics. `A+B` near 100% means one would do. A high `referee` alone means the lens misses things. A high dropped means noise.
+   Comments: every one on a tower PR that fails CODE.md got past the mechanic and the review at its tier. Find which one saw it and let it through.
    Model trial: skeptic A runs on opus, B on sonnet. Compare `A` alone vs `B` alone and dropped `A` vs `B`. B about equal to A: propose sonnet for both. B clearly lower: propose opus for B again.
 7. **Save** the scorecard and the pitfalls (not the raw extract) to `~/.hitch/inspections/<until>.md`. It's the next baseline.
 8. **Edits**: only on the user's OK. Make them in the dotfiles repo (`claude/.claude/...`), never in the deployed files.
