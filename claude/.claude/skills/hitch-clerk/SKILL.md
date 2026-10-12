@@ -23,7 +23,7 @@ project=$(az devops configure -l | sed -n 's/^project = //p')
 - **Blocking**: if Task B is blocked by A, B gets a `Predecessor` link to A.
 - **PR**: links to its Task and its Story (`az repos pr create --work-items <task-id> <story-id>`), never to a Feature. Tower completes it with `--transition-work-items false`, so a merge never closes the Story.
 - Area: copy it from the parent or siblings.
-- Iteration: don't set it. Sprint planning is done by humans.
+- Iteration: every item hitch creates goes into the current sprint of the team owning its area (`az boards iteration team list --team <team> --timeframe current`), never the backlog, unless the user names another sprint. No current sprint: ask.
 - Tags: one component tag, reused from the siblings. Never invent one.
 - Assignee: every Story and Task hitch creates, starts or publishes gets the user if it's unassigned. Someone else holds it: ask, never reassign.
 - State: new items start as `New`. Never delete. Close obsolete items (`Removed`) only with the user's OK.
@@ -80,25 +80,38 @@ A Story:
   The role is someone who uses or runs the system (an operator, a meter admin), never "developer". A bug: repro → expected vs actual instead of the story line.
 - **Plan** (more than one Task): a `## Plan` section after the Design with the split as a rendered diagram. hitch-tower redraws it on every Task state change. Azure renders Mermaid only in wikis, so render it locally and attach the PNG. Source and PNG per step in `~/.hitch/<repo>/plan/<story-id>/<NN>.{mmd,png}`, `NN` counting up, never committed.
   ```mermaid
+  ---
+  config:
+    layout: elk
+    theme: base
+    flowchart:
+      wrappingWidth: 260
+    themeVariables:
+      lineColor: '#868e96'
+      clusterBkg: 'rgba(134,142,150,0.08)'
+      clusterBorder: '#868e96'
+      titleColor: '#868e96'
+      primaryTextColor: '#212529'
+  ---
   graph LR
     subgraph S["#101 Import meter reads"]
-      direction LR
       T201["#201 Add reads table<br/>PR 2301"]:::done --> T202["#202 Ingest reads<br/>PR 2310"]:::review
       T201 --> T203["#203 Reads endpoint"]:::build
       T202 & T203 --> T204["#204 Reads tile"]:::todo
     end
-    classDef done fill:#d3f9d8,stroke:#2b8a3e
-    classDef review fill:#fff3bf,stroke:#e67700
-    classDef build fill:#d0ebff,stroke:#1971c2
-    classDef todo fill:#f1f3f5,stroke:#868e96
+    classDef done fill:#d3f9d8,stroke:#2b8a3e,color:#212529
+    classDef review fill:#fff3bf,stroke:#e67700,color:#212529
+    classDef build fill:#d0ebff,stroke:#1971c2,color:#212529
+    classDef todo fill:#f1f3f5,stroke:#868e96,color:#212529
   ```
-  Arrow: blocks. `done` closed · `review` PR in review · `build` in progress · `todo` not started.
+  Arrow: blocks, direct ones only. Label: the Task's full title and its PRs (`merged` while the Task is still open). A Task of another Story at either end: in its own box, labelled only `#<story-id>`. `done` closed · `review` PR in review · `build` in progress · `todo` not started.
+  Shape: wider than tall, at most 5:1 (the PNG's width/height). Outside that: change `wrappingWidth` (lower = narrower) and render again. Transparent and grey lines: readable on Azure's light and dark theme.
   ```bash
-  mmdc -i <NN>.mmd -o <NN>.png -s 2 -b white
+  mmdc -i <NN>.mmd -o <NN>.png -w 1400 -s 2 -b transparent
   curl -s -u ":$AZURE_DEVOPS_EXT_PAT" -H 'Content-Type: application/octet-stream' --data-binary @<NN>.png \
     "$org/$project/_apis/wit/attachments?fileName=plan-<NN>.png&api-version=7.1" | jq -r .url
   ```
-  Then PATCH the Story: an `AttachedFile` relation to that URL, and `![Plan](<url>)` as the `## Plan` section.
+  Then PATCH the Story: `![Plan](<url>)` as the `## Plan` section, an `AttachedFile` relation to that URL, and remove the previous Plan's relation. Open PRs swap their image the same way, as a PR attachment (**PR**).
 - `Acceptance Criteria` field: bullets of observable behavior. Tasks have no such field.
 
 A Task:
@@ -174,7 +187,7 @@ az repos pr list --status completed --top 5 --query '[].[title, completionOption
   ![Plan](<attachment url>)   <the Story's current Plan PNG, uploaded to the PR as plan-<NN>.png; only if the Story has one>
 
   ```text
-  <sketch, only if the change spans components: call tree, file tree or data flow, `diff` block if the shape exists; only what matters>
+  <sketch, only if the change spans components: call tree, file tree or data flow, `diff` block if the shape exists; only what matters; a rendered diagram instead when the text would get ugly, see below>
   ```
 
   **Changes**
@@ -187,6 +200,7 @@ az repos pr list --status completed --top 5 --query '[].[title, completionOption
   ![<what it shows>](<attachment url>)
   ````
   One-way: hard to walk back, e.g. a migration, deleted data, a published contract. Blast radius: a few words, e.g. `consumers of <topic>`, `none outside <component>`.
+  Sketch as a diagram: when the text version needs drawn boxes, long arrow runs or side columns of notes (a flow with branches, a message sequence, a state machine), draw it in Mermaid instead (`flowchart`, `sequenceDiagram`, `stateDiagram-v2`), with the Plan's front matter and `mmdc` line, uploaded like the screenshot and embedded in place of the text block. One or two per PR or Design, never for what a few plain lines show. Source and PNG in `~/.hitch/<repo>/plan/<story-id>/<task-id>-<name>.{mmd,png}`, never committed. A Design's diagram is a work-item attachment, like the Plan.
   URL: on every PR whose branch runs on a dev namespace, bare. Screenshot: only for a change a user sees in the UI. It is a PR attachment, so it's uploaded after the PR exists, then the description is updated.
 - Annotations: the thinking a reviewer can't read off the code. One sentence each (what changed + intent), only where the intent, a trade-off or a non-obvious why needs it. A change repeated across files: one, on its first hunk (`same in <n> files`). None on trivial, mechanical or self-explaining hunks. `Autogenerated` once per generated file. Aim for 20–40 per PR. Needing more than ~40 means the PR is too wide: say so, don't annotate it all. They stay open: the author never resolves their own annotations.
 

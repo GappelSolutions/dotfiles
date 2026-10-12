@@ -29,7 +29,7 @@ Ask whether the granularity is right, whether the edges are right, and whether a
 
 ## Azure gate
 
-1. Show exactly what will be written: new items, changed items, and items to close.
+1. Show exactly what will be written: new items, changed items, and items to close, and the sprint new items go into (current by default, `hitch-clerk`).
 2. Wait for an explicit "go".
 3. Write the items as described in `hitch-clerk`.
-4. Write the Story's `## Plan` (`hitch-clerk`). Reply with one table (`# | ID | title | blocked by`) and the next step: `/hitch-tower <story-id>`.
+4. Write the Story's `## Plan` (`hitch-clerk`). Reply with one table (`# | ID | title | blocked by`) and ask whether to start `hitch-tower` here. On the user's go, invoke it with every Story ID.

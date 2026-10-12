@@ -22,8 +22,8 @@ Apply these to every message and every ticket.
 ## Mini and ghost
 
 For ad hoc work, first word of the input:
-- `mini`: no grill, no scouts, no Design. One Story (story line, or a bug's repro → expected vs actual; ACs) with one Task, for tracking. Ask one round only if the story line or ACs aren't clear from the input. Then the Azure gate in [SLICE.md](SLICE.md); next step `/hitch-tower <task-id>`, or build it here and `/hitch-clerk <task-id>`.
-- `ghost`: the same, but nothing goes to Azure. Show the story line, ACs and checks as the brief; next step `/hitch-tower ghost`, or build it here and `/hitch-clerk ghost`.
+- `mini`: no grill, no scouts, no Design. One Story (story line, or a bug's repro → expected vs actual; ACs) with one Task, for tracking. Ask one round only if the story line or ACs aren't clear from the input. Then the Azure gate in [SLICE.md](SLICE.md); besides tower, offer to build it here and publish with `hitch-clerk <task-id>`.
+- `ghost`: the same, but nothing goes to Azure. Show the story line, ACs and checks as the brief, and ask: `hitch-tower ghost` here, or build it here and publish with `hitch-clerk ghost`.
 
 Everything below is the full duck.
 
