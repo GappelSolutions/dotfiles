@@ -60,17 +60,6 @@
     "mode": "custom",
     "customInstructions": "never mention the ai/model like\n\n```\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n```\n\ncommits are always in the same \n\n```\n#REF_ID chore/feat/bug(DOMAIN): DESCRIPTION \n```\n\nformat. #REF_ID only if given, don't ask for it"
   },
-  "providers": {
-    "cursor": {
-      "enabled": false
-    },
-    "grok": {
-      "enabled": false
-    },
-    "opencode": {
-      "enabled": false
-    }
-  },
   "providerInstances": {
     "codex": {
       "driver": "codex",
