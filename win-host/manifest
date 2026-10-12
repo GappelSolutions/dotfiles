@@ -24,9 +24,11 @@ file    vim/.vimrc                                          _vimrc
 
 # yazi on Windows: drive/dir jumps (g + lowercase letter) and `z` = fzf over fidx's prebuilt file
 # lists of the network drives. fidx.ps1 crawls them (task: win-host/register-fidx.ps1); the lists
-# stay local. Win+E opening yazi instead of Explorer: win-host/register-yazi-wine.ps1.
+# stay local. Win+E opening yazi instead of Explorer: win-host/register-yazi-wine.ps1. The drive
+# jumps go through netcd, which reconnects mappings Windows didn't restore at logon (so does fidx.ps1).
 file    win-host/AppData/Roaming/yazi/config/keymap.toml    AppData/Roaming/yazi/config/keymap.toml
 dir     win-host/AppData/Roaming/yazi/config/plugins/fidx.yazi  AppData/Roaming/yazi/config/plugins/fidx.yazi
+dir     win-host/AppData/Roaming/yazi/config/plugins/netcd.yazi  AppData/Roaming/yazi/config/plugins/netcd.yazi
 file    win-host/AppData/Local/fidx/fidx.ps1                AppData/Local/fidx/fidx.ps1
 # yazi as a full-width tile (top third) for Win+E and Raycast; as the picker for any app's
 # Open/Save dialog (alt+e in whkdrc); Y / ctrl+v in yazi for the Windows clipboard

@@ -4,38 +4,39 @@ run  = "plugin fidx"
 desc = "fzf via prebuilt drive index (falls back to plain fzf)"
 
 # g + lowercase only. yazi's defaults keep gg gh gc gd gf g<Space>, so C: is gw (Windows) and L: is
-# ga, as gl is the WSL dev dir.
+# ga, as gl is the WSL dev dir. The network drives go through plugins/netcd.yazi: it reconnects a
+# mapping Windows didn't restore at logon (Explorer does that on access, yazi doesn't).
 [[mgr.prepend_keymap]]
 on = [ "g", "w" ]
 run = "cd 'C:\\'"
 desc = "Go to drive C:"
 [[mgr.prepend_keymap]]
 on = [ "g", "a" ]
-run = "cd 'L:\\'"
+run = "plugin netcd 'L:\\'"
 desc = "Go to drive L:"
 [[mgr.prepend_keymap]]
 on = [ "g", "m" ]
-run = "cd 'M:\\'"
+run = "plugin netcd 'M:\\'"
 desc = "Go to drive M:"
 [[mgr.prepend_keymap]]
 on = [ "g", "p" ]
-run = "cd 'P:\\'"
+run = "plugin netcd 'P:\\'"
 desc = "Go to drive P:"
 [[mgr.prepend_keymap]]
 on = [ "g", "t" ]
-run = "cd 'T:\\'"
+run = "plugin netcd 'T:\\'"
 desc = "Go to drive T:"
 [[mgr.prepend_keymap]]
 on = [ "g", "x" ]
-run = "cd 'X:\\'"
+run = "plugin netcd 'X:\\'"
 desc = "Go to drive X:"
 [[mgr.prepend_keymap]]
 on = [ "g", "y" ]
-run = "cd 'Y:\\'"
+run = "plugin netcd 'Y:\\'"
 desc = "Go to drive Y:"
 [[mgr.prepend_keymap]]
 on = [ "g", "z" ]
-run = "cd 'Z:\\'"
+run = "plugin netcd 'Z:\\'"
 desc = "Go to drive Z:"
 
 [[mgr.prepend_keymap]]
@@ -46,7 +47,7 @@ desc = "Go to WSL ~/dev"
 # bookmarks: paths come from user env vars, so work paths stay out of this public repo
 [[mgr.prepend_keymap]]
 on = [ "g", "s" ]
-run = "cd '%YAZI_SPECS%'"
+run = "plugin netcd '%YAZI_SPECS%'"
 desc = "Go to specs (%YAZI_SPECS%)"
 
 # Windows clipboard (plugins/winclip.yazi): Y copies the selection as files (ctrl+v in Teams,

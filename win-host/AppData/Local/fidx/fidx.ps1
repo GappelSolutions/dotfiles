@@ -24,6 +24,16 @@ function Log($msg) {
     Add-Content -LiteralPath $log -Value $line
 }
 
+# A mapping that wasn't reachable at logon (VPN or domain not up yet) stays "Unavailable", without
+# a drive letter, until something reconnects it: Explorer does on access, fd doesn't. Reconnect it
+# the same way (the yazi side: plugins/netcd.yazi).
+function Restore-Drive($d) {
+    $remote = (Get-ItemProperty -LiteralPath "HKCU:\Network\$d" -ErrorAction Ignore).RemotePath
+    if (-not $remote) { return }
+    $out = net use "${d}:" $remote 2>&1
+    Log ("${d}: reconnect to $remote " + $(if ($LASTEXITCODE) { "failed: $out" } else { 'ok' }))
+}
+
 # logon, VPN-connect and interval triggers can fire together: only one crawl at a time
 $mutex = [Threading.Mutex]::new($false, 'Local\fidx')
 if (-not $mutex.WaitOne(0)) { Log 'another fidx run is active, exiting'; return }
@@ -37,6 +47,7 @@ try {
 
         $old = Get-Item -LiteralPath $out -ErrorAction Ignore
         if ($old -and $MaxAgeMinutes -and $old.LastWriteTime -gt (Get-Date).AddMinutes(-$MaxAgeMinutes)) { continue }
+        if (-not (Test-Path -LiteralPath $root)) { Restore-Drive $d }
         if (-not (Test-Path -LiteralPath $root)) { Log "$root not reachable, skipping"; continue }
 
         # --path-separator: fd switches to '/' when MSYSTEM is set (Git Bash), which yazi can't open.
