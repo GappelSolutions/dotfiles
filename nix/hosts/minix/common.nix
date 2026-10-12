@@ -4,6 +4,8 @@ let
   sshKeys = import ../../modules/shared/ssh-keys.nix;
 in
 {
+  imports = [ ../../modules/nixos/nix-gc.nix ];
+
   networking.hostName = "minix";
 
   boot.kernelParams = [ "nomodeset" ];

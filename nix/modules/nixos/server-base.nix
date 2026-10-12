@@ -4,6 +4,8 @@ let
   sshKeys = import ../shared/ssh-keys.nix;
 in
 {
+  imports = [ ./nix-gc.nix ];
+
   nixpkgs.config.allowUnfree = true;
 
   programs.nix-ld.enable = true;

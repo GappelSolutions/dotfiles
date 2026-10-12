@@ -1,2 +1,6 @@
 [wsl2]
 guiApplications=false
+
+[experimental]
+# Shrink VHDs on fstrim so space freed inside WSL returns to C:.
+sparseVhd=true
