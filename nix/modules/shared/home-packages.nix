@@ -6,6 +6,7 @@ let
   oh-my-pi = pkgs.callPackage ../../pkgs/oh-my-pi/package.nix { };
   agent-of-empires = pkgs.callPackage ../../pkgs/agent-of-empires/package.nix { };
   revdiff = pkgs.callPackage ../../pkgs/revdiff/package.nix { };
+  twofa = pkgs.callPackage ../../rust/twofa { };
   rd = pkgs.callPackage ../../pkgs/rd/package.nix {
     inherit (pkgs) coreutils git jujutsu wl-clipboard;
     inherit revdiff;
@@ -27,6 +28,7 @@ in
     agent-of-empires
     revdiff
     rd
+    twofa
     lazyops
     dotnet
     inputs.agenix.packages.${pkgs.stdenv.hostPlatform.system}.default
@@ -90,7 +92,7 @@ in
     openbao
     k9s
     tealdeer
-    cotp # TOTP authenticator TUI (alias 2fa)
+    cotp # TOTP store; `2fa` (rust/twofa) is the picker on top, password cached in the keyring
   ]);
 
   home.sessionVariables.DOTNET_ROOT = "${dotnet}/share/dotnet";

@@ -318,12 +318,6 @@ struct App {
     toast: Option<(String, Instant)>,
 }
 
-enum Action {
-    Continue,
-    Quit,
-    CopyAndQuit(usize),
-}
-
 impl App {
     fn visible(&self) -> Vec<usize> {
         (0..self.entries.len())
@@ -364,10 +358,11 @@ impl App {
         }
     }
 
-    fn key(&mut self, key: KeyEvent) -> Action {
+    /// Handles one key press; true quits. Only `q` (and Ctrl-C) quit, nothing else does.
+    fn key(&mut self, key: KeyEvent) -> bool {
         let ctrl = key.modifiers.contains(KeyModifiers::CONTROL);
-        if ctrl && matches!(key.code, KeyCode::Char('c' | 'd')) {
-            return Action::Quit;
+        if ctrl && key.code == KeyCode::Char('c') {
+            return true;
         }
         if self.searching {
             match key.code {
@@ -375,11 +370,7 @@ impl App {
                     self.searching = false;
                     self.query.clear();
                 }
-                KeyCode::Enter => {
-                    return self
-                        .selected()
-                        .map_or(Action::Continue, Action::CopyAndQuit)
-                }
+                KeyCode::Enter => self.copy_selected(),
                 KeyCode::Backspace => {
                     if self.query.pop().is_none() {
                         self.searching = false;
@@ -396,10 +387,10 @@ impl App {
                 _ => {}
             }
             self.clamp();
-            return Action::Continue;
+            return false;
         }
         match key.code {
-            KeyCode::Char('q') | KeyCode::Esc => return Action::Quit,
+            KeyCode::Char('q') => return true,
             KeyCode::Char('j') | KeyCode::Down | KeyCode::Tab => self.move_by(1),
             KeyCode::Char('k') | KeyCode::Up | KeyCode::BackTab => self.move_by(-1),
             KeyCode::Char('g') | KeyCode::Home => self.list.select(Some(0)),
@@ -408,21 +399,17 @@ impl App {
                 .select(Some(self.visible().len().saturating_sub(1))),
             KeyCode::Char('/') => self.searching = true,
             KeyCode::Char('f') if ctrl => self.searching = true,
-            KeyCode::Char('y') | KeyCode::Char(' ') => self.copy_selected(),
-            KeyCode::Enter => {
-                return self
-                    .selected()
-                    .map_or(Action::Continue, Action::CopyAndQuit)
-            }
+            KeyCode::Enter | KeyCode::Char('y' | ' ') => self.copy_selected(),
             KeyCode::Char(c @ '1'..='9') => {
-                let n = c as usize - '1' as usize;
-                if let Some(&i) = self.visible().get(n) {
-                    return Action::CopyAndQuit(i);
+                let row = c as usize - '1' as usize;
+                if row < self.visible().len() {
+                    self.list.select(Some(row));
+                    self.copy_selected();
                 }
             }
             _ => {}
         }
-        Action::Continue
+        false
     }
 }
 
@@ -594,16 +581,10 @@ fn draw(frame: &mut Frame, app: &mut App) {
                 ]
             };
             let hints = if app.searching {
-                [
-                    hint("⏎", "copy & quit"),
-                    hint("↑↓", "move"),
-                    hint("esc", "clear"),
-                ]
-                .concat()
+                [hint("⏎", "copy"), hint("↑↓", "move"), hint("esc", "clear")].concat()
             } else {
                 [
-                    hint("⏎/1-9", "copy & quit"),
-                    hint("y", "copy"),
+                    hint("⏎/1-9", "copy"),
                     hint("/", "search"),
                     hint("q", "quit"),
                 ]
@@ -615,7 +596,7 @@ fn draw(frame: &mut Frame, app: &mut App) {
     frame.render_widget(Paragraph::new(footer_line), footer);
 }
 
-fn run_tui(terminal: &mut DefaultTerminal, app: &mut App) -> Result<Option<usize>> {
+fn run_tui(terminal: &mut DefaultTerminal, app: &mut App) -> Result<()> {
     loop {
         terminal.draw(|f| draw(f, app))?;
         if !event::poll(Duration::from_millis(250))? {
@@ -625,10 +606,8 @@ fn run_tui(terminal: &mut DefaultTerminal, app: &mut App) -> Result<Option<usize
             if key.kind != KeyEventKind::Press {
                 continue;
             }
-            match app.key(key) {
-                Action::Continue => {}
-                Action::Quit => return Ok(None),
-                Action::CopyAndQuit(i) => return Ok(Some(i)),
+            if app.key(key) {
+                return Ok(());
             }
         }
     }
@@ -648,20 +627,7 @@ fn tui() -> Result<()> {
     let mut terminal = ratatui::init();
     let result = run_tui(&mut terminal, &mut app);
     ratatui::restore();
-
-    if let Some(i) = result? {
-        let e = &app.entries[i];
-        if e.unsupported.is_none() {
-            let code = e.code_at(now());
-            copy(&code);
-            println!(
-                "\x1b[32m✓\x1b[0m copied {} \x1b[1m{}\x1b[0m",
-                e.name(),
-                group(&code)
-            );
-        }
-    }
-    Ok(())
+    result
 }
 
 /// `2fa <cotp subcommand ...>`: cotp with the cached password.
@@ -678,7 +644,7 @@ fn main() {
         None => tui().map(|()| 0),
         Some("-h" | "--help") => {
             println!(
-                "2fa            pick a code (⏎ / 1-9 copy & quit, y copy, / search, q quit)\n\
+                "2fa            pick a code (⏎ / 1-9 copy, / search, q quit)\n\
                  2fa lock       forget the cached password\n\
                  2fa <args>     cotp <args> with the cached password (add, edit, delete, list, ...)"
             );
