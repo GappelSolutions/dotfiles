@@ -34,5 +34,18 @@
       done
       exec vis "$@"
     '')
+
+    # No X/Wayland here, so tools that only know xclip/xsel/wl-copy can't copy (cotp: "Cannot
+    # copy"). This xclip ignores selections and goes to the Windows clipboard via win32yank (clip.exe
+    # mangles UTF-8, see scripts/zellij-copy); -o pastes, anything else copies stdin.
+    (pkgs.writeShellScriptBin "xclip" ''
+      win32yank='/mnt/c/Program Files/Neovim/bin/win32yank.exe'
+      for arg; do
+        case $arg in
+          -o*) exec "$win32yank" -o --lf ;;
+        esac
+      done
+      exec "$win32yank" -i --crlf
+    '')
   ];
 }
