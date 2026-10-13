@@ -27,6 +27,9 @@ in
   # Proxmox root password, pve1 (ers-srvprox-001, 172.25.65.5)
   "pve-root-password.age".publicKeys = [ masterKey ];
 
+  # sudo password of ens-admin on the ensor DNS/DHCP host (simsandbox01, 172.25.64.10)
+  "ensor-dns-admin.age".publicKeys = [ masterKey ];
+
   # Postgres logins, deployed as ~/.pgpass
   "pgpass.age".publicKeys = [ masterKey ];
 
