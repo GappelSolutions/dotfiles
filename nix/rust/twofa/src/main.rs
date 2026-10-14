@@ -111,7 +111,8 @@ fn with_cotp<T>(run: impl Fn(&str) -> Result<Option<T>>) -> Result<T> {
     bail!("giving up after 3 attempts")
 }
 
-fn cotp(pw: &str, args: &[String], capture: bool) -> Result<(i32, Vec<u8>)> {
+/// `stdin` follows the password line, for cotp's own prompts (delete's "[Y,N]").
+fn cotp(pw: &str, args: &[String], capture: bool, stdin: &[u8]) -> Result<(i32, Vec<u8>)> {
     let mut child = Command::new("cotp")
         .arg("--password-stdin")
         .args(args)
@@ -129,9 +130,10 @@ fn cotp(pw: &str, args: &[String], capture: bool) -> Result<(i32, Vec<u8>)> {
         .spawn()
         .context("running cotp")?;
     {
-        let mut stdin = child.stdin.take().unwrap();
-        stdin.write_all(pw.as_bytes())?;
-        stdin.write_all(b"\n")?;
+        let mut pipe = child.stdin.take().unwrap();
+        pipe.write_all(pw.as_bytes())?;
+        pipe.write_all(b"\n")?;
+        pipe.write_all(stdin)?;
     }
     let out = child.wait_with_output()?;
     Ok((out.status.code().unwrap_or(1), out.stdout))
@@ -146,7 +148,7 @@ fn load_entries() -> Result<(Vec<Entry>, Zeroizing<String>)> {
         // export writes the JSON to --path, then "Successfully exported ..." to stdout; with both on
         // the same pipe only the first JSON value is the export.
         let args = ["export", "--otp-uri", "--path", "/dev/stdout"].map(String::from);
-        let (code, out) = cotp(pw, &args, true)?;
+        let (code, out) = cotp(pw, &args, true, b"")?;
         let out = match code {
             0 => Zeroizing::new(out),
             COTP_BAD_PASSWORD => return Ok(None),
@@ -178,7 +180,13 @@ fn load_entries() -> Result<(Vec<Entry>, Zeroizing<String>)> {
 /// `cotp edit --index <n> --label <label>`; cotp exits 0 once the change is persisted.
 fn rename(pw: &str, index: usize, label: &str) -> bool {
     let args = ["edit", "--index", &index.to_string(), "--label", label].map(String::from);
-    matches!(cotp(pw, &args, true), Ok((0, _)))
+    matches!(cotp(pw, &args, true, b""), Ok((0, _)))
+}
+
+/// `cotp delete --index <n>`, answering its confirmation (already given in the TUI).
+fn delete(pw: &str, index: usize) -> bool {
+    let args = ["delete", "--index", &index.to_string()].map(String::from);
+    matches!(cotp(pw, &args, true, b"y\n"), Ok((0, _)))
 }
 
 // ── OTP ─────────────────────────────────────────────────────────────────────────────────────────
@@ -335,6 +343,8 @@ struct App {
     searching: bool,
     /// The new label while renaming the selected entry.
     renaming: Option<String>,
+    /// Asking to confirm deleting the selected entry.
+    deleting: bool,
     list: ListState,
     /// (message, ok, shown at)
     toast: Option<(String, bool, Instant)>,
@@ -405,6 +415,28 @@ impl App {
         self.toast = Some((msg, ok, Instant::now()));
     }
 
+    fn finish_delete(&mut self) {
+        self.deleting = false;
+        let Some(i) = self.selected() else {
+            return;
+        };
+        let index = self.entries[i].index;
+        let name = self.entries[i].name().to_string();
+        let ok = delete(&self.password, index);
+        let msg = if ok {
+            self.entries.remove(i);
+            // cotp's rows after the deleted one move up
+            for e in self.entries.iter_mut().filter(|e| e.index > index) {
+                e.index -= 1;
+            }
+            self.clamp();
+            format!("deleted {name}")
+        } else {
+            format!("deleting {name} failed")
+        };
+        self.toast = Some((msg, ok, Instant::now()));
+    }
+
     /// Handles one key press; true quits. Only `q` (and Ctrl-C) quit, nothing else does.
     fn key(&mut self, key: KeyEvent) -> bool {
         let ctrl = key.modifiers.contains(KeyModifiers::CONTROL);
@@ -420,6 +452,13 @@ impl App {
                 }
                 KeyCode::Char(c) => label.push(c),
                 _ => {}
+            }
+            return false;
+        }
+        if self.deleting {
+            match key.code {
+                KeyCode::Char('y') => self.finish_delete(),
+                _ => self.deleting = false,
             }
             return false;
         }
@@ -460,6 +499,7 @@ impl App {
             KeyCode::Char('f') if ctrl => self.searching = true,
             KeyCode::Enter | KeyCode::Char('y' | ' ') => self.copy_selected(),
             KeyCode::Char('r') => self.start_rename(),
+            KeyCode::Char('d') => self.deleting = self.selected().is_some(),
             KeyCode::Char(c @ '1'..='9') => {
                 let row = c as usize - '1' as usize;
                 if row < self.visible().len() {
@@ -508,8 +548,22 @@ fn draw(frame: &mut Frame, app: &mut App) {
     let remaining = period - t % period;
     let color = countdown_color(remaining);
 
-    // header: title (or rename / search field) left, countdown right
-    let title = if let Some(label) = &app.renaming {
+    // header: title (or delete confirmation / rename / search field) left, countdown right
+    let title = if let (true, Some(e)) = (app.deleting, current) {
+        Line::from(vec![
+            Span::styled("delete ", Style::new().fg(Color::Red).bold()),
+            Span::styled(e.name().to_string(), Style::new().bold()),
+            Span::styled(
+                if e.issuer.is_empty() || e.label.is_empty() {
+                    String::new()
+                } else {
+                    format!(" ({})", e.issuer)
+                },
+                Style::new().fg(DIM),
+            ),
+            Span::styled("?", Style::new().fg(Color::Red).bold()),
+        ])
+    } else if let Some(label) = &app.renaming {
         Line::from(vec![
             Span::styled("rename ", Style::new().fg(ACCENT)),
             Span::raw(label.clone()),
@@ -650,7 +704,9 @@ fn draw(frame: &mut Frame, app: &mut App) {
                     Span::styled(format!(" {d}   "), Style::new().fg(DIM)),
                 ]
             };
-            let hints = if app.renaming.is_some() {
+            let hints = if app.deleting {
+                [hint("y", "delete"), hint("any key", "cancel")].concat()
+            } else if app.renaming.is_some() {
                 [hint("⏎", "save"), hint("esc", "cancel")].concat()
             } else if app.searching {
                 [hint("⏎", "copy"), hint("↑↓", "move"), hint("esc", "clear")].concat()
@@ -659,6 +715,7 @@ fn draw(frame: &mut Frame, app: &mut App) {
                     hint("⏎/1-9", "copy"),
                     hint("/", "search"),
                     hint("r", "rename"),
+                    hint("d", "delete"),
                     hint("q", "quit"),
                 ]
                 .concat()
@@ -694,6 +751,7 @@ fn tui() -> Result<()> {
         query: String::new(),
         searching: false,
         renaming: None,
+        deleting: false,
         list: ListState::default(),
         toast: None,
     };
@@ -708,7 +766,7 @@ fn tui() -> Result<()> {
 /// `2fa <cotp subcommand ...>`: cotp with the cached password.
 fn passthrough(args: &[String]) -> Result<i32> {
     with_cotp(|pw| {
-        let (code, _) = cotp(pw, args, false)?;
+        let (code, _) = cotp(pw, args, false, b"")?;
         Ok((code != COTP_BAD_PASSWORD).then_some(code))
     })
 }
@@ -719,7 +777,7 @@ fn main() {
         None => tui().map(|()| 0),
         Some("-h" | "--help") => {
             println!(
-                "2fa            pick a code (⏎ / 1-9 copy, / search, r rename, q quit)\n\
+                "2fa            pick a code (⏎ / 1-9 copy, / search, r rename, d delete, q quit)\n\
                  2fa lock       forget the cached password\n\
                  2fa <args>     cotp <args> with the cached password (add, edit, delete, list, ...)"
             );
