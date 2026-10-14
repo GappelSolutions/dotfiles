@@ -29,6 +29,18 @@
       owner = "cgpp";
       mode = "600";
     };
+    ensor-gap-env = {
+      file = ../../secrets/ensor-gap-env.age;
+      path = "/home/cgpp/.secrets/ensor/gap.env";
+      owner = "cgpp";
+      mode = "600";
+    };
+    ensor-dashboard-env = {
+      file = ../../secrets/ensor-dashboard-env.age;
+      path = "/home/cgpp/.secrets/ensor/dashboard.env";
+      owner = "cgpp";
+      mode = "600";
+    };
     # Work config, kept out of this public repo
     work-zsh = {
       file = ../../secrets/work-zsh.age;

@@ -30,6 +30,10 @@ in
   # sudo password of ens-admin on the ensor DNS/DHCP host (simsandbox01, 172.25.64.10)
   "ensor-dns-admin.age".publicKeys = [ masterKey ];
 
+  # Copies of Watcher_GDM server/secrets/{gap,dashboard}-env.age; re-copy after rotating there
+  "ensor-gap-env.age".publicKeys = [ masterKey ];
+  "ensor-dashboard-env.age".publicKeys = [ masterKey ];
+
   # Postgres logins, deployed as ~/.pgpass
   "pgpass.age".publicKeys = [ masterKey ];
 
