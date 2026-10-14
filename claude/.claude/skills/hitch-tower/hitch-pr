@@ -49,7 +49,7 @@ wait_prs() {
   while sleep "$interval"; do
     now=$(snapshot "$@") || continue
     if [[ $now != "$before" ]]; then
-      diff <(echo "$before") <(echo "$now") | sed -n 's/^> //p'
+      { diff <(echo "$before") <(echo "$now") || :; } | sed -n 's/^> //p'
       return 0
     fi
   done
