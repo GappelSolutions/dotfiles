@@ -22,7 +22,7 @@ Input: `$ARGUMENTS`
 | agent | does | model · effort |
 |---|---|---|
 | `hitch-bouncer` | loads a Task and its Story from Azure: brief + Ready verdict | haiku · medium |
-| `hitch-mechanic` | builds one Task in its worktree: fixes, dev deploy through a gofer, annotations | opus · high |
+| `hitch-mechanic` | builds one Task in its worktree: fixes, dev deploy through a gofer, annotations | sonnet · high (trial) |
 | `hitch-gofer` | tool-call chains: dev deploy + checks, screenshot (for the mechanic), after-merge pipelines + check | haiku · medium |
 | `hitch-skeptic` | review of a batch: one, or two independently at tier `full` | opus · high · B at `full`: sonnet (trial) |
 | `hitch-referee` | tier `full`: verifies both reviews, the final fix list per Task | opus · high |
@@ -54,6 +54,7 @@ The frontier is every Task whose Predecessors are all `Closed`. A batch is the f
    ```
    `<default>`: `git symbolic-ref --short refs/remotes/origin/HEAD`. `<branch>`: the naming rule in the repo's CLAUDE.md/AGENTS.md or its pre-PR skill, with the Task's ID and title, e.g. `<initials>_T<task-id>_<Title_Words>`, with the placeholders filled in as in your own branches (`git for-each-ref refs/remotes --format='%(authoremail) %(refname:short)'`). No rule: the convention in `git branch -r`.
 3. **Build**: `hitch-mechanic` with the worktree and the brief. It returns a hand-off.
+   - **Open** items: run the duck in Task mode on them, then a fresh `hitch-mechanic` with the worktree, the updated brief and the hand-off. Review waits for it.
 4. **Review**, once per batch, after every mechanic in it has handed off. Reviews stay in chat, never on Azure. The crew below is the whole review: no other review agents.
    - **Tier**, from `git diff --stat <base>...HEAD` and the touched paths, the batch's highest. State it in one line with the reason.
      - `none`: nothing to judge. Generated or lock files only, a revert, a version or config bump.
