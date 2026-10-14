@@ -28,12 +28,12 @@ Input: `$ARGUMENTS`
 | `hitch-referee` | tier `full`: verifies both reviews, the final fix list per Task | opus · high |
 | `general-purpose` | the `hitch-janitor` skill once the Story is done | sonnet · medium |
 
-Spawn them in the background with absolute paths. Keep only their reports in your context. `hitch-pr` and `hitch-slot` mean those scripts in `~/.claude/skills/hitch-tower/`.
+Spawn them in the background with absolute paths. Keep only their reports in your context. `hitch-pr` means `~/.claude/skills/hitch-tower/hitch-pr`.
 
 Mechanics are short-lived: a subagent's cache expires after 5 idle minutes, and waking it re-writes its whole context.
 - One run each, never SendMessage one: every fix round, dev failure or conflict gets a fresh mechanic with the worktree, the brief, the last hand-off and the request.
 - Slow work (dev deploy, full suite, e2e, pipelines) runs in a gofer after the hand-off, never in the mechanic.
-- Machine-wide cap, shared with other sessions: `hitch-slot take <task-id>` in the background before each mechanic, `hitch-slot free <task-id>` once it hands off. Tasks queue rather than burst the 5h limit.
+- At most 2 mechanics running per tower session. The next one starts when one hands off: Tasks queue rather than burst the 5h limit.
 
 ## Start
 
@@ -47,7 +47,7 @@ Mechanics are short-lived: a subagent's cache expires after 5 idle minutes, and 
 
 ## Loop
 
-The frontier is every Task whose Predecessors are all `Closed`. A batch is the frontier Tasks built together: at most 3, their mechanics queued on `hitch-slot`; the rest form the next batch. A Task still in its duck (step 1) joins a later batch.
+The frontier is every Task whose Predecessors are all `Closed`. A batch is the frontier Tasks built together: at most 3, their mechanics 2 at a time; the rest form the next batch. A Task still in its duck (step 1) joins a later batch.
 
 1. **Gate**: `hitch-bouncer` per Task.
    - READY: its brief is your context for that Task.
