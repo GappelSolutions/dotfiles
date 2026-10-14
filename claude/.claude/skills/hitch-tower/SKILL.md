@@ -22,13 +22,18 @@ Input: `$ARGUMENTS`
 | agent | does | model · effort |
 |---|---|---|
 | `hitch-bouncer` | loads a Task and its Story from Azure: brief + Ready verdict | haiku · medium |
-| `hitch-mechanic` | builds one Task in its worktree: fixes, dev deploy through a gofer, annotations | sonnet · high (trial) |
-| `hitch-gofer` | tool-call chains: dev deploy + checks, screenshot (for the mechanic), after-merge pipelines + check | haiku · medium |
+| `hitch-mechanic` | builds one Task in its worktree, or one fix round on it; returns a hand-off with annotations | sonnet · high (trial) |
+| `hitch-gofer` | tool-call chains: dev deploy + checks, screenshot, slow checks (full suite, e2e), after-merge pipelines + check | haiku · medium |
 | `hitch-skeptic` | review of a batch: one, or two independently at tier `full` | opus · high · B at `full`: sonnet (trial) |
 | `hitch-referee` | tier `full`: verifies both reviews, the final fix list per Task | opus · high |
 | `general-purpose` | the `hitch-janitor` skill once the Story is done | sonnet · medium |
 
-Spawn them in the background with absolute paths. Keep only their reports in your context. `hitch-pr` means `~/.claude/skills/hitch-tower/hitch-pr`.
+Spawn them in the background with absolute paths. Keep only their reports in your context. `hitch-pr` and `hitch-slot` mean those scripts in `~/.claude/skills/hitch-tower/`.
+
+Mechanics are short-lived: a subagent's cache expires after 5 idle minutes, and waking it re-writes its whole context.
+- One run each, never SendMessage one: every fix round, dev failure or conflict gets a fresh mechanic with the worktree, the brief, the last hand-off and the request.
+- Slow work (dev deploy, full suite, e2e, pipelines) runs in a gofer after the hand-off, never in the mechanic.
+- Machine-wide cap, shared with other sessions: `hitch-slot take <task-id>` in the background before each mechanic, `hitch-slot free <task-id>` once it hands off. Tasks queue rather than burst the 5h limit.
 
 ## Start
 
@@ -42,7 +47,7 @@ Spawn them in the background with absolute paths. Keep only their reports in you
 
 ## Loop
 
-The frontier is every Task whose Predecessors are all `Closed`. A batch is the frontier Tasks built together: at most 3 (the mechanic cap), the rest form the next batch. A Task still in its duck (step 1) joins a later batch.
+The frontier is every Task whose Predecessors are all `Closed`. A batch is the frontier Tasks built together: at most 3, their mechanics queued on `hitch-slot`; the rest form the next batch. A Task still in its duck (step 1) joins a later batch.
 
 1. **Gate**: `hitch-bouncer` per Task.
    - READY: its brief is your context for that Task.
@@ -55,6 +60,7 @@ The frontier is every Task whose Predecessors are all `Closed`. A batch is the f
    `<default>`: `git symbolic-ref --short refs/remotes/origin/HEAD`. `<branch>`: the naming rule in the repo's CLAUDE.md/AGENTS.md or its pre-PR skill, with the Task's ID and title, e.g. `<initials>_T<task-id>_<Title_Words>`, with the placeholders filled in as in your own branches (`git for-each-ref refs/remotes --format='%(authoremail) %(refname:short)'`). No rule: the convention in `git branch -r`.
 3. **Build**: `hitch-mechanic` with the worktree and the brief. It returns a hand-off.
    - **Open** items: run the duck in Task mode on them, then a fresh `hitch-mechanic` with the worktree, the updated brief and the hand-off. Review waits for it.
+   - **Checks** marked `→ tower`: a `hitch-gofer` runs them in the worktree. A failure: a fresh mechanic with its report.
 4. **Review**, once per batch, after every mechanic in it has handed off. Reviews stay in chat, never on Azure. The crew below is the whole review: no other review agents.
    - **Tier**, from `git diff --stat <base>...HEAD` and the touched paths, the batch's highest. State it in one line with the reason.
      - `none`: nothing to judge. Generated or lock files only, a revert, a version or config bump.
@@ -62,15 +68,15 @@ The frontier is every Task whose Predecessors are all `Closed`. A batch is the f
      - `full`: a migration or schema change, auth or secrets, a contract between services, concurrency or failure handling (queues, retries, transactions), > ~400 changed lines outside tests and generated files, or the user asks. Two `hitch-skeptic` runs in parallel with the same input, neither sees the other, B with the model override `sonnet` (trial, measured by `hitch-inspector`). Each writes to `/tmp/hitch-<story-id>/review-<batch>-<A|B>.md` and returns only the path. Then `hitch-referee` with the same input plus both files.
    - Input per Task: the worktree, the base, the brief, the hand-off.
    - After it: `git update-ref refs/hitch/<task-id>/base <base>` and `refs/hitch/<task-id>/reviewed HEAD`. Local only, never pushed.
-   - The **Fix** list per Task goes to that Task's mechanic (SendMessage, context intact: the only follow-ups that may, with the dev step right after). The **Open** items go to the user in step 7.
+   - The **Fix** list per Task goes to a fresh mechanic for that Task. The **Open** items go to the user in step 7.
    - **Reruns**: a later change (fixes, feedback, a rebase) is never reviewed in full again. Only the new part: `refs/hitch/<task-id>/reviewed..HEAD`. After a rebase, only what `git range-diff <old-base>..<reviewed> <new-base>..HEAD` marks changed, plus conflict resolutions (`git show --remerge-diff <merge>`). Tier `none`, unless the new part alone hits a `full` trigger (then `full`) or exceeds ~100 changed lines (then `one`). Applied Fix lists: `none`, the checks cover them. Move both refs.
 5. **Dev**: each Task gets its own dev namespace, so Tasks deploy in parallel.
    - Pool: your dev namespace `<ns>` on the dev cluster, plus its numbered siblings (`<ns>2`, `<ns>3`, …), each with its own DB, broker vhost and NodePorts. No siblings: `<ns>` alone, one Task at a time.
    - Lease: a namespace without a `hitch-lease` ConfigMap is free, and `<ns>` goes first. Take it with `oc create configmap hitch-lease -n <ns> --from-literal=task=<task-id>`. The lease lives in the cluster, so a later session finds it (Start, step 3). None free: the Task waits.
    - Keep it until the Task is closed, so feedback redeploys land in the same place. Then `oc delete configmap hitch-lease -n <ns>`.
-   - Before every deploy (yours or the mechanic's dev step): `data.task` still `<task-id>` → `oc annotate configmap hitch-lease -n <ns> hitch/renewed=$(date -u +%FT%TZ) --overwrite`; gone or another Task's → lease a free one again. `hitch-reaper` (systemd timer, every 10 min) releases a lease whose Task is closed, whose PRs are all closed, or that has no PR and wasn't renewed for 3 h.
-   - The mechanic, with `<ns>`, the Task's dev checks, and whether it's a UI change: it deploys, checks and screenshots through a gofer and fixes what fails. Then it writes the annotations.
-6. **Draft PR**: `git push -u origin <branch>`, create the draft as in `hitch-clerk`, then `hitch-pr annotate <pr> <file>` with the mechanic's annotations. Add the mechanic's deployed URL to the description, and for a UI change upload its screenshot, as in `hitch-clerk`. Again after a push with a new screenshot.
+   - Before every deploy: `data.task` still `<task-id>` → `oc annotate configmap hitch-lease -n <ns> hitch/renewed=$(date -u +%FT%TZ) --overwrite`; gone or another Task's → lease a free one again. `hitch-reaper` (systemd timer, every 10 min) releases a lease whose Task is closed, whose PRs are all closed, or that has no PR and wasn't renewed for 3 h.
+   - A `hitch-gofer` with the worktree, `<ns>`, the Task's dev checks, and whether it's a UI change: it deploys, checks and screenshots. A failure in the code: a fresh mechanic with its report, then a new gofer.
+6. **Draft PR**: `git push -u origin <branch>`, create the draft as in `hitch-clerk`, then `hitch-pr annotate <pr> <file>` with the last hand-off's annotations. Add the gofer's deployed URL to the description, and for a UI change upload its screenshot, as in `hitch-clerk`. Again after a push with a new screenshot.
 7. **Report** per Task:
    ```
    **T<n> #<task> <title>** → <pr-url>
@@ -86,7 +92,7 @@ The frontier is every Task whose Predecessors are all `Closed`. A batch is the f
    - The Plan (`hitch-clerk`): redraw it after every Task state change, on the Story and in the descriptions of the Story's open PRs.
 9. **Publish**: `az repos pr update --id <pr> --draft false`, then move the Task to the taskboard's review column, as in `hitch-clerk`.
 10. **Ahead**, alongside step 11: while a batch waits on review, run the next batch early instead of idling. It may be thrown away if review changes the concept: that's accepted.
-    - Steps 1–4 as for any batch: its own worktree and a fresh mechanic per Task, never SendMessage a mechanic another Task. Base: its Predecessors' branches instead of `origin/<default>` (several: merged into the new branch first). No dev deploy, no PR, no push. Task states stay `New`.
+    - Steps 1–4 as for any batch: its own worktree and a fresh mechanic per Task. Base: its Predecessors' branches instead of `origin/<default>` (several: merged into the new branch first). No dev deploy, no PR, no push. Task states stay `New`.
     - The next ahead batch starts only once this one's fixes are in.
     - A Predecessor gets a push: a `hitch-gofer` runs `git rebase --onto <new base> refs/hitch/<task-id>/base` and the checks; a conflict: a fresh mechanic resolves it. Then step 4's Reruns, and if the Predecessor's push itself hit a `full` trigger, tier `one` at least, with that push's diff as context. Feedback that changes the Design: name the ahead Tasks it hits, the user says rebuild or drop.
     - Predecessors close: the same rebase onto `origin/<default>`, then step 5 on.
