@@ -45,6 +45,9 @@ file    win-host/.config/whkdrc                             .config/whkdrc
 file    win-host/.config/yasb/config.yaml                   .config/yasb/config.yaml
 file    win-host/.config/yasb/styles.css                    .config/yasb/styles.css
 
+# Mouse keepalive: 1px nudge after 2 min idle so the session never locks (task: win-host/register-keepalive.ps1)
+file    win-host/AppData/Local/keepalive/keepalive.ps1      AppData/Local/keepalive/keepalive.ps1
+
 # Raycast script commands (register the folder once: Settings -> Script Commands -> Add Script Directory)
 dir     win-host/AppData/Roaming/Raycast/Scripts            AppData/Roaming/Raycast/Scripts
 
