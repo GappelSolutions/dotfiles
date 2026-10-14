@@ -121,6 +121,11 @@ fn cotp(pw: &str, args: &[String], capture: bool) -> Result<(i32, Vec<u8>)> {
         } else {
             Stdio::inherit()
         })
+        .stderr(if capture {
+            Stdio::null()
+        } else {
+            Stdio::inherit()
+        })
         .spawn()
         .context("running cotp")?;
     {
@@ -135,17 +140,19 @@ fn cotp(pw: &str, args: &[String], capture: bool) -> Result<(i32, Vec<u8>)> {
 /// cotp exits 255 (-1) when the database can't be decrypted, before running any subcommand.
 const COTP_BAD_PASSWORD: i32 = 255;
 
-fn load_entries() -> Result<Vec<Entry>> {
-    let json = with_cotp(|pw| {
+/// The entries, and the password they were read with (kept for `cotp edit`, so the TUI never prompts).
+fn load_entries() -> Result<(Vec<Entry>, Zeroizing<String>)> {
+    let (json, pw) = with_cotp(|pw| {
         // export writes the JSON to --path, then "Successfully exported ..." to stdout; with both on
         // the same pipe only the first JSON value is the export.
         let args = ["export", "--otp-uri", "--path", "/dev/stdout"].map(String::from);
         let (code, out) = cotp(pw, &args, true)?;
-        match code {
-            0 => Ok(Some(Zeroizing::new(out))),
-            COTP_BAD_PASSWORD => Ok(None),
-            _ => Ok(Some(Zeroizing::new(Vec::new()))),
-        }
+        let out = match code {
+            0 => Zeroizing::new(out),
+            COTP_BAD_PASSWORD => return Ok(None),
+            _ => Zeroizing::new(Vec::new()),
+        };
+        Ok(Some((out, Zeroizing::new(pw.to_string()))))
     })?;
 
     #[derive(serde::Deserialize)]
@@ -157,13 +164,21 @@ fn load_entries() -> Result<Vec<Entry>> {
         .next()
     else {
         // "No contents to export" -- an empty database
-        return Ok(Vec::new());
+        return Ok((Vec::new(), pw));
     };
-    Ok(export
+    let entries = export
         .items
         .iter()
-        .filter_map(|uri| Entry::parse(uri))
-        .collect())
+        .enumerate()
+        .filter_map(|(i, uri)| Entry::parse(uri).map(|e| Entry { index: i + 1, ..e }))
+        .collect();
+    Ok((entries, pw))
+}
+
+/// `cotp edit --index <n> --label <label>`; cotp exits 0 once the change is persisted.
+fn rename(pw: &str, index: usize, label: &str) -> bool {
+    let args = ["edit", "--index", &index.to_string(), "--label", label].map(String::from);
+    matches!(cotp(pw, &args, true), Ok((0, _)))
 }
 
 // ── OTP ─────────────────────────────────────────────────────────────────────────────────────────
@@ -176,6 +191,8 @@ enum Algorithm {
 }
 
 struct Entry {
+    /// cotp's row number (1-based, database order), for `cotp edit`.
+    index: usize,
     issuer: String,
     label: String,
     secret: Zeroizing<Vec<u8>>,
@@ -216,6 +233,7 @@ impl Entry {
             _ => Algorithm::Sha1,
         };
         Some(Entry {
+            index: 0,
             issuer,
             label,
             secret: Zeroizing::new(secret),
@@ -312,10 +330,14 @@ fn copy(text: &str) {
 
 struct App {
     entries: Vec<Entry>,
+    password: Zeroizing<String>,
     query: String,
     searching: bool,
+    /// The new label while renaming the selected entry.
+    renaming: Option<String>,
     list: ListState,
-    toast: Option<(String, Instant)>,
+    /// (message, ok, shown at)
+    toast: Option<(String, bool, Instant)>,
 }
 
 impl App {
@@ -353,9 +375,34 @@ impl App {
             let e = &self.entries[i];
             if e.unsupported.is_none() {
                 copy(&e.code_at(now()));
-                self.toast = Some((format!("copied {}", e.name()), Instant::now()));
+                self.toast = Some((format!("copied {}", e.name()), true, Instant::now()));
             }
         }
+    }
+
+    fn start_rename(&mut self) {
+        if let Some(i) = self.selected() {
+            self.renaming = Some(self.entries[i].name().to_string());
+        }
+    }
+
+    fn finish_rename(&mut self) {
+        let (Some(label), Some(i)) = (self.renaming.take(), self.selected()) else {
+            return;
+        };
+        let label = label.trim();
+        let e = &mut self.entries[i];
+        if label.is_empty() || label == e.name() {
+            return;
+        }
+        let ok = rename(&self.password, e.index, label);
+        let msg = if ok {
+            e.label = label.to_string();
+            format!("renamed to {label}")
+        } else {
+            format!("renaming {} failed", e.name())
+        };
+        self.toast = Some((msg, ok, Instant::now()));
     }
 
     /// Handles one key press; true quits. Only `q` (and Ctrl-C) quit, nothing else does.
@@ -363,6 +410,18 @@ impl App {
         let ctrl = key.modifiers.contains(KeyModifiers::CONTROL);
         if ctrl && key.code == KeyCode::Char('c') {
             return true;
+        }
+        if let Some(label) = &mut self.renaming {
+            match key.code {
+                KeyCode::Esc => self.renaming = None,
+                KeyCode::Enter => self.finish_rename(),
+                KeyCode::Backspace => {
+                    label.pop();
+                }
+                KeyCode::Char(c) => label.push(c),
+                _ => {}
+            }
+            return false;
         }
         if self.searching {
             match key.code {
@@ -400,6 +459,7 @@ impl App {
             KeyCode::Char('/') => self.searching = true,
             KeyCode::Char('f') if ctrl => self.searching = true,
             KeyCode::Enter | KeyCode::Char('y' | ' ') => self.copy_selected(),
+            KeyCode::Char('r') => self.start_rename(),
             KeyCode::Char(c @ '1'..='9') => {
                 let row = c as usize - '1' as usize;
                 if row < self.visible().len() {
@@ -448,8 +508,14 @@ fn draw(frame: &mut Frame, app: &mut App) {
     let remaining = period - t % period;
     let color = countdown_color(remaining);
 
-    // header: title (or search field) left, countdown right
-    let title = if app.searching || !app.query.is_empty() {
+    // header: title (or rename / search field) left, countdown right
+    let title = if let Some(label) = &app.renaming {
+        Line::from(vec![
+            Span::styled("rename ", Style::new().fg(ACCENT)),
+            Span::raw(label.clone()),
+            Span::styled("▏", Style::new().fg(ACCENT)),
+        ])
+    } else if app.searching || !app.query.is_empty() {
         Line::from(vec![
             Span::styled("/ ", Style::new().fg(ACCENT)),
             Span::raw(app.query.clone()),
@@ -567,11 +633,15 @@ fn draw(frame: &mut Frame, app: &mut App) {
     let toast = app
         .toast
         .as_ref()
-        .filter(|(_, at)| at.elapsed() < Duration::from_millis(1500));
+        .filter(|(_, _, at)| at.elapsed() < Duration::from_millis(1500));
     let footer_line = match toast {
-        Some((msg, _)) => Line::from(Span::styled(
+        Some((msg, true, _)) => Line::from(Span::styled(
             format!("✓ {msg}"),
             Style::new().fg(Color::Green),
+        )),
+        Some((msg, false, _)) => Line::from(Span::styled(
+            format!("✗ {msg}"),
+            Style::new().fg(Color::Red),
         )),
         None => {
             let hint = |k: &'static str, d: &'static str| {
@@ -580,12 +650,15 @@ fn draw(frame: &mut Frame, app: &mut App) {
                     Span::styled(format!(" {d}   "), Style::new().fg(DIM)),
                 ]
             };
-            let hints = if app.searching {
+            let hints = if app.renaming.is_some() {
+                [hint("⏎", "save"), hint("esc", "cancel")].concat()
+            } else if app.searching {
                 [hint("⏎", "copy"), hint("↑↓", "move"), hint("esc", "clear")].concat()
             } else {
                 [
                     hint("⏎/1-9", "copy"),
                     hint("/", "search"),
+                    hint("r", "rename"),
                     hint("q", "quit"),
                 ]
                 .concat()
@@ -614,11 +687,13 @@ fn run_tui(terminal: &mut DefaultTerminal, app: &mut App) -> Result<()> {
 }
 
 fn tui() -> Result<()> {
-    let entries = load_entries()?;
+    let (entries, password) = load_entries()?;
     let mut app = App {
         entries,
+        password,
         query: String::new(),
         searching: false,
+        renaming: None,
         list: ListState::default(),
         toast: None,
     };
@@ -644,7 +719,7 @@ fn main() {
         None => tui().map(|()| 0),
         Some("-h" | "--help") => {
             println!(
-                "2fa            pick a code (⏎ / 1-9 copy, / search, q quit)\n\
+                "2fa            pick a code (⏎ / 1-9 copy, / search, r rename, q quit)\n\
                  2fa lock       forget the cached password\n\
                  2fa <args>     cotp <args> with the cached password (add, edit, delete, list, ...)"
             );
