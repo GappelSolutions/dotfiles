@@ -5,6 +5,15 @@
   "cross_monitor_move_behaviour": "Insert",
   "default_workspace_padding": 8,
   "default_container_padding": 8,
+  "ignore_rules": [
+    { "kind": "Exe", "id": "handy.exe", "matching_strategy": "Equals" }
+  ],
+  "manage_rules": [
+    [
+      { "kind": "Exe", "id": "(?i)^[a-z]+craft(-launcher)?\\.exe$", "matching_strategy": "Regex" },
+      { "kind": "Class", "id": "Window Class", "matching_strategy": "Equals" }
+    ]
+  ],
   "border": true,
   "border_width": 6,
   "animation": {
