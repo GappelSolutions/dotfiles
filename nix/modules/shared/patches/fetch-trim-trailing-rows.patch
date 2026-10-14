@@ -1,0 +1,47 @@
+diff --git a/fetch.c b/fetch.c
+index fdbc461..440939a 100644
+--- a/fetch.c
++++ b/fetch.c
+@@ -4211,6 +4211,7 @@ int main(int argc, char **argv) {
+   printf("\033[?25l\033[2J");
+   fflush(stdout);
+ 
++  int last_row = -1; // last row of the last drawn frame with any content
+   for (int frame = 0; max_frames == 0 || frame < max_frames; frame++) {
+     struct pollfd pfd = {.fd = STDIN_FILENO, .events = POLLIN};
+     if (poll(&pfd, 1, 0) > 0)
+@@ -4343,7 +4344,9 @@ int main(int argc, char **argv) {
+     int inner_len = strlen(color_inner);
+     int outer_len = strlen(color_outer);
+ 
++    int frame_last_row = -1;
+     for (int i = 0; i < render_height && p + 8 < end; i++) {
++      char *row_start = p;
+       if (!use_color) {
+         for (int j = 0; j < aw && p + 8 < end; j++) {
+           int c = 0;
+@@ -4398,6 +4401,9 @@ int main(int argc, char **argv) {
+         p = emit_clipped(p, end, fetch_lines[fi], info_clip_cols);
+       }
+ 
++      for (char *q = row_start; q < p; q++)
++        if (*q != ' ') { frame_last_row = i; break; }
++
+       // Erase to end of line + newline
+       if (p + 8 >= end) break;
+       memcpy(p, clr_seq, 4); p += 4;
+@@ -4416,9 +4422,14 @@ int main(int argc, char **argv) {
+     }
+     if (write(STDOUT_FILENO, out_buf, p - out_buf) < 0)
+       break;
++    last_row = layout_stacked ? -1 : frame_last_row;
+     usleep(50000);
+   }
+ 
++  // Leave the cursor right below the last frame's content, not below the
++  // whole canvas, and clear the blank rows under it.
++  if (last_row >= 0)
++    printf("\033[%dH\033[J", last_row + 2);
+   printf("\033[?25h");
+   fflush(stdout);
+   return 0;

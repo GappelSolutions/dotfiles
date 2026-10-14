@@ -196,7 +196,8 @@
       [[ -r ~/.work.zsh ]] && source ~/.work.zsh
 
       clear
-      $HOME/.local/bin/nerdfetch
+      # any key stops the spin and goes to the prompt
+      [[ -t 0 && -t 1 ]] && fetch --height 32
       echo "\n"
     '';
   };
