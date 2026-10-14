@@ -4,6 +4,7 @@
 #       draft, votes, comments, pushes), print the changed lines. Run it in the
 #       background: the harness wakes the session when it exits. Failed polls
 #       (VPN down, token expired) are retried.
+#   hitch-pr status <pr-id>...  one line per PR, as wait prints them.
 #   hitch-pr gate <pr-id>  exit 0 and "READY" when the PR may be merged
 #       automatically, else exit 1 and list every blocker.
 #   hitch-pr annotate <pr-id> <file>  one annotation thread per line of
@@ -125,12 +126,13 @@ stats() {
 }
 
 usage() {
-  echo "usage: hitch-pr wait [-i seconds] <pr-id>... | gate <pr-id> | annotate <pr-id> <file> | stats <pr-id>..." >&2
+  echo "usage: hitch-pr wait [-i seconds] <pr-id>... | status <pr-id>... | gate <pr-id> | annotate <pr-id> <file> | stats <pr-id>..." >&2
   exit 2
 }
 
 case ${1:-} in
 wait) shift && wait_prs "$@" ;;
+status) shift && (($#)) || usage && for id in "$@"; do state "$id"; done ;;
 gate) (($# == 2)) || usage && gate "$2" ;;
 annotate) (($# == 3)) || usage && annotate "$2" "$3" ;;
 stats) shift && (($#)) || usage && stats "$@" ;;

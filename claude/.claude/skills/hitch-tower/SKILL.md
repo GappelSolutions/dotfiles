@@ -37,7 +37,7 @@ Spawn them in the background with absolute paths. Keep only their reports in you
    - Story IDs: their child Tasks that aren't `Closed` or `Removed`. Several Stories share one Loop.
    - Task IDs: those.
    - `ghost`: the brief from this session's `/hitch-duck ghost`, one Task with no ID. No bouncer, no Azure states, links or Plan. Branch: the naming rule without the ID.
-3. Rebuild the state from Azure and git, per Task: its PR and PR status, whether its worktree exists, which dev namespace it leases (step 5); its `refs/hitch/<task-id>/{base,reviewed}` (steps 4, 10). Never keep a state file. A later session resumes the same way.
+3. Rebuild the state from Azure and git, per Task: its PR and PR status, whether its worktree exists, which dev namespace it leases (step 5); its `refs/hitch/<task-id>/{base,reviewed}` (steps 4, 10); its after-merge record `~/.local/state/hitch/after-merge/<task-id>` (step 11): show its `RESULT` line. Never keep a state file. A later session resumes the same way.
 4. Show `| Task | state | PR | blocked by |`, then enter the loop where each Task stands.
 
 ## Loop
@@ -67,6 +67,7 @@ The frontier is every Task whose Predecessors are all `Closed`. A batch is the f
    - Pool: your dev namespace `<ns>` on the dev cluster, plus its numbered siblings (`<ns>2`, `<ns>3`, …), each with its own DB, broker vhost and NodePorts. No siblings: `<ns>` alone, one Task at a time.
    - Lease: a namespace without a `hitch-lease` ConfigMap is free, and `<ns>` goes first. Take it with `oc create configmap hitch-lease -n <ns> --from-literal=task=<task-id>`. The lease lives in the cluster, so a later session finds it (Start, step 3). None free: the Task waits.
    - Keep it until the Task is closed, so feedback redeploys land in the same place. Then `oc delete configmap hitch-lease -n <ns>`.
+   - Before every deploy (yours or the mechanic's dev step): `data.task` still `<task-id>` → `oc annotate configmap hitch-lease -n <ns> hitch/renewed=$(date -u +%FT%TZ) --overwrite`; gone or another Task's → lease a free one again. `hitch-reaper` (systemd timer, every 10 min) releases a lease whose Task is closed, whose PRs are all closed, or that has no PR and wasn't renewed for 3 h.
    - The mechanic, with `<ns>`, the Task's dev checks, and whether it's a UI change: it deploys, checks and screenshots through a gofer and fixes what fails. Then it writes the annotations.
 6. **Draft PR**: `git push -u origin <branch>`, create the draft as in `hitch-clerk`, then `hitch-pr annotate <pr> <file>` with the mechanic's annotations. Add the mechanic's deployed URL to the description, and for a UI change upload its screenshot, as in `hitch-clerk`. Again after a push with a new screenshot.
 7. **Report** per Task:
@@ -93,7 +94,7 @@ The frontier is every Task whose Predecessors are all `Closed`. A batch is the f
     - Then `hitch-pr gate <pr>`:
       - READY (someone else approved with 10, no negative vote, no unaddressed thread, no conflicts): complete the PR as in `hitch-clerk`. The user's approval of the workflow covers this. No need to ask.
       - BLOCKED: show the blockers unless they're only "no approval yet", and keep waiting.
-    - `completed`: **After merge** as in `hitch-clerk`. Pass: close the Task, release the dev namespace, `git worktree remove <path>`, `git branch -d <branch>` (never force), `git update-ref -d` both `refs/hitch/<task-id>/*`. Recompute the frontier and go to step 1.
+    - `completed`: claim it first, `mkdir -p ~/.local/state/hitch/after-merge && echo "tower $(date -u +%FT%TZ) PR <pr>" > ~/.local/state/hitch/after-merge/<task-id>`. A record already there: another session or `hitch-reaper` ran it, so show its `RESULT` and don't run it again. Then **After merge** as in `hitch-clerk`, and append `RESULT: pass` or `RESULT: fail <why>` to the record. Pass: close the Task, release the dev namespace, `git worktree remove <path>`, `git branch -d <branch>` (never force), `git update-ref -d` both `refs/hitch/<task-id>/*`. Recompute the frontier and go to step 1.
     - Restart the wait with the PRs still open.
-    - A user message cuts the wait short: check the PRs right away.
+    - Every user message, whatever it's about, starts with `hitch-pr status <pr-id>...` on the Loop's open PRs: the user often merges on Azure themselves. A `completed` one goes through the step above before the reply.
 12. **Done**, per Story: once its Tasks are all `Closed`, close it as in `hitch-clerk`, run `hitch-janitor` in a `general-purpose` agent (`Follow ~/.claude/skills/hitch-janitor/SKILL.md for Story <id> in <repo path>.`), and report its findings. The Loop goes on with the other Stories.

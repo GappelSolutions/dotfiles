@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+# Cleans up after hitch-tower sessions that died or never saw their PR merge.
+# Runs from a systemd user timer every 10 minutes; `hitch-reaper --dry-run`
+# prints what it would do.
+#   Leases: a dev namespace's hitch-lease ConfigMap is released when its Task
+#     is Closed/Removed, when none of its PRs is still active, or when it has
+#     no PR and wasn't renewed (annotation hitch/renewed) for LEASE_TTL hours.
+#   After merge: an Active Task of mine whose PRs are all closed and one
+#     completed more than GRACE minutes ago gets the clerk's After merge from a
+#     headless haiku session. Every after-merge, the tower's too, first claims
+#     ~/.local/state/hitch/after-merge/<task-id>; an existing claim is skipped,
+#     so a failed one isn't retried and the user decides. Merges older than
+#     MAX_AGE days are only claimed and logged, for the user to look at.
+# Unreachable cluster or Azure (VPN down, expired login): exits quietly.
+set -euo pipefail
+
+export PATH="$HOME/.local/bin:$PATH"
+state=${XDG_STATE_HOME:-$HOME/.local/state}/hitch
+claims=$state/after-merge
+ctx=${HITCH_REAPER_CONTEXT:-gdm-dev}
+lease_ttl=$((${HITCH_LEASE_TTL_HOURS:-3} * 3600))
+grace=$((${HITCH_AFTER_MERGE_GRACE_MIN:-45} * 60))
+max_age=$((${HITCH_AFTER_MERGE_MAX_AGE_DAYS:-2} * 86400))
+dry=0
+[[ ${1:-} == --dry-run ]] && dry=1
+
+mkdir -p "$claims"
+exec 9>"$state/reaper.lock"
+flock -n 9 || exit 0
+if [[ -z ${AZURE_DEVOPS_EXT_PAT:-} && -r $HOME/.azure-devops-pat ]]; then
+  AZURE_DEVOPS_EXT_PAT=$(<"$HOME/.azure-devops-pat")
+  export AZURE_DEVOPS_EXT_PAT
+fi
+
+log() {
+  echo "$*"
+  ((dry)) || echo "$(date -u +%FT%TZ) $*" >>"$state/reaper.log"
+}
+
+now=$(date +%s)
+age() { echo $((now - $(date -d "$1" +%s))); }
+
+# One line: "<state> <story-id>", then one line per linked PR:
+# "<pr-id> <status> <closedDate|-> <repository>".
+task_info() {
+  local wi id
+  wi=$(az boards work-item show --id "$1" --expand relations --only-show-errors -o json) || return 1
+  jq -r '"\(.fields["System.State"]) \(.relations // [] | map(select(.rel == "System.LinkTypes.Hierarchy-Reverse")) | first | .url // "-" | split("/") | last)"' <<<"$wi"
+  for id in $(jq -r '.relations // [] | .[] | select(.rel == "ArtifactLink" and .attributes.name == "Pull Request") | .url | ascii_downcase | split("%2f") | last' <<<"$wi"); do
+    az repos pr show --id "$id" --only-show-errors -o json |
+      jq -r '"\(.pullRequestId) \(.status) \(.closedDate // "-") \(.repository.name)"' || return 1
+  done
+}
+
+oc --context "$ctx" get --raw /version >/dev/null 2>&1 || { echo "$ctx unreachable"; exit 0; }
+az boards query --wiql "SELECT [System.Id] FROM WorkItems WHERE [System.Id] = 1" --only-show-errors -o none 2>/dev/null ||
+  { echo "Azure DevOps unreachable"; exit 0; }
+
+release() {
+  local ns=$1 task=$2 why=$3
+  log "lease $ns (Task $task): release, $why"
+  ((dry)) && return
+  [[ $(oc --context "$ctx" get configmap hitch-lease -n "$ns" -o jsonpath='{.data.task}' 2>/dev/null) == "$task" ]] || return 0
+  oc --context "$ctx" delete configmap hitch-lease -n "$ns" >/dev/null
+}
+
+leases=$(oc --context "$ctx" get configmap -A --field-selector metadata.name=hitch-lease -o json |
+  jq -r '.items[] | "\(.metadata.namespace) \(.data.task) \(.metadata.annotations["hitch/renewed"] // .metadata.creationTimestamp)"')
+while read -r ns task since; do
+  [[ -n $ns ]] || continue
+  info=$(task_info "$task") || { echo "Task $task: lookup failed"; continue; }
+  read -r wstate _ <<<"$(head -1 <<<"$info")"
+  prs=$(tail -n +2 <<<"$info")
+  if [[ $wstate == Closed || $wstate == Removed ]]; then
+    release "$ns" "$task" "Task $wstate"
+  elif grep -q ' active ' <<<"$prs"; then
+    :
+  elif [[ -n $prs ]]; then
+    release "$ns" "$task" "PRs closed: $(awk '{printf "%s%s %s", sep, $1, $2; sep=", "}' <<<"$prs")"
+  elif (($(age "$since") > lease_ttl)); then
+    release "$ns" "$task" "no PR, not renewed since $since"
+  fi
+done <<<"$leases"
+
+repo_dir() {
+  local repo=$1 task=$2 wt common
+  wt=$state/wt/$repo/$task
+  if [[ -d $wt ]] && common=$(git -C "$wt" rev-parse --path-format=absolute --git-common-dir 2>/dev/null); then
+    dirname "$common"
+    return
+  fi
+  find "$HOME/dev" -maxdepth 4 -type d -name "$repo" -exec test -d '{}/.git' ';' -print -quit
+}
+
+tasks=$(az boards query --only-show-errors -o json --wiql \
+  "SELECT [System.Id] FROM WorkItems WHERE [System.WorkItemType] = 'Task' AND [System.State] = 'Active' AND [System.AssignedTo] = @Me" |
+  jq -r '.[].id')
+for task in $tasks; do
+  [[ -e $claims/$task ]] && continue
+  info=$(task_info "$task") || { echo "Task $task: lookup failed"; continue; }
+  read -r _ story <<<"$(head -1 <<<"$info")"
+  prs=$(tail -n +2 <<<"$info")
+  [[ -n $prs ]] || continue
+  grep -q ' active ' <<<"$prs" && continue
+  merged=$(awk '$2 == "completed"' <<<"$prs" | sort -k3 | tail -1)
+  [[ -n $merged ]] || continue
+  read -r pr _ closed repo <<<"$merged"
+  (($(age "$closed") > grace)) || continue
+  if (($(age "$closed") > max_age)); then
+    log "Task $task: PR $pr merged $closed, too old for an unattended After merge, left for you"
+    ((dry)) || echo "reaper $(date -u +%FT%TZ) PR $pr: merged $closed, left for the user. RESULT: skipped" >"$claims/$task"
+    continue
+  fi
+  dir=$(repo_dir "$repo" "$task")
+  if [[ -z $dir ]]; then
+    log "Task $task: PR $pr merged, no local clone of $repo, skipped"
+    continue
+  fi
+  log "Task $task: PR $pr merged $closed, After merge in $dir"
+  ((dry)) && continue
+  echo "reaper $(date -u +%FT%TZ) PR $pr" >"$claims/$task"
+  (cd "$dir" && timeout 2h claude -p --model haiku --dangerously-skip-permissions "$(cat <<EOF
+Task $task (Story $story) had its PR $pr merged at $closed, and the hitch-tower session that ran it is gone. You do its After merge, alone: no subagents, no questions, nobody reads along until you're done.
+
+Read ~/.claude/skills/hitch-clerk/SKILL.md (Convention, Shapes: Plan, After merge) and step 11 \`completed\` and step 12 of ~/.claude/skills/hitch-tower/SKILL.md.
+
+1. After merge steps 1-3 yourself: the merge commit's pipelines until each finishes, then the Task's dev check, then its after items (only read-only ones; list the rest).
+2. Pass: close Task $task. Release its dev namespace only if a hitch-lease ConfigMap on context $ctx has data.task $task. \`git worktree remove $state/wt/$repo/$task\` if it exists, \`git branch -d\` its branch, \`git update-ref -d\` both refs/hitch/$task/* refs. Redraw the Story's Plan. If every Task of Story $story is Closed, close the Story.
+3. Fail: change nothing on Azure, in git or on the cluster.
+
+Never push, never post PR comments, never force or -D, never import a CA into a trust store.
+End with one line per step, then a last line exactly \`RESULT: pass\` or \`RESULT: fail <why>\`.
+EOF
+)") >>"$claims/$task" 2>&1 || echo "RESULT: fail exit $?" >>"$claims/$task"
+  log "Task $task: $(grep -o 'RESULT: .*' "$claims/$task" | tail -1)"
+done
