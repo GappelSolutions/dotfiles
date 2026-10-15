@@ -5,6 +5,7 @@
     ../dev/home.nix
     ./p-backup.nix
     ./hitch-reaper.nix
+    ./hitch-graph.nix
   ];
 
   # Hand git credentials to the Windows GCM, which keeps them in Windows

@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+# Draws one dependency graph of everything I work on as an Excalidraw drawing,
+# HITCH_GRAPH_FILE (default: Hitch.excalidraw in the Obsidian vault in the
+# Windows home): a band per Feature, a lane per Story of mine, its Tasks left
+# to right in dependency order, Predecessor links arrows (layout:
+# hitch-graph-draw). Every item shows its ID and title, links to Azure and is
+# colored by state like the clerk's Plan.
+# My Stories: under a Feature, and created by me or assigned to me and grilled
+# (a Design section); a colleague's Story only assigned to me and an ad-hoc
+# one without a Feature are not tracked. A Feature shows while one of my
+# Stories in it is open and it was active in the last HITCH_GRAPH_ACTIVE_DAYS
+# days: an open Story there, mine or nobody's, was created or had a Task changed.
+# Runs from a systemd user timer every 10 minutes; Azure unreachable: exits
+# quietly. The drawing is only rewritten when the graph changed, so a scroll
+# position Obsidian saved into it survives.
+set -euo pipefail
+
+if [[ -n ${HITCH_GRAPH_FILE:-} ]]; then
+  out=$HITCH_GRAPH_FILE
+else
+  # cmd.exe refuses a UNC working directory (the WSL home).
+  win_home=$(cd /mnt/c && /sbin/wslpath -u "$(/mnt/c/Windows/System32/cmd.exe /c 'echo %USERPROFILE%' | tr -d '\r')")
+  out=$win_home/kepano-obsidian/Hitch.excalidraw
+fi
+active=${HITCH_GRAPH_ACTIVE_DAYS:-14}
+if [[ -z ${AZURE_DEVOPS_EXT_PAT:-} && -r $HOME/.azure-devops-pat ]]; then
+  AZURE_DEVOPS_EXT_PAT=$(<"$HOME/.azure-devops-pat")
+fi
+: "${AZURE_DEVOPS_EXT_PAT:?no Azure DevOps PAT}"
+export PATH="$HOME/.local/bin:$PATH"
+cfg=$(az devops configure -l)
+org=$(sed -n 's/^organization = //p' <<<"$cfg")
+project=$(sed -n 's/^project = //p' <<<"$cfg")
+base="$org/$(jq -rn --arg p "$project" '$p | @uri')"
+
+api() { curl -sf --max-time 60 -u ":$AZURE_DEVOPS_EXT_PAT" -H 'Content-Type: application/json' "$@"; }
+wiql() {
+  api -d "$(jq -n --arg q "$1" '{query: $q}')" "$base/_apis/wit/wiql?api-version=7.1" | jq -c '[.workItems[].id]'
+}
+# Work items with their relations, 200 per request (the API's limit).
+items() {
+  jq -c 'range(0; length; 200) as $i | .[$i:$i + 200]' <<<"$1" | while read -r ids; do
+    api -d "$(jq -n --argjson ids "$ids" '{ids: $ids, "$expand": "relations"}')" \
+      "$base/_apis/wit/workitemsbatch?api-version=7.1" | jq -c '.value[]'
+  done | jq -sc .
+}
+
+recent="[System.WorkItemType] = 'User Story' AND [System.State] <> 'Removed' AND [System.ChangedDate] > @Today - 180"
+mine=$(wiql "SELECT [System.Id] FROM WorkItems WHERE $recent AND [System.CreatedBy] = @Me" 2>/dev/null) ||
+  { echo "Azure DevOps unreachable"; exit 0; }
+assigned=$(wiql "SELECT [System.Id] FROM WorkItems WHERE $recent AND [System.AssignedTo] = @Me")
+stories=$(items "$(jq -nc --argjson a "$mine" --argjson b "$assigned" '$a + $b | unique')")
+
+# My Stories, grouped by Feature; Features with an open one.
+stories=$(jq -c --argjson mine "$mine" '
+  map(select(.fields["System.Parent"]
+      and (.id as $id | ($mine | index($id)) or (.fields["System.Description"] // "" | test("## Design|<h[1-6][^>]*>\\s*Design"))))
+    | . + {group: .fields["System.Parent"]})
+  | group_by(.group) | map(select(any(.[]; .fields["System.State"] != "Closed"))) | add // []' <<<"$stories")
+
+ids=$(jq -c 'map(.id)' <<<"$stories")
+tasks='[]'
+if [[ $ids != '[]' ]]; then
+  tasks=$(wiql "SELECT [System.Id] FROM WorkItems WHERE [System.WorkItemType] = 'Task'
+    AND [System.State] <> 'Removed' AND [System.Parent] IN ($(jq -r 'join(",")' <<<"$ids"))")
+  tasks=$(items "$tasks")
+fi
+
+# Only the groups active lately.
+others=$(wiql "SELECT [System.Id] FROM WorkItems WHERE [System.Id] IN ($(jq -r 'join(",")' <<<"$ids"))
+  AND [System.AssignedTo] <> @Me AND [System.AssignedTo] <> ''")
+stories=$(jq -c --slurpfile t <(echo "$tasks") --argjson active "$active" --argjson others "$others" '
+  def time: sub("\\.[0-9]+Z$"; "Z") | fromdate;
+  (now - $active * 86400) as $since
+  | ($t[0] | map({key: (.fields["System.Parent"] | tostring), value: (.fields["System.ChangedDate"] | time)})
+      | group_by(.key) | map({key: .[0].key, value: (map(.value) | max)}) | from_entries) as $taskChanged
+  | group_by(.group)
+  | map(select(any(.[]; .fields["System.State"] != "Closed" and (.id as $id | $others | index($id) | not)
+      and ((.fields["System.CreatedDate"] | time) > $since or ($taskChanged[.id | tostring] // 0) > $since))))
+  | add // []' <<<"$stories")
+features=$(items "$(jq -c '[.[].fields["System.Parent"] // empty] | unique' <<<"$stories")")
+
+# A Task is in review while one of its PRs is active.
+active_prs=$(jq -r '.[] | select(.fields["System.State"] != "Closed") | .relations // [] | .[]
+  | select(.rel == "ArtifactLink" and .attributes.name == "Pull Request") | .url | ascii_downcase | split("%2f") | last' <<<"$tasks" |
+  sort -u | while read -r pr; do
+    api "$base/_apis/git/pullrequests/$pr?api-version=7.1" | jq -r 'select(.status == "active") | .pullRequestId'
+  done | jq -sc 'map(tostring)')
+
+# The model hitch-graph-draw lays out: Features, Stories, Tasks, Predecessor links.
+new=$(jq -n -c --slurpfile s <(echo "$stories") --slurpfile t <(echo "$tasks") --slurpfile f <(echo "$features") \
+  --argjson active "$active_prs" --arg base "$base" '
+  $s[0] as $stories | $t[0] as $tasks | $f[0] as $features |
+  def url: "\($base)/_workitems/edit/\(.)";
+  def state: .fields["System.State"];
+  def prs: [.relations // [] | .[] | select(.rel == "ArtifactLink" and .attributes.name == "Pull Request")
+    | .url | ascii_downcase | split("%2f") | last];
+  def class:
+    if state == "Closed" then "done"
+    elif any(prs[]; . as $p | $active | index($p)) then "review"
+    elif state == "Active" then "build"
+    else "todo" end;
+  def preds: [.relations // [] | .[] | select(.rel == "System.LinkTypes.Dependency-Reverse") | .url | split("/") | last | tonumber];
+  def item: {id, text: "#\(.id) \(.fields["System.Title"])", link: (.id | url)};
+  {
+    url: ("" | url),
+    features: [$features[] | select(.id as $id | $stories | any(.fields["System.Parent"] == $id)) | item] | sort_by(.id),
+    stories: [$stories[] | item + {class: class, feature: .fields["System.Parent"]}] | sort_by(.id),
+    tasks: [$tasks[] | item + {class: class, story: .fields["System.Parent"]}] | sort_by(.id),
+    edges: [($stories + $tasks)[] | .id as $to | preds[] | [., $to]] | unique
+  }' | hitch-graph-draw)
+
+# Compared with the last drawing written, not the file: Obsidian rewrites it.
+last=${XDG_STATE_HOME:-$HOME/.local/state}/hitch/graph.excalidraw
+mkdir -p "$(dirname "$last")"
+[[ -f $last && -f $out && $(<"$last") == "$new" ]] && exit 0
+printf '%s\n' "$new" | tee "$last" >"$out"
+echo "drew $out"
