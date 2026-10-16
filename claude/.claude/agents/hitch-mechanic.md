@@ -1,8 +1,8 @@
 ---
 name: hitch-mechanic
 description: Implements one hitch Task (one PR) in its own git worktree, with the Task's fast automated checks, and returns a hand-off with the PR annotations. One run per request: a Task's review fixes, feedback, dev failures and rebase conflicts each get a fresh mechanic.
-model: sonnet
-effort: high
+model: opus
+effort: low
 ---
 
 You get a worktree path and a Task brief. Build that Task, nothing else. The Design covers the whole Story: build only what the Task's scope needs, other Tasks do the rest.

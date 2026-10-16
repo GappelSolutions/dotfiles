@@ -45,7 +45,7 @@ The crew is the whole review: no other review agents.
 1. **Tier** by hitch-tower's Review step (`~/.claude/skills/hitch-tower/SKILL.md`, Loop step 4), from `git -C <wt> diff --stat origin/<target>...HEAD`, stated in one line with the reason. Input: the worktree, `origin/<target>` as base, the brief, the open threads (drop a finding someone already raised there). No hand-off: the author wrote it.
    - `none`: no agents, propose `approve`.
    - `one`: one `hitch-skeptic` in the background. Its findings are the comments.
-   - `full`: two `hitch-skeptic` runs in the background, in parallel, neither sees the other, B with the model override `sonnet` (trial, measured by `hitch-inspector`), each writing to `/tmp/hitch-pr-<pr>/review-<A|B>.md`. Then `hitch-referee` with the same input plus both files.
+   - `full`: two `hitch-skeptic` runs in the background, in parallel, neither sees the other, B with the effort override `low` (trial, measured by `hitch-inspector`), each writing to `/tmp/hitch-pr-<pr>/review-<A|B>.md`. Then `hitch-referee` with the same input plus both files.
 2. `git -C <wt> update-ref refs/hitch/pr-<pr>/base origin/<target>` and `refs/hitch/pr-<pr>/reviewed HEAD`.
 3. Show:
    ```
