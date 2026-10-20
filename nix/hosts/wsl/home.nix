@@ -24,6 +24,8 @@
   # (Windows nvim takes 8 s). The caller's Windows paths become WSL ones; relative paths already
   # resolve, wsl.exe starts in the caller's directory.
   home.packages = [
+    pkgs.powershell
+
     (pkgs.writeShellScriptBin "vis-win" ''
       for arg; do
         shift
