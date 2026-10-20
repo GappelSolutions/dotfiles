@@ -28,7 +28,7 @@ play = [
 ]
 # yazi's preset, but on Windows:
 # - drops Rio's WGPU_BACKEND=gl (rio/config.toml) before handing the file to its default app: wgpu
-#   apps quit silently on the GL backend
+#   apps like WordCraft quit silently on the GL backend
 # - ShellExecute via rundll32, not cmd's start: start refuses files someone else has open in Word on
 #   a share ("being used by another process"), and yazi swallows the error, so Enter did nothing
 open = [
