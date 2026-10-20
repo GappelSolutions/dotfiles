@@ -9,11 +9,6 @@
     "zellij".source = ../../../zellij/.config/zellij;
   };
 
-  home.file.".local/bin/nerdfetch" = {
-    source = ../../scripts/nerdfetch;
-    executable = true;
-  };
-
   home.file.".local/bin/zellij-copy" = {
     source = ../../scripts/zellij-copy;
     executable = true;

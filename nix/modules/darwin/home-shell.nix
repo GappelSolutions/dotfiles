@@ -66,7 +66,6 @@
       py = "python3";
       pip = "pip3";
 
-      nerdfetch = "$HOME/.local/bin/nerdfetch";
       sc = "~/bin/macos-screensaver";
       rb = "sudo HOME=/var/root /nix/var/nix/profiles/default/bin/nix run nix-darwin -- switch --option warn-dirty false --flake ~/dev/misc/dotfiles/nix 2>&1 | grep --line-buffered -v \"builtins.toFile\"";
       dsh = "ssh dev";
@@ -196,8 +195,7 @@
       [[ -r ~/.work.zsh ]] && source ~/.work.zsh
 
       clear
-      # any key stops the spin and goes to the prompt
-      [[ -t 0 && -t 1 ]] && fetch --height 32
+      fetch
       echo "\n"
     '';
   };

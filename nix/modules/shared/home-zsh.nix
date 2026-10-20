@@ -46,7 +46,6 @@
       vim = "vis";
       py = "python3";
       pip = "pip3";
-      nerdfetch = "$HOME/.local/bin/nerdfetch";
       rb = "sudo nixos-rebuild switch --option warn-dirty false --flake ~/dev/misc/dotfiles/nix";
       rbw = "sudo nixos-rebuild switch --option warn-dirty false --flake ~/dev/misc/dotfiles/nix#wsl";
       rollback = "sudo nixos-rebuild switch --rollback";
@@ -274,8 +273,7 @@
       [[ -r ~/.work.zsh ]] && source ~/.work.zsh
 
       clear
-      # any key stops the spin and goes to the prompt
-      [[ -t 0 && -t 1 ]] && fetch --height 32
+      fetch
       echo "\n"
     '';
   };

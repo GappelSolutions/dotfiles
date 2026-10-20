@@ -54,7 +54,6 @@ in
     qpdf
 
     jq
-    nerdfetch
     unar
     zip
     socat
