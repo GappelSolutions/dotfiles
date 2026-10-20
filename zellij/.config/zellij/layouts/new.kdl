@@ -6,5 +6,10 @@ layout {
         }
     }
 
-    tab name="1"
+    tab name="1" {
+        pane
+        floating_panes {
+            pane { x "25%"; y "48%"; width "50%"; height "47%"; }
+        }
+    }
 }
