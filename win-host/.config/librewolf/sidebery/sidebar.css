@@ -1,0 +1,80 @@
+/* Sidebery: icon-only strip, Iceberg colors (injected into managed storage by install.ps1) */
+#root.root {
+  --frame-bg: #121720;
+  --frame-fg: #c6c8d1;
+  --toolbar-bg: #121720;
+  --toolbar-fg: #c6c8d1;
+  --popup-bg: #1a2232;
+  --popup-fg: #c6c8d1;
+  --s-accent: #84a0c6;
+  --nav-btn-accent: #84a0c6;
+  --tabs-normal-fg: #c6c8d1;
+  --tabs-activated-fg: #c6c8d1;
+  --frame-el-overlay-hover-bg: #1a2232;
+  --frame-el-overlay-selected-bg: #263450;
+  --tabs-height: 36px;
+  --tabs-margin: 2px;
+  --general-margin: 4px;
+  --general-border-radius: 6px;
+  --tabs-border-radius: 6px;
+}
+
+/* titles, close buttons and indent lines are not needed when only icons show */
+.Tab .t-box,
+.Tab .close,
+.Tab .ctx { display: none !important; }
+.Tab .body { justify-content: center !important; padding: 0 !important; }
+.Tab .main-row { justify-content: center !important; padding: 0 !important; }
+.Tab .fav { margin: 0 !important; }
+
+.Tab[data-active="true"] .body {
+  background-color: #263450 !important;
+  box-shadow: inset 2px 0 0 #84a0c6 !important;
+}
+.Tab[data-discarded="true"] .fav { opacity: 0.45; }
+
+/* workspace switcher at the bottom (Sidebery only offers top): one button per row,
+   active one highlighted, separator above */
+.top-horizontal-box {
+  order: 99;
+  border-top: 1px solid #2a3a55;
+  padding-top: 4px !important;
+  margin-top: 8px !important;
+  padding-bottom: 4px !important;
+}
+.NavigationBar .main-items { flex-direction: column !important; align-items: center !important; }
+.NavigationBar .nav-item[data-active="true"] { background-color: #263450 !important; border-radius: 6px; }
+.NavigationBar .nav-item .len { display: none !important; }
+
+/* pinned tabs: single column, separator below like the native vertical tab strip */
+.PinnedTabsBar {
+  justify-content: center !important;
+  border-bottom: 1px solid #2a3a55;
+  padding-bottom: 4px !important;
+  margin-bottom: 8px !important;
+}
+
+/* "+" new tab row */
+.NewTabBar { justify-content: center !important; }
+.NewTabBar .new-tab-btn { margin: 0 auto !important; }
+
+/* Ctrl+1..0 preview: badge on the favicon's bottom-right corner. The digits themselves come from
+   install.ps1 (nth-child rules, pins first like Sidebery's switch_to_tab_N); CSS counters don't
+   work here because Sidebery's markup scopes them per tab. Tabs past the 10th get no badge. */
+.TabsPanel .Tab .fav::after {
+  position: absolute;
+  right: -7px;
+  bottom: -6px;
+  z-index: 5;
+  min-width: 11px;
+  height: 11px;
+  padding: 0 2px;
+  box-sizing: border-box;
+  border-radius: 3px;
+  background: #263450;
+  color: #c6c8d1;
+  font: 700 9px/11px "Segoe UI", sans-serif;
+  text-align: center;
+  pointer-events: none;
+}
+.TabsPanel .Tab[data-active="true"] .fav::after { background: #84a0c6; color: #121720; }

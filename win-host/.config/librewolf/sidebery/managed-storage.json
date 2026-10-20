@@ -1,0 +1,81 @@
+{
+  "name": "{3c078156-979c-498b-8990-85f7987dd929}",
+  "description": "Sidebery config (managed storage wins over the settings UI; edit here and restart LibreWolf)",
+  "type": "storage",
+  "data": {
+    "settings": {
+      "navBarLayout": "horizontal",
+      "navBarInline": false,
+      "navBtnCount": false,
+      "hideEmptyPanels": false,
+      "navSwitchPanelsWheel": false,
+      "subPanelRecentlyClosedBar": false,
+      "subPanelBookmarks": false,
+      "subPanelHistory": false,
+      "updateSidebarTitle": false,
+
+      "hideInact": true,
+      "activateLastTabOnPanelSwitching": true,
+      "activateLastTabOnPanelSwitchingLoadedOnly": false,
+      "tabsPanelSwitchActMove": true,
+
+      "pinnedTabsPosition": "panel",
+      "tabsTree": false,
+      "tabRmBtn": "none",
+      "showNewTabBtns": true,
+      "newTabBarPosition": "after_tabs",
+      "tabsBadge": false,
+      "tabsUrlInTooltip": "full",
+      "warnOnMultiTabClose": "none",
+
+      "nativeScrollbars": false,
+      "theme": "proton",
+      "colorScheme": "ff",
+      "density": "default",
+      "animationSpeed": "fast",
+      "tabDoubleClick": "none"
+    },
+    "sidebar": {
+      "nav": ["work", "private"],
+      "panels": {
+        "work": {
+          "type": 2,
+          "id": "work",
+          "name": "Work",
+          "iconSVG": "briefcase",
+          "color": "blue",
+          "lockedPanel": false,
+          "skipOnSwitching": false,
+          "noEmpty": false,
+          "newTabCtx": "firefox-container-2",
+          "dropTabCtx": "none",
+          "moveRules": [
+            { "id": "work-ctr", "active": true, "containerId": "firefox-container-2" }
+          ],
+          "moveExcludedTo": -1,
+          "bookmarksFolderId": -1,
+          "newTabBtns": [],
+          "srcPanelConfig": null
+        },
+        "private": {
+          "type": 2,
+          "id": "private",
+          "name": "Private",
+          "iconSVG": "chill",
+          "color": "green",
+          "lockedPanel": false,
+          "skipOnSwitching": false,
+          "noEmpty": false,
+          "newTabCtx": "none",
+          "dropTabCtx": "none",
+          "moveRules": [],
+          "moveExcludedTo": -1,
+          "bookmarksFolderId": -1,
+          "newTabBtns": [],
+          "srcPanelConfig": null
+        }
+      }
+    },
+    "sidebarCSS": "SIDEBAR_CSS_PLACEHOLDER"
+  }
+}

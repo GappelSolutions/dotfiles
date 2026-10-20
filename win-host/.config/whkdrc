@@ -10,9 +10,9 @@ alt + shift + o         : komorebic reload-configuration
 # alt + f                 : if ($wshell.AppActivate('Firefox') -eq $False) { start firefox }
 # alt + b                 : if ($wshell.AppActivate('Chrome') -eq $False) { start chrome }
 
-# Zen Browser - jump komorebi to the existing instance's workspace instead of
-# spawning a new zen.exe process every time
-alt + z                 : if (Get-Process zen -ErrorAction SilentlyContinue) { komorebic eager-focus zen.exe } else { Start-Process zen }
+# LibreWolf - jump komorebi to the existing instance's workspace instead of
+# spawning a new window every time (headless/marionette instances have no window)
+alt + z                 : if (Get-Process librewolf -ErrorAction SilentlyContinue | Where-Object MainWindowHandle -ne 0) { komorebic eager-focus librewolf.exe } else { Start-Process librewolf }
 
 alt + q                 : komorebic close
 

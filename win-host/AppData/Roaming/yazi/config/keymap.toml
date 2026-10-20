@@ -60,3 +60,9 @@ desc = "Copy to the Windows clipboard"
 on = "<C-v>"
 run = "plugin winclip paste"
 desc = "Paste from the Windows clipboard"
+
+# folderstate.yazi writes hover changes at most once a second: write what's left before quitting
+[[mgr.prepend_keymap]]
+on = "q"
+run = [ "plugin folderstate", "quit" ]
+desc = "Quit"

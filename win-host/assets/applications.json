@@ -1337,6 +1337,53 @@
       }
     ]
   },
+  "LibreWolf": {
+    "ignore": [
+      {
+        "kind": "Class",
+        "id": "MozillaDialogClass",
+        "matching_strategy": "Equals"
+      },
+      {
+        "kind": "Class",
+        "id": "MozillaTaskbarPreviewClass",
+        "matching_strategy": "Legacy"
+      },
+      [
+        {
+          "kind": "Title",
+          "id": "Picture-in-Picture",
+          "matching_strategy": "Equals"
+        },
+        {
+          "kind": "Exe",
+          "id": "librewolf.exe",
+          "matching_strategy": "Equals"
+        }
+      ]
+    ],
+    "tray_and_multi_window": [
+      {
+        "kind": "Exe",
+        "id": "librewolf.exe",
+        "matching_strategy": "Equals"
+      }
+    ],
+    "object_name_change": [
+      {
+        "kind": "Exe",
+        "id": "librewolf.exe",
+        "matching_strategy": "Equals"
+      }
+    ],
+    "slow_application": [
+      {
+        "kind": "Exe",
+        "id": "librewolf.exe",
+        "matching_strategy": "Equals"
+      }
+    ]
+  },
   "Line": {
     "floating": [
       {

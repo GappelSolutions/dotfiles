@@ -1,0 +1,4 @@
+/* Iceberg (blue-leaning) background for blank/new tab so it doesn't flash white */
+@-moz-document url("about:blank"), url("about:newtab"), url("about:home"), url("about:privatebrowsing") {
+  html, body { background-color: #121720 !important; color: #c6c8d1 !important; }
+}

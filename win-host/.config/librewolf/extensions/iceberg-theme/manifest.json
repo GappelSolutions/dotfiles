@@ -1,0 +1,52 @@
+{
+  "manifest_version": 2,
+  "name": "Iceberg",
+  "version": "1.1",
+  "description": "Iceberg dark (cocopon/iceberg.vim), blue-leaning, matching rio/zsh",
+  "browser_specific_settings": { "gecko": { "id": "iceberg-theme@cgpp" } },
+  "theme": {
+    "colors": {
+      "frame": "#121720",
+      "frame_inactive": "#121720",
+      "tab_background_text": "#6e809c",
+      "tab_selected": "#1a2232",
+      "tab_text": "#d2d8e2",
+      "tab_line": "#84a0c6",
+      "tab_loading": "#84a0c6",
+      "toolbar": "#121720",
+      "toolbar_text": "#c6c8d1",
+      "toolbar_top_separator": "#121720",
+      "toolbar_bottom_separator": "#1a2232",
+      "toolbar_vertical_separator": "#2a3a55",
+      "toolbar_field": "#1a2232",
+      "toolbar_field_text": "#c6c8d1",
+      "toolbar_field_border": "#1a2232",
+      "toolbar_field_focus": "#1a2232",
+      "toolbar_field_text_focus": "#c6c8d1",
+      "toolbar_field_border_focus": "#84a0c6",
+      "toolbar_field_highlight": "rgba(132, 160, 198, 0.35)",
+      "toolbar_field_highlight_text": "#c6c8d1",
+      "bookmark_text": "#c6c8d1",
+      "icons": "#c6c8d1",
+      "icons_attention": "#84a0c6",
+      "button_background_hover": "rgba(132, 160, 198, 0.15)",
+      "button_background_active": "rgba(132, 160, 198, 0.3)",
+      "popup": "#1a2232",
+      "popup_text": "#c6c8d1",
+      "popup_border": "#2a3a55",
+      "popup_highlight": "#263450",
+      "popup_highlight_text": "#c6c8d1",
+      "sidebar": "#121720",
+      "sidebar_text": "#c6c8d1",
+      "sidebar_border": "#1a2232",
+      "sidebar_highlight": "#263450",
+      "sidebar_highlight_text": "#c6c8d1",
+      "ntp_background": "#121720",
+      "ntp_text": "#c6c8d1"
+    },
+    "properties": {
+      "color_scheme": "dark",
+      "content_color_scheme": "dark"
+    }
+  }
+}

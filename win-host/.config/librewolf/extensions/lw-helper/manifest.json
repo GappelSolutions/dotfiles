@@ -1,0 +1,9 @@
+{
+  "manifest_version": 2,
+  "name": "lw-helper",
+  "version": "1.6",
+  "description": "Closing a pinned tab resets it to its pinned URL; re-enables the Iceberg theme after each theme update",
+  "browser_specific_settings": { "gecko": { "id": "lw-helper@cgpp" } },
+  "permissions": ["tabs", "sessions", "cookies", "management", "storage"],
+  "background": { "scripts": ["background.js"], "persistent": true }
+}

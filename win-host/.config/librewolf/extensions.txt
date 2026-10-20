@@ -1,0 +1,11 @@
+# addons.mozilla.org slugs, installed into the profile by install.ps1
+sidebery
+ublock-origin
+darkreader
+vimium-ff
+proton-pass
+web-clipper-obsidian
+angular-devtools
+multiple-paste-and-go-button
+socialfocus
+600-sound-volume-fixed   # the original "600% Sound Volume" is no longer listed on AMO

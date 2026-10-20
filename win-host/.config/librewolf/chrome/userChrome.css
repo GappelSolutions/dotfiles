@@ -1,0 +1,32 @@
+/* LibreWolf chrome tweaks: Sidebery replaces the tab strip with a fixed icon-only sidebar */
+
+/* horizontal tabs (and the titlebar row with them) live in Sidebery now; komorebi handles the window */
+#TabsToolbar { visibility: collapse !important; }
+
+/* Sidebery sidebar: no header, fixed narrow strip, no splitter */
+#sidebar-box[sidebarcommand*="3c078156"] #sidebar-header { display: none !important; }
+#sidebar-box[sidebarcommand*="3c078156"] {
+  min-width: 48px !important;
+  max-width: 48px !important;
+  width: 48px !important;
+}
+#sidebar-box[sidebarcommand*="3c078156"] #sidebar { min-width: 48px !important; }
+#sidebar-box[sidebarcommand*="3c078156"] + #sidebar-splitter {
+  width: 1px !important;
+  min-width: 1px !important;
+  border: none !important;
+  background-color: #1a2232 !important;
+  pointer-events: none;
+}
+
+/* Firefox's design-token accent (focus rings, urlbar result URLs, history badges, checkboxes) is a
+   violet the theme API doesn't reach; pin it to Iceberg blue */
+:root {
+  --color-accent-primary: #84a0c6 !important;
+  --color-accent-primary-hover: #91acd1 !important;
+  --color-accent-primary-active: #a3bad9 !important;
+  --focus-outline-color: #84a0c6 !important;
+  --link-color: #84a0c6 !important;
+  --urlbarView-url-color: #84a0c6 !important;
+  --toolbarbutton-icon-fill-attention: #84a0c6 !important;
+}
