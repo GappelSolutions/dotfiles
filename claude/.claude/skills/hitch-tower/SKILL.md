@@ -22,7 +22,7 @@ Input: `$ARGUMENTS`
 | agent | does | model · effort |
 |---|---|---|
 | `hitch-bouncer` | loads a Task and its Story from Azure: brief + Ready verdict | haiku · medium |
-| `hitch-mechanic` | builds one Task in its worktree, or one fix round on it; returns a hand-off with annotations | opus · low · UI design work: opus · high |
+| `hitch-mechanic` | builds one Task in its worktree, or one fix round on it; returns a hand-off with annotations | opus · effort per run, step 3 |
 | `hitch-gofer` | tool-call chains: dev deploy + checks, screenshot, slow checks (full suite, e2e), after-merge pipelines + check | haiku · medium |
 | `hitch-skeptic` | review of a batch: one, or two independently at tier `full` | opus · high · B at `full`: opus · low |
 | `hitch-referee` | tier `full`: verifies both reviews, the final fix list per Task | opus · high |
@@ -59,7 +59,11 @@ The frontier is every Task whose Predecessors are all `Closed`. A batch is the f
    ```
    `<default>`: `git symbolic-ref --short refs/remotes/origin/HEAD`. `<branch>`: the naming rule in the repo's CLAUDE.md/AGENTS.md or its pre-PR skill, with the Task's ID and title, e.g. `<initials>_T<task-id>_<Title_Words>`, with the placeholders filled in as in your own branches (`git for-each-ref refs/remotes --format='%(authoremail) %(refname:short)'`). No rule: the convention in `git branch -r`.
 3. **Build**: `hitch-mechanic` with the worktree and the brief. It returns a hand-off.
-   - UI design work (a new or reshaped page, component, layout or visual style, not a wiring or logic change behind an existing UI): effort override `high`, for the build and every fix or feedback round on it. Low effort UI comes out generic.
+   - **Effort**: you pick it for every mechanic run (build, Open re-run, fix, feedback, dev failure, conflict) by what that run changes, not by the Task. Pass it as the effort override and state it in one line with the reason.
+     - `high`: new code with real logic (domain rules, algorithms, state, queries, parsing, concurrency, failure handling). UI design work (a new or reshaped page, component, layout or visual style, not a wiring or logic change behind an existing UI): every run on it, low effort UI comes out generic.
+     - `medium`: bigger refactors: restructuring existing logic, a changed signature or contract with many callers, wiring through layers along an existing pattern.
+     - `low`: rename, move, config or version bump, mechanical edits, a review Fix item or change request whose fix is spelled out, a rebase conflict without a semantic clash.
+     - Mixed: the highest that applies. Unsure: the higher one. A Fix item asking for new logic (e.g. missing failure handling) is `high`.
    - **Open** items: run the duck in Task mode on them, then a fresh `hitch-mechanic` with the worktree, the updated brief and the hand-off. Review waits for it.
    - **Checks** marked `→ tower`: a `hitch-gofer` runs them in the worktree. A failure: a fresh mechanic with its report.
 4. **Review**, once per batch, after every mechanic in it has handed off. Reviews stay in chat, never on Azure. The crew below is the whole review: no other review agents.
