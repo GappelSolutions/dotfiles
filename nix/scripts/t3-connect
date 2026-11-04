@@ -2,8 +2,9 @@
 # Link / unlink this machine's T3 Code environment with T3 Connect.
 #
 # T3 Code ships no `t3` binary on PATH here: the desktop app unpacks a server
-# runtime into ~/.t3/wsl-runtime/sha256-<digest>/ and the CLI is the bundled
-# apps/server/dist/bin.mjs. We resolve the newest runtime and run it with node.
+# runtime into ~/.t3/wsl-runtime/sha256-<digest>/. Newer runtimes hold a
+# compiled `t3` executable; older ones the node bundle apps/server/dist/bin.mjs.
+# We resolve the newest runtime and run whichever it has.
 #
 # `connect unlink` disables remote access but keeps the stored CLI
 # authorization, so reconnecting needs no browser round-trip. Use `logout` to
@@ -27,14 +28,18 @@ resolve_cli() {
 
   [[ -n $newest ]] || die "no unpacked runtime under $RUNTIME_ROOT"
 
-  local bin="$newest/apps/server/dist/bin.mjs"
-  [[ -f $bin ]] || die "runtime at $newest has no apps/server/dist/bin.mjs"
-
-  printf '%s' "$bin"
+  if [[ -x $newest/t3 ]]; then
+    CLI=("$newest/t3")
+  elif [[ -f $newest/apps/server/dist/bin.mjs ]]; then
+    CLI=(node "$newest/apps/server/dist/bin.mjs")
+  else
+    die "runtime at $newest has neither t3 nor apps/server/dist/bin.mjs"
+  fi
 }
 
 t3() {
-  node "$(resolve_cli)" "$@"
+  [[ -v CLI ]] || resolve_cli
+  "${CLI[@]}" "$@"
 }
 
 # `connect status --json` reports desired/authenticated/linked. Treat a missing
