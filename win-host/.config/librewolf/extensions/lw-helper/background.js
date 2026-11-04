@@ -1,4 +1,4 @@
-// Ctrl+1..0 are Sidebery's switch_to_tab_N (set by install.ps1): they count the active
+// Ctrl+1..9 are Sidebery's switch_to_tab_N (set by install.ps1): they count the active
 // workspace's own pins, which Firefox's built-in Ctrl+N can't since pinned tabs never hide.
 
 // Pinned tabs remember the URL they were pinned with ("home", kept in session data so it

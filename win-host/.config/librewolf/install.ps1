@@ -14,14 +14,14 @@ $sideberyId = '{3c078156-979c-498b-8990-85f7987dd929}'
 
 # --- Sidebery managed storage (HKCU, no admin) -------------------------------------
 function Write-SideberyConfig {
-  # Ctrl+1..0 badges: digits for the first 10 tabs of a workspace, pins first. Unpinned tabs are
+  # Ctrl+1..9 badges: digits for the first 9 tabs of a workspace, pins first. Unpinned tabs are
   # offset by the pin count (has pin N, lacks pin N+1). "of S" skips non-tab siblings in both lists.
   $pin = { param($i) ".tab-wrapper:nth-child($i of .tab-wrapper)" }
-  $badges = foreach ($k in 1..10) { ".PinnedTabsBar $(& $pin $k) .fav::after { content: `"$($k % 10)`"; }" }
-  $badges += foreach ($pins in 0..9) {
+  $badges = foreach ($k in 1..9) { ".PinnedTabsBar $(& $pin $k) .fav::after { content: `"$k`"; }" }
+  $badges += foreach ($pins in 0..8) {
     $panel = ".TabsPanel:not(:has($(& $pin ($pins + 1))))"
     if ($pins) { $panel = ".TabsPanel:has($(& $pin $pins)):not(:has($(& $pin ($pins + 1))))" }
-    foreach ($n in 1..(10 - $pins)) { "$panel .TabList .Tab:nth-child($n of .Tab) .fav::after { content: `"$(($pins + $n) % 10)`"; }" }
+    foreach ($n in 1..(9 - $pins)) { "$panel .TabList .Tab:nth-child($n of .Tab) .fav::after { content: `"$($pins + $n)`"; }" }
   }
 
   $managed = Get-Content "$here\sidebery\managed-storage.json" -Raw | ConvertFrom-Json -AsHashtable
@@ -135,6 +135,7 @@ $extPrefs[$sideberyId].permissions = $perms
 $extPrefs | ConvertTo-Json -Depth 5 | Set-Content $prefsFile -Encoding utf8NoBOM
 
 # Sidebery shortcuts (sidebery/shortcuts.json), stored where about:addons > Manage shortcuts keeps them.
+# "" clears a shortcut (switch_to_tab_9: Ctrl+0 stays LibreWolf's reset zoom).
 # Sidebery has to have been installed once (first start) so its installDate is known.
 $addons = (Get-Content "$profileDir\extensions.json" -Raw -ErrorAction SilentlyContinue | ConvertFrom-Json).addons
 $sidebery = $addons | Where-Object id -eq $sideberyId

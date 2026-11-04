@@ -58,9 +58,9 @@
 .NewTabBar { justify-content: center !important; }
 .NewTabBar .new-tab-btn { margin: 0 auto !important; }
 
-/* Ctrl+1..0 preview: badge on the favicon's bottom-right corner. The digits themselves come from
+/* Ctrl+1..9 preview: badge on the favicon's bottom-right corner. The digits themselves come from
    install.ps1 (nth-child rules, pins first like Sidebery's switch_to_tab_N); CSS counters don't
-   work here because Sidebery's markup scopes them per tab. Tabs past the 10th get no badge. */
+   work here because Sidebery's markup scopes them per tab. Tabs past the 9th get no badge. */
 .TabsPanel .Tab .fav::after {
   position: absolute;
   right: -7px;
