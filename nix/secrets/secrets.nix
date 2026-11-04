@@ -41,5 +41,7 @@ in
   "work-zsh.age".publicKeys = [ masterKey ];
   # OpenBao root tokens per oc context (`<context>=<token>` lines), read by `kbao` in work-zsh
   "openbao-tokens.age".publicKeys = [ masterKey ];
+  # OpenBao static seal key per cluster: base64 `data.key` of platform-secrets/openbao-static-seal-key, needed to open a raft snapshot
+  "openbao-seal-key-gdm-dev.age".publicKeys = [ masterKey ];
   "lazyops-config.age".publicKeys = [ masterKey ];
 }
