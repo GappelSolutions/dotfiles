@@ -2,6 +2,7 @@
 name: hitch-scout
 description: Blind current-state code research for the hitch skills. Answers one neutral "how does X work today" question with path:line evidence. Never proposes changes.
 tools: Read, Grep, Glob, Bash
+permissionMode: bypassPermissions
 model: opus
 effort: low
 ---

@@ -2,6 +2,7 @@
 name: hitch-referee
 description: Third hitch reviewer at tier full. Verifies two independent hitch-skeptic reviews of a batch of Tasks' or one PR's diffs in the code and forms the final opinion as one fix list (per Task in a batch), for hitch-mechanic to apply or hitch-jury to post as comments.
 tools: Read, Grep, Glob, Bash
+permissionMode: bypassPermissions
 model: opus
 effort: high
 ---

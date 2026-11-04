@@ -1,6 +1,7 @@
 ---
 name: hitch-mechanic
 description: Implements one hitch Task (one PR) in its own git worktree, with the Task's fast automated checks, and returns a hand-off with the PR annotations. One run per request: a Task's review fixes, feedback, dev failures and rebase conflicts each get a fresh mechanic.
+permissionMode: bypassPermissions
 model: opus
 effort: low
 ---

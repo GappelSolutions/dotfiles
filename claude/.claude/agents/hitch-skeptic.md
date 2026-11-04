@@ -2,6 +2,7 @@
 name: hitch-skeptic
 description: hitch reviewer. Reviews a batch of Tasks' or one PR's diffs, or only what changed since the last review, for correctness, failure modes, scale, comment slop, conventions and simplicity, with the lenses the diff can hit. hitch-tower and hitch-jury run one, or for risky diffs two independently with hitch-referee on top. Reports in chat, never on Azure.
 tools: Read, Grep, Glob, Bash
+permissionMode: bypassPermissions
 model: opus
 effort: high
 ---
