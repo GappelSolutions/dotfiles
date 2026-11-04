@@ -103,15 +103,16 @@ A Story:
     classDef review fill:#fff3bf,stroke:#e67700,color:#212529
     classDef build fill:#d0ebff,stroke:#1971c2,color:#212529
     classDef todo fill:#f1f3f5,stroke:#868e96,color:#212529
+    classDef here stroke:#c2255c,stroke-width:5px
   ```
-  Arrow: blocks, direct ones only. Label: the Task's full title and its PRs (`merged` while the Task is still open). A Task of another Story at either end: in its own box, labelled only `#<story-id>`. `done` closed · `review` PR in review · `build` in progress · `todo` not started.
+  Arrow: blocks, direct ones only. Label: the Task's full title and its PRs (`merged` while the Task is still open). A Task of another Story at either end: in its own box, labelled only `#<story-id>`. `done` closed · `review` PR in review · `build` in progress · `todo` not started. `here`: only in a PR's copy (**PR**), never on the Story.
   Shape: wider than tall, at most 5:1 (the PNG's width/height). Outside that: change `wrappingWidth` (lower = narrower) and render again. Transparent and grey lines: readable on Azure's light and dark theme.
   ```bash
   mmdc -i <NN>.mmd -o <NN>.png -w 1400 -s 2 -b transparent
   curl -s -u ":$AZURE_DEVOPS_EXT_PAT" -H 'Content-Type: application/octet-stream' --data-binary @<NN>.png \
     "$org/$project/_apis/wit/attachments?fileName=plan-<NN>.png&api-version=7.1" | jq -r .url
   ```
-  Then PATCH the Story: `![Plan](<url>)` as the `## Plan` section, an `AttachedFile` relation to that URL, and remove the previous Plan's relation. Open PRs swap their image the same way, as a PR attachment (**PR**).
+  Then PATCH the Story: `![Plan](<url>)` as the `## Plan` section, an `AttachedFile` relation to that URL, and remove the previous Plan's relation. Open PRs swap their image the same way, as a PR attachment (**PR**), each its own copy `<NN>-<task-id>.{mmd,png}` marking that PR's Task: `class T<task-id> here` after its state class (thick magenta border, state fill kept).
 - `Acceptance Criteria` field: bullets of observable behavior. Tasks have no such field.
 
 A Task:
@@ -184,7 +185,7 @@ az repos pr list --status completed --top 5 --query '[].[title, completionOption
   ````
   <one line: what works after this PR>
 
-  ![Plan](<attachment url>)   <the Story's current Plan PNG, uploaded to the PR as plan-<NN>.png; only if the Story has one>
+  ![Plan](<attachment url>)   <the Story's current Plan with this PR's Task marked (**Plan**), uploaded to the PR as plan-<NN>-<task-id>.png; only if the Story has one>
 
   ```text
   <sketch, only if the change spans components: call tree, file tree or data flow, `diff` block if the shape exists; only what matters; a rendered diagram instead when the text would get ugly, see below>
