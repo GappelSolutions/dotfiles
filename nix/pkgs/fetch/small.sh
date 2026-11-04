@@ -92,11 +92,22 @@ $c0   **   **   $c1##$r
 OUT
 
 [[ -t 0 && -t 1 ]] || exit 0
+# Like the 3D greeting the stopping key is only peeked at, never read, so the shell gets it.
+# Unbuffered and unechoed until then; `read -t` on a FIFO nobody writes is the sleep.
+tty=$(stty -g)
+stty -icanon -echo
+fifo=$(mktemp -u)
+mkfifo "$fifo"
+exec {tick}<>"$fifo"
+rm "$fifo"
 # RAM is 4 rows above the cursor, uptime 3
 printf '%s[?25l' "$e"
-trap 'printf "%s[?25h" "$e"' EXIT
+trap 'stty "$tty"; printf "%s[?25h" "$e"' EXIT
 trap 'exit 130' INT TERM
-until read -rsn1 -t 1; do
+n=0
+until read -t 0; do
+	read -t 0.05 -u "$tick"
+	((++n % 20)) && continue
 	mem_line
 	up_line
 	printf '\r%s[4A%s%s[K\n%s%s[K\r%s[3B' "$e" "$(mem_row)" "$e" "$(up_row)" "$e" "$e"
