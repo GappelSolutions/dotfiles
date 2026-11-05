@@ -112,6 +112,10 @@ When the frontier is empty, turn the round log into the Story's Design (shape in
 - The Story already has a Design: produce one merged Design, never a second.
 - Nothing lost: every settled decision is in a D line, merged, or shown by a sketch. ADRs still match.
 
+Design review, before the user sees the draft: one `hitch-skeptic` by its **Design review** section, with the repo path, story line, ACs and the draft. Never the round log. Task mode: only the decisions this grill changed.
+- Open each question's `path:line` yourself and drop the false ones.
+- Ask the rest as grill rounds, `contradicts` and one-way doors first. Their answers go into the draft. No second review unless a one-way door changed.
+
 Show the draft Design, then:
 
 ```

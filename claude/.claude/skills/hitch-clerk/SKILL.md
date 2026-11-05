@@ -188,7 +188,7 @@ az repos pr list --status completed --top 5 --query '[].[title, completionOption
   ![Plan](<attachment url>)   <the Story's current Plan with this PR's Task marked (**Plan**), uploaded to the PR as plan-<NN>-<task-id>.png; only if the Story has one>
 
   ```text
-  <sketch, only if the change spans components: call tree, file tree or data flow, `diff` block if the shape exists; only what matters; a rendered diagram instead when the text would get ugly, see below>
+  <sketch, only if the change spans components: call tree, file tree or data flow, `diff` block if the shape exists; only what matters; a rendered diagram instead when the text would get ugly, see below. Call tree: cut from `calldiff diff <base> HEAD` in the worktree, never written from memory>
   ```
 
   **Changes**

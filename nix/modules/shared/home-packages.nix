@@ -5,6 +5,7 @@ let
   lazyops = inputs.lazyops.packages.${pkgs.stdenv.hostPlatform.system}.default;
   oh-my-pi = pkgs.callPackage ../../pkgs/oh-my-pi/package.nix { };
   agent-of-empires = pkgs.callPackage ../../pkgs/agent-of-empires/package.nix { };
+  calldiff = pkgs.callPackage ../../pkgs/calldiff/package.nix { };
   revdiff = pkgs.callPackage ../../pkgs/revdiff/package.nix { };
   twofa = pkgs.callPackage ../../rust/twofa { };
   rd = pkgs.callPackage ../../pkgs/rd/package.nix {
@@ -26,6 +27,7 @@ in
     zellij-welcome
     oh-my-pi
     agent-of-empires
+    calldiff
     revdiff
     rd
     twofa
