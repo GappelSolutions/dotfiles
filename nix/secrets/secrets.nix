@@ -44,4 +44,6 @@ in
   # OpenBao static seal key per cluster: base64 `data.key` of platform-secrets/openbao-static-seal-key, needed to open a raft snapshot
   "openbao-seal-key-gdm-dev.age".publicKeys = [ masterKey ];
   "lazyops-config.age".publicKeys = [ masterKey ];
+  # Vaultwarden master password of christian.gappel@ensor.com (vault.ensor.test, org ensor)
+  "vaultwarden-master-password.age".publicKeys = [ masterKey ];
 }
