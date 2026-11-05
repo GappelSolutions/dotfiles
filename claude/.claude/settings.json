@@ -38,6 +38,15 @@
             "command": "~/.claude/hooks/usage-limit.sh"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/no-filtered-checks.sh"
+          }
+        ]
       }
     ]
   }

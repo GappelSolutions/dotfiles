@@ -8,6 +8,7 @@ in
   home.file.".claude/settings.json".source = repo + /claude/.claude/settings.json;
   home.file.".claude/statusline-command.sh".source = repo + /claude/.claude/statusline-command.sh;
   home.file.".claude/hooks/usage-limit.sh".source = repo + /claude/.claude/hooks/usage-limit.sh;
+  home.file.".claude/hooks/no-filtered-checks.sh".source = repo + /claude/.claude/hooks/no-filtered-checks.sh;
 
   # User-scope MCP servers live in ~/.claude.json, which Claude Code rewrites
   # constantly (sessions, OAuth state), so it can't be a store symlink. Merge
