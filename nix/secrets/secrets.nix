@@ -46,4 +46,6 @@ in
   "lazyops-config.age".publicKeys = [ masterKey ];
   # Vaultwarden master password of christian.gappel@ensor.com (vault.ensor.test, org ensor)
   "vaultwarden-master-password.age".publicKeys = [ masterKey ];
+  # GDM UI login `cga` (Christian Gappel), same password on the dev-cluster namespaces cga, cga2-cga5 and ersys
+  "gdm-ui-cga-password.age".publicKeys = [ masterKey ];
 }
