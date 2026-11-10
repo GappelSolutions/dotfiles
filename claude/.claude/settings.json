@@ -15,7 +15,13 @@
   },
   "permissions": {
     "deny": [
-      "Skill(skill:deep-research)"
+      "Skill(skill:deep-research)",
+      "Artifact",
+      "ArtifactComments",
+      "ArtifactData",
+      "Skill(skill:artifact-design)",
+      "Skill(skill:artifact-capabilities)",
+      "Skill(skill:artifact-diagramming)"
     ]
   },
   "hooks": {
