@@ -1,6 +1,6 @@
 ---
 name: hitch-pilot
-description: Release the default branch to stage with zero downtime. Reviews every change since the last release, anyone's, for what breaks while old and new versions run side by side, and opens the release PR with the checklist the release needs. Use when the user wants to cut, prepare or check a release.
+description: Release the default branch to stage with zero downtime. Reviews every change since the last release, anyone's, for what breaks while old and new versions run side by side, opens the release PR with the checklist the release needs, and drafts the PM mail of what changes for users. Use when the user wants to cut, prepare or check a release.
 argument-hint: "[repo]"
 ---
 
@@ -78,6 +78,24 @@ Show the user, empty sections dropped:
 ```
 
 Blockers are the user's call: fix on `<dev>` first (`hitch-duck`/`hitch-tower`, or by hand), or release anyway. No release PR with an open blocker unless the user says so.
+
+## PM mail
+
+With the checklist, draft a plain English email of what changes for users, for the user to send to the PMs. Show it, never send or post it. After **Completed**, rewrite the opening line with how the release went.
+
+- Opening: one line on the release (window, downtime, no data lost), then sections by area (e.g. Login & accounts, Monitoring, Exports / reports, Meter data correctness, Master data & settings, Meter connections, UI, For API users).
+- Per feature 1-4 bullets, one line each: what a user sees, can do, or no longer can. Fixes a user noticed count too, e.g. "DST fix: load-profile values are now correct in UTC across clock changes."
+- Nothing technical (queues, retries, migrations, secrets, service accounts), nothing operational (dev namespaces, PR or review status, Stories to close, which accounts redo 2FA), and nothing that reads as "nothing changed" ("byte-identical", "same data").
+- Features still in alpha stay out, or show up under their released page only. Ask the user once which ones are alpha.
+
+Granularity:
+
+```
+**Meter data (new)**
+- View the readings of a meter, a metering point or an application group over a chosen time range and interval.
+- Live readings update automatically, and the data can be shown as a table and exported as CSV.
+- After a data gap, a value is shown as unknown instead of a fake spike.
+```
 
 ## Release PR (on the user's OK)
 
