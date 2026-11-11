@@ -29,7 +29,7 @@ Fresh Mac: `curl -fsSL https://raw.githubusercontent.com/GappelSolutions/dotfile
 | MacBook | `darwinConfigurations.Christians-MacBook-Pro` | nix-darwin + Homebrew |
 | WSL (Windows laptop) | `nixosConfigurations.wsl` | NixOS-WSL; Windows side via `win-host/` (Rio, komorebi, pwsh, native zellij) |
 | ThinkPad T14 | `nixosConfigurations.cgpp-t14-nix` (`-lite`: no Caelestia) | Hyprland desktop, users `cgpp` + `wife`; `cgpp-t14-recovery` / `cgpp-recovery-iso` for recovery |
-| dev, minix, nix-cc | `nixosConfigurations.<name>` (`minix-iso` installer) | headless servers; nix-cc user is `cga` |
+| dev | `nixosConfigurations.dev` | headless server (servers like vm-hitch live in NOVA/Infra, the Watcher box in Watcher_GDM) |
 
 Shared files must work on every host that deploys them. Host-specific bits go in the host module,
 behind a runtime check (e.g. `nix/scripts/zellij-copy`), or in a per-host override that imports a

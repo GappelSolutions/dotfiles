@@ -206,63 +206,6 @@
         ];
       };
 
-      nixosConfigurations.minix = nixpkgs.lib.nixosSystem {
-        system = linuxSystem;
-        specialArgs = { inherit inputs; };
-        modules = [
-          { nixpkgs.overlays = [ inputs.claude-code-nix.overlays.default ]; }
-          ./hosts/minix/configuration.nix
-          home-manager.nixosModules.home-manager
-          {
-            home-manager = {
-              useGlobalPkgs = true;
-              useUserPackages = true;
-              backupFileExtension = "hm-backup";
-              extraSpecialArgs = { inherit inputs; };
-              users.cga = import ./hosts/minix/home.nix;
-            };
-          }
-        ];
-      };
-
-      nixosConfigurations.minix-iso = nixpkgs.lib.nixosSystem {
-        system = linuxSystem;
-        specialArgs = { inherit inputs; };
-        modules = [
-          { nixpkgs.overlays = [ inputs.claude-code-nix.overlays.default ]; }
-          ./hosts/minix/iso.nix
-          home-manager.nixosModules.home-manager
-          {
-            home-manager = {
-              useGlobalPkgs = true;
-              useUserPackages = true;
-              backupFileExtension = "hm-backup";
-              extraSpecialArgs = { inherit inputs; };
-              users.cga = import ./hosts/minix/home.nix;
-            };
-          }
-        ];
-      };
-
-      nixosConfigurations.nix-cc = nixpkgs.lib.nixosSystem {
-        system = linuxSystem;
-        specialArgs = { inherit inputs; };
-        modules = [
-          { nixpkgs.overlays = [ inputs.claude-code-nix.overlays.default ]; }
-          ./hosts/nix-cc/configuration.nix
-          home-manager.nixosModules.home-manager
-          {
-            home-manager = {
-              useGlobalPkgs = true;
-              useUserPackages = true;
-              backupFileExtension = "hm-backup";
-              extraSpecialArgs = { inherit inputs; };
-              users.cga = import ./hosts/nix-cc/home.nix;
-            };
-          }
-        ];
-      };
-
       nixosConfigurations.cgpp-t14-nix = desktopSystem { };
       nixosConfigurations.cgpp-t14-nix-lite =
         desktopSystem { enableCaelestia = false; };

@@ -32,7 +32,7 @@ if [ -n "${DISPLAY:-}" ] && command -v xclip >/dev/null 2>&1; then
   exec xclip -selection clipboard
 fi
 
-# Headless host (minix, nix-cc, dev over ssh): nothing local to copy into.
+# Headless host (dev, Infra-managed servers over ssh): nothing local to copy into.
 # Drain stdin so zellij doesn't block on a full pipe.
 cat >/dev/null
 exit 1
