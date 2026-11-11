@@ -42,6 +42,12 @@
       mode = "600";
     };
     # Work config, kept out of this public repo
+    claude-ensor = {
+      file = ../../secrets/claude-ensor.age;
+      path = "/home/cgpp/.claude/ensor.md";
+      owner = "cgpp";
+      mode = "600";
+    };
     work-zsh = {
       file = ../../secrets/work-zsh.age;
       path = "/home/cgpp/.work.zsh";

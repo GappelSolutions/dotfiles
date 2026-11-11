@@ -37,3 +37,7 @@ Never run `playwright install` (browsers are provided system-wide, download is d
 - Project already has `playwright`/`@playwright/test`: use its own install/config.
 - Ad hoc/no project: use `nix/scripts/browser-scratch/` (git-tracked, pinned to the installed browser revision).
 - Prefer `innerText()`/`getComputedStyle` reads over screenshots; script one bounded flow and stop; always `browser.close()`.
+
+# Work
+
+Ensor/Semax context (agenix, absent on private hosts): @~/.claude/ensor.md

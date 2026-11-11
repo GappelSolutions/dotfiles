@@ -24,10 +24,10 @@ in
   # Tokens
   "azure-devops-pat.age".publicKeys = [ masterKey ];
 
-  # Proxmox root password, pve1 (ers-srvprox-001, 172.25.65.5)
+  # Proxmox root password, hw-pve-stage and hw-pve-dev
   "pve-root-password.age".publicKeys = [ masterKey ];
 
-  # sudo password of ens-admin on the ensor DNS/DHCP host (simsandbox01, 172.25.64.10)
+  # sudo password of ens-admin on the ensor DNS/DHCP host (hw-dns, 172.25.64.10)
   "ensor-dns-admin.age".publicKeys = [ masterKey ];
 
   # Copies of Watcher_GDM server/secrets/{gap,dashboard}-env.age; re-copy after rotating there
@@ -38,6 +38,8 @@ in
   "pgpass.age".publicKeys = [ masterKey ];
 
   # Work config, kept out of this public repo
+  # Work context for Claude, deployed as ~/.claude/ensor.md: only what the work repos don't document
+  "claude-ensor.age".publicKeys = [ masterKey ];
   "work-zsh.age".publicKeys = [ masterKey ];
   # OpenBao root tokens per oc context (`<context>=<token>` lines), read by `kbao` in work-zsh
   "openbao-tokens.age".publicKeys = [ masterKey ];
