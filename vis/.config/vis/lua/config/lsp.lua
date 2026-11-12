@@ -20,6 +20,28 @@ lspc.ls_map.csharp = {
 	roots = { '*.slnx', '*.sln' },
 	formatting_options = { tabSize = 4, insertSpaces = true },
 }
+-- from nixpkgs (home-vis.nix), not Mason; bash and json keep vis-lspc's defaults
+lspc.ls_map.nix = { name = 'nixd', cmd = 'nixd', roots = { 'flake.nix', '.git' } }
+lspc.ls_map.opentofu = {
+	name = 'tofu-ls',
+	cmd = 'tofu-ls serve',
+	roots = { '.terraform.lock.hcl', '.terraform', '.git' },
+}
+lspc.ls_map.yaml = { name = 'yaml-language-server', cmd = 'yaml-language-server --stdio' }
+lspc.ls_map.python = {
+	name = 'basedpyright',
+	cmd = 'basedpyright-langserver --stdio',
+	roots = { 'pyproject.toml', 'setup.py', 'requirements.txt', '.git' },
+}
+lspc.ls_map.toml = { name = 'taplo', cmd = 'taplo lsp stdio' }
+lspc.ls_map.markdown = { name = 'marksman', cmd = 'marksman server' }
+-- vis-lspc runs cmd as `exec <cmd>`: log and session files straight into the cache dir
+local pses = (os.getenv('XDG_CACHE_HOME') or os.getenv('HOME') .. '/.cache') .. '/vis-pses'
+lspc.ls_map.powershell = {
+	name = 'powershell-editor-services',
+	cmd = 'powershell-editor-services -Stdio -HostName vis -HostProfileId vis -HostVersion 1.0.0'
+		.. ' -LogLevel Warning -LogPath ' .. pses .. '.log -SessionDetailsPath ' .. pses .. '.json',
+}
 -- nvim attaches tailwindcss next to the html/css server; vis-lspc runs one server per
 -- syntax, so tailwind is an extra server under its own key, opened alongside
 lspc.ls_map.tailwind = {

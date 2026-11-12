@@ -6,6 +6,10 @@ end)
 
 -- vis has neither a csv filetype nor lexer: ../lexers/csv.lua
 vis.ftdetect.filetypes.csv = { ext = { '%.csv$', '%.tsv$' } }
+-- nor nix/HCL ones: ../lexers/{nix,hcl,opentofu}.lua
+vis.ftdetect.filetypes.nix = { ext = { '%.nix$' } }
+vis.ftdetect.filetypes.opentofu = { ext = { '%.tf$', '%.tofu$' } }
+vis.ftdetect.filetypes.hcl = { ext = { '%.hcl$', '%.tfvars$' } }
 
 -- subscribed before vis-editorconfig-options so .editorconfig wins
 local two_space = { javascript = true, typescript = true, html = true }

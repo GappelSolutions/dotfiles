@@ -66,7 +66,22 @@ in
     (lib.hiPrio clipboard)
     pkgs.scooter
     pkgs.television
-  ];
+  ]
+  # language servers for vis-lspc (vis/.config/vis/lua/config/lsp.lua) that Mason doesn't hold;
+  # bash-language-server lints through shellcheck, tofu-ls validates through tofu
+  ++ (with pkgs; [
+    nixd
+    tofu-ls
+    opentofu
+    yaml-language-server
+    bash-language-server
+    shellcheck
+    basedpyright
+    taplo
+    marksman
+    vscode-langservers-extracted
+    powershell-editor-services
+  ]);
 
   xdg.configFile."vis/visrc.lua".source = ../../../vis/.config/vis/visrc.lua;
   xdg.configFile."vis/lua".source = ../../../vis/.config/vis/lua;
@@ -82,9 +97,15 @@ in
   };
 
   xdg.configFile."vis/plugins".source = pkgs.linkFarm "vis-plugins" {
-    vis-lspc = plugin "https://gitlab.com/muhq/vis-lspc"
-      "9d0f7a0b82b1983b44636259733d6d2c39497315"
-      "sha256-lA9ZzYeq7td5x5mBE8hCc7xzbRNMl8slm0H4o1P9dlc=";
+    # the patch answers workspace/configuration with a null per unconfigured item (it sent
+    # [], and nixd exits on the short array) and drops replies to no pending request
+    vis-lspc = pkgs.applyPatches {
+      name = "vis-lspc";
+      src = plugin "https://gitlab.com/muhq/vis-lspc"
+        "9d0f7a0b82b1983b44636259733d6d2c39497315"
+        "sha256-lA9ZzYeq7td5x5mBE8hCc7xzbRNMl8slm0H4o1P9dlc=";
+      patches = [ ./patches/vis-lspc.patch ];
+    };
     vis-fzf-mru = plugin "https://github.com/peaceant/vis-fzf-mru"
       "1e95326b27b70f4976c5acbd8c85e951697e71af"
       "sha256-u2OMS6uej9fkJvS1zZbRXFUiRqaxX9VLJH+Iyw0fJBU=";

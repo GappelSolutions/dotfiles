@@ -1,0 +1,25 @@
+diff -ru a/init.lua b/init.lua
+--- a/init.lua	2026-11-12 14:37:16.932876554 +0100
++++ b/init.lua	2026-11-12 14:37:16.980814335 +0100
+@@ -1078,10 +1078,11 @@
+     local scope = item.scopeUri and uri_to_path(item.scopeUri)
+     local effective_settings = settings.effective_settings(ls, item.section, scope)
+     -- If we can not provide any settings LSP requires that null is present in the result array.
++    -- (table.insert(results, nil) inserts nothing: nixd exits on the short array)
+     if next(effective_settings) then
+       table.insert(results, effective_settings)
+     else
+-      table.insert(results, nil)
++      table.insert(results, lspc.json.null)
+     end
+   end
+   response.result = results
+@@ -1166,7 +1167,7 @@
+   local req = self.inflight[method.id]
+   if req and not method.method then
+     self:handle_method_response(method, req)
+-  else
++  elseif method.method then
+     self:handle_method_call(method)
+   end
+ end

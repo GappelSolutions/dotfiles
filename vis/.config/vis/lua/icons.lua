@@ -76,6 +76,11 @@ local by_syntax = {
 	nix = 'nix',
 	yaml = 'yaml',
 	bash = 'sh',
+	opentofu = 'tf',
+	hcl = 'hcl',
+	python = 'py',
+	toml = 'toml',
+	powershell = 'ps1',
 }
 M.default = { '', '#6d8086' }
 
