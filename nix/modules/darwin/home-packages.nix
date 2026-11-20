@@ -21,7 +21,6 @@ in
     rd
     pkgs.jujutsu
     pkgs.codex
-    pkgs.godot_4-mono
   ] ++ (with pkgs; [
     git
     age

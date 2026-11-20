@@ -54,9 +54,6 @@
       lg = "lazygit";
       "2fa" = "cotp";
 
-      godot = "godot-mono";
-      godot4 = "godot-mono";
-
       ai = "codex --dangerously-bypass-approvals-and-sandbox";
       sz = "source ~/.zshrc";
       zr = "zellij run -i --";
