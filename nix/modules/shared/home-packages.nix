@@ -88,7 +88,16 @@ in
     rustup
     sshpass
     neovim
-    (azure-cli.withExtensions [ azure-cli-extensions.azure-devops ])
+    # Reads the PAT itself: T3 Code (started by wsl.exe) and other non-zsh
+    # callers never source .zshenv, so AZURE_DEVOPS_EXT_PAT is unset there.
+    (symlinkJoin {
+      name = "azure-cli-pat";
+      paths = [ (azure-cli.withExtensions [ azure-cli-extensions.azure-devops ]) ];
+      nativeBuildInputs = [ makeWrapper ];
+      postBuild = ''
+        wrapProgram $out/bin/az --run '[ -z "''${AZURE_DEVOPS_EXT_PAT:-}" ] && [ -r "$HOME/.azure-devops-pat" ] && export AZURE_DEVOPS_EXT_PAT="$(cat "$HOME/.azure-devops-pat")"'
+      '';
+    })
     openshift
     openssl
     openbao
