@@ -58,6 +58,9 @@ file    win-host/bin/librewolf-launch.vbs                   bin/librewolf-launch
 # Mouse keepalive: 1px nudge after 2 min idle so the session never locks (task: win-host/register-keepalive.ps1)
 file    win-host/AppData/Local/keepalive/keepalive.ps1      AppData/Local/keepalive/keepalive.ps1
 
+# Outlook: the Azure DevOps mail rules and the Azure folder's 1-week retention live on the Exchange
+# server, so there's no file here; win-host/register-outlook-rules.ps1 applies them.
+
 # Raycast script commands (register the folder once: Settings -> Script Commands -> Add Script Directory)
 dir     win-host/AppData/Roaming/Raycast/Scripts            AppData/Roaming/Raycast/Scripts
 
