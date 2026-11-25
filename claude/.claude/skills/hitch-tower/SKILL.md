@@ -66,6 +66,7 @@ The frontier is every Task whose Predecessors are all `Closed`. A batch is the f
      - Mixed: the highest that applies. Unsure: the higher one. A Fix item asking for new logic (e.g. missing failure handling) is `high`.
    - **Open** items: run the duck in Task mode on them, then a fresh `hitch-mechanic` with the worktree, the updated brief and the hand-off. Review waits for it.
    - **Checks** marked `→ tower`: a `hitch-gofer` runs them in the worktree. A failure: a fresh mechanic with its report.
+   - **Pre-push gate**: before every push (steps 6 and 8), a `hitch-gofer` runs the repo's pre-push dry run in the worktree if its CLAUDE.md names one. Push only when it passes. A failure: a fresh mechanic with its report, then the dry run again. Every push runs each pipeline it triggers on a scarce runner, so never push to see what CI says.
 4. **Review**, once per batch, after every mechanic in it has handed off. Reviews stay in chat, never on Azure. The crew below is the whole review: no other review agents.
    - **Tier**, from `git diff --stat <base>...HEAD` and the touched paths, the batch's highest. State it in one line with the reason.
      - `none`: nothing to judge. Generated or lock files only, a revert, a version or config bump.
@@ -92,7 +93,7 @@ The frontier is every Task whose Predecessors are all `Closed`. A batch is the f
    ```
 8. **Feedback**: the user goes over the draft, in chat or as Azure comments you didn't post.
    - Questions: answer from the worktree. Spawn `hitch-scout` for wide ones.
-   - Change requests: a fresh `hitch-mechanic` with the worktree, the brief, the last hand-off and the request, then checks, then step 4's Reruns, then push. If a change contradicts a decision, run the duck in Task mode first.
+   - Change requests: a fresh `hitch-mechanic` with the worktree, the brief, the last hand-off and the request, then checks, then step 4's Reruns, then the pre-push gate, then push. Collect a round's requests and fixes into one mechanic run and one push, never a push per fix. If a change contradicts a decision, run the duck in Task mode first.
    - After every push, bring the description and the annotations up to date with the code, as in `hitch-clerk`. Colleagues must always see the full picture, and nothing may contradict.
    - Repeat until the user says `publish` or publishes it on Azure.
    - The Plan (`hitch-clerk`): redraw it after every Task state change, on the Story and in the descriptions of the Story's open PRs.
@@ -102,6 +103,7 @@ The frontier is every Task whose Predecessors are all `Closed`. A batch is the f
     - The next ahead batch starts only once this one's fixes are in.
     - A Predecessor gets a push: a `hitch-gofer` runs `git rebase --onto <new base> refs/hitch/<task-id>/base` and the checks; a conflict: a fresh mechanic resolves it. Then step 4's Reruns, and if the Predecessor's push itself hit a `full` trigger, tier `one` at least, with that push's diff as context. Feedback that changes the Design: name the ahead Tasks it hits, the user says rebuild or drop.
     - Predecessors close: the same rebase onto `origin/<default>`, then step 5 on.
+    - Rebase a pushed PR only for a conflict, a Predecessor, or a change on `<default>` it needs. A rebase just to stay current reruns all its PR builds for nothing.
 11. **Wait**: run `hitch-pr wait <pr-id>...` in the background on every open PR. It exits on any status, draft, vote or comment change. Then, per changed PR:
     - New comments from others: one line each, plus a proposed reply or fix. Post and push nothing without the user's OK. Resolve threads only as in `hitch-clerk`: `fixed` once the fix is pushed, `wontFix` with the reason. A reply alone leaves the thread open.
     - Then `hitch-pr gate <pr>`:

@@ -24,6 +24,8 @@ You get a worktree path and a Task brief. Build that Task, nothing else. The Des
 - Found something outside the Task (a bug, a bad name)? Note it, don't fix it.
 - Comments: write none as you go, then before handing off list every comment the diff adds and delete each one that fails the Comments test in CODE.md (no `<summary>` on records, DTOs, interfaces, repository methods, endpoints, config classes or tests). Report the count that remains.
 - Run the automated checks before handing off. Never push, never touch Azure.
+- Toolchain: the repo's pinned one when it has one (a `devenv.nix` at the root or in the touched component: `devenv shell -- <cmd>`), never an SDK found elsewhere. A check that can't run (missing SDK, NETSDK1045, missing tool): list it under **Checks** as `<cmd>` → tower with the error. Never skip it silently.
+- The repo's pre-push dry run, if its CLAUDE.md names one: always list it under **Checks** as `<cmd>` → tower. It can take over 4 min, so don't run it.
 - Short-lived: your cache expires after 5 idle minutes, and every call after that re-writes your whole context. Run no command that may take over ~4 min: tests and builds scoped to the touched projects and the Task's tests, no `sleep`/`until`/watch loops, no dev deploy, no waiting on pipelines. A slower check the Task needs (full suite, e2e): don't run it, list it under **Checks** as `<cmd>` → tower. Hand off and end; you're never messaged again.
 
 Hand-off, no bloat:

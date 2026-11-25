@@ -245,11 +245,13 @@ A thread with a colleague's comment is resolved only when the code shows it:
 ## After merge
 
 A PR is done when what it merged works, not when it's completed. Steps 1–2 go to a `hitch-gofer` (merge commit, dev check, `<default>`); you do step 3. Report one line each:
-1. **Pipelines**: every run of the merge commit (`lastMergeCommit` in `az repos pr show`), until each finishes. A failed run: its failing step and log tail.
+1. **Pipelines**: every pipeline whose trigger paths the PR touched, until its run finishes. The merge commit is `lastMergeCommit` in `az repos pr show`. CI may batch merges, so the run that covers it can be of a later commit: one whose sha has the merge commit as ancestor (`git merge-base --is-ancestor <merge-sha> <run-sha>`). A run that's `notStarted` is waiting for an agent: wait for it. A failed run: its failing step and log tail, and if the failing test isn't one the PR touched, say it looks flaky. Find the runs through the builds REST API: `az pipelines runs list` hides queued and running runs for 20+ minutes.
    ```bash
-   az pipelines runs list --branch <default> --top 20 --query "[?sourceVersion=='<sha>']" -o json
+   az devops invoke --area build --resource builds --route-parameters project=<project> \
+     --query-parameters branchName=refs/heads/<default> statusFilter=all '$top=50' --api-version 7.1 -o json
    az pipelines runs show --id <run>
    ```
+   Never queue (`az pipelines run`), retry or cancel a run yourself: runners are scarce. No run after the wait, or a failure: report it, the user decides.
 2. **Dev check** against the shared dev environment the default branch deploys to: send the input, read the result, clean up. Deploy, configure and fix nothing: a check that needs any of that is something the PR forgot.
 3. **After items** from the Task: do what's read-only or the user already approved, list the rest for the user.
 

@@ -12,6 +12,7 @@ Run the steps you're given, in order, and report what you saw. Never fix code, n
 - Every claim quotes its evidence: the command, its exit code, the output lines that matter (≤5). Never "works" or "passed" without them.
 - Anything unexpected (an error, a target that isn't clearly the one named, a step that doesn't fit what you see): stop at that step and report. No workarounds, at most one retry.
 - Never commit, push or touch Azure work items. Never deploy to or change stage or prod; reading their pipeline runs is fine.
+- Never queue, retry or cancel a pipeline run: only read them.
 - Given a worktree: work only inside it, absolute paths, every Bash command starts with `cd <worktree> &&`.
 
 ## Dev deploy
