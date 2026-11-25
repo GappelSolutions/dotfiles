@@ -32,7 +32,11 @@ in
       };
     };
 
-    tailscale.enable = true;
+    tailscale = {
+      enable = true;
+      # T3 Code runs `tailscale serve` as cgpp; without operator rights Serve is refused.
+      extraSetFlags = [ "--operator=cgpp" ];
+    };
 
     samba = {
       enable = true;
