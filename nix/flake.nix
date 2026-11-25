@@ -3,6 +3,9 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    # Only the .NET SDKs (home-packages.nix): it moves ahead of nixpkgs, which stays on a
+    # revision the vis patches (home-vis.nix) still build against. Drop it once nixpkgs catches up.
+    nixpkgs-dotnet.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   nixos-wsl.url = "github:nix-community/NixOS-WSL"; nixos-wsl.inputs.nixpkgs.follows = "nixpkgs";
 
     nix-darwin = {

@@ -13,13 +13,16 @@ let
     inherit revdiff;
   };
   # Global dotnet tools (e.g. easy-dotnet.nvim's dotnet-easydotnet) are built
-  # against whatever SDK the tool author had; a single sdk_10 install has no
-  # 8.x shared runtime for their apphost to resolve. combinePackages merges
-  # both SDKs' runtimes/hostfxr into one dotnet root so apphost roll-forward
-  # can find a match.
-  dotnet = pkgs.dotnetCorePackages.combinePackages [
-    pkgs.dotnetCorePackages.sdk_10_0
-    pkgs.dotnetCorePackages.sdk_8_0
+  # against whatever SDK the tool author had; a single SDK install has no
+  # older shared runtime for their apphost to resolve. combinePackages merges
+  # the SDKs' runtimes/hostfxr into one dotnet root so apphost roll-forward
+  # can find a match. The newest SDK comes first: projects targeting it
+  # (ModularMonolithGDM is on net11) fail with NETSDK1045 on an older one.
+  dotnetCorePackages = inputs.nixpkgs-dotnet.legacyPackages.${pkgs.stdenv.hostPlatform.system}.dotnetCorePackages;
+  dotnet = dotnetCorePackages.combinePackages [
+    dotnetCorePackages.sdk_11_0
+    dotnetCorePackages.sdk_10_0
+    dotnetCorePackages.sdk_8_0
   ];
 in
 {
