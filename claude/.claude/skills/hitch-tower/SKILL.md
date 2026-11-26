@@ -27,6 +27,7 @@ Input: `$ARGUMENTS`
 | `hitch-skeptic` | review of a batch: one, or two independently at tier `full` | opus · high · B at `full`: opus · low |
 | `hitch-referee` | tier `full`: verifies both reviews, the final fix list per Task | opus · high |
 | `general-purpose` | the `hitch-janitor` skill once the Story is done | opus · low |
+| `general-purpose` | the `hitch-focus` skill per PR before its report: the PR map (blocks, focus points, effects) | opus · medium |
 
 Spawn them in the background with absolute paths. Keep only their reports in your context. `hitch-pr` means `~/.claude/skills/hitch-tower/hitch-pr`.
 
@@ -90,6 +91,7 @@ The frontier is every Task whose Predecessors are all `Closed`. A batch is the f
    - checks: auto ✅ · dev ✅ <what was observed>
    - review: <n> fixed · <n> dropped · open: <question>
    ```
+   Then its map: before the first report and after a push that changes the PR's shape (not a fix list), a `general-purpose` agent, model `opus`, effort `medium` (`Follow ~/.claude/skills/hitch-focus/SKILL.md for PR <pr> with worktree <path>, base <base>, brief <file>, hand-offs <files>, review results <files or text>, screenshots <paths>.`). Show its report as is, below the Task's lines, and render its cards (the html path in the report: `html_preview` for the height, then `html_render`). Any other push: `~/.claude/skills/hitch-focus/hitch-map refresh <map>` and `html <map>`, its cards rendered the same way; it keeps the blocks, viewed marks hold for unchanged blocks, new hunks show as unassigned: name them in the report. In T3 Code, also start the PR's review guide (`write_pull_request_guides` with the PR url): the PR Guide tab walks the diff file by file. It fails while guides are off in the settings: say so once.
 8. **Feedback**: the user goes over the draft, in chat or as Azure comments you didn't post.
    - Questions: answer from the worktree. Spawn `hitch-scout` for wide ones.
    - Change requests: a fresh `hitch-mechanic` with the worktree, the brief, the last hand-off and the request, then checks, then step 4's Reruns, then push. Collect a round's requests and fixes into one mechanic run and one push, never a push per fix: every push runs each pipeline it triggers on a scarce runner. If a change contradicts a decision, run the duck in Task mode first.

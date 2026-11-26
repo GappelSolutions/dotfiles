@@ -10,6 +10,8 @@ vis.ftdetect.filetypes.csv = { ext = { '%.csv$', '%.tsv$' } }
 vis.ftdetect.filetypes.nix = { ext = { '%.nix$' } }
 vis.ftdetect.filetypes.opentofu = { ext = { '%.tf$', '%.tofu$' } }
 vis.ftdetect.filetypes.hcl = { ext = { '%.hcl$', '%.tfvars$' } }
+-- PR map flows (hitch-map flow): ../lexers/prflow.lua
+vis.ftdetect.filetypes.prflow = { ext = { '%.flow$' } }
 
 -- subscribed before vis-editorconfig-options so .editorconfig wins
 local two_space = { javascript = true, typescript = true, html = true }

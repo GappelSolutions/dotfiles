@@ -1,0 +1,1021 @@
+#!/usr/bin/env python3
+"""PR map for hitch-focus: a diff as semantic blocks, rendered for T3 (HTML) and vis.
+
+  hitch-map hunks <repo> <base> <head>   the diff with an `### <id> <kind>` line over
+      every hunk, for the agent that groups them. Kinds the script decides: test
+      (hidden), generated, mechanical (whitespace, moved code), binary; `-` = to group.
+  hitch-map build <in.json>   merge the agent's groups with the diff, check coverage,
+      write the map; prints its path. Exit 1 and the problems when it doesn't hold.
+  hitch-map refresh <map>     re-diff after a push: blocks keep the hunks that still
+      exist, new ones land in an unassigned block. Exit 1 while one is unassigned.
+  hitch-map live <dir|map>    the map of the branch checked out in <dir> over its worktree
+      (uncommitted and untracked files too), rebuilt on every call (vis <Space>m). With a
+      hitch-focus map: refresh against the worktree. Without: base origin/HEAD, one block
+      per file in layer order.
+  hitch-map check <map>       coverage and anchors, as build checks them.
+  hitch-map html <map>        the slices as cards for T3's chat (html_render), next to the map;
+      prints its path. Steps link into T3's PR panel at their line.
+  hitch-map flow <map>        the slices as flow trees in one buffer (vis <Space>m), plus
+      map.at: the slice and pinned path:line of each of its lines.
+  hitch-map outline <map>     one line per block in reading order.
+  hitch-map block <map> <id>  one block as a diff buffer; prints its path (vis).
+  hitch-map file <map> <path> the head version of <path> to jump to; prints its path.
+  hitch-map mark <map> <id>   toggle a block viewed. A block's key is its hunks'
+      content, so a push re-opens only the blocks it changed.
+  hitch-map list [repo]       maps, newest first (all repos without one).
+  hitch-map path <repo> [head]  where the map of <repo>'s branch (or <head>) lives.
+
+<in.json>, written by the hitch-focus agent:
+  {repo, base, head, pr?, url?, title?, intent,
+   blocks: [{id, title, flow: [step], logic?, hunks: [hunk ids, in reading order], after: [block ids]}],
+   focus: [{block, title, at: "path:line", chosen, instead, tradeoff, look, door}],
+   effects: [{title, layer, summary, file?}], settled: [text]}
+step: {do, at: "path:line", change?: new|changed|gone, kind?: out|stop, id?,
+   when?: [{if, then: [step]}], to?: step id}  (hitch-focus SKILL.md: Flow)
+Hunk ids hash the hunk's path and lines, not its position: they survive rebases.
+Patterns a repo needs beyond the defaults: the git attributes `hitch-test` and
+`linguist-generated` (.gitattributes).
+"""
+
+import hashlib
+import html
+import json
+import os
+import re
+import subprocess
+import sys
+import urllib.parse
+from datetime import datetime, timezone
+from pathlib import Path
+
+STATE = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state")) / "hitch/map"
+CONTEXT = 2
+LAYERS = ["contract", "backend", "frontend", "infra", "docs", "other"]
+UNTRACKED = 200  # untracked files a live map reads at most
+
+TEST = [
+    r"(^|/)(tests?|__tests__|e2e|testing|fixtures|__snapshots__|checks)/",
+    r"(^|/)[^/]*-e2e/",
+    r"(^|/)[^/]*\.(Unit|Integration|Functional|Architecture|E2E)?Tests?(\.[^/]*)?/",
+    r"Tests?\.cs$",
+    r"\.(spec|test|e2e-spec)\.[cm]?[jt]sx?$",
+    r"(^|/)test_[^/]*\.py$|_test\.(py|go)$",
+    r"\.(snap|verified\.\w+|received\.\w+)$",
+    r"(^|/)(tsconfig\.spec\.json|jest\.config\.\w+|vitest\.config\.\w+|playwright\.config\.\w+|karma\.conf\.\w+)$",
+]
+GENERATED = [
+    r"\.Designer\.cs$", r"ModelSnapshot\.cs$", r"\.g\.(i\.)?cs$",
+    r"(^|/)(generated|rendered|dist)/", r"\.min\.(js|css)$", r"\.map$",
+    r"(^|/)(flake|devenv|Cargo|bun|yarn|composer|poetry|Gemfile|packages)\.lock(b)?$",
+    r"(^|/)(package-lock\.json|pnpm-lock\.yaml|packages\.lock\.json|go\.sum)$",
+]
+LAYER_BY_PATH = [
+    ("backend", r"\.(cs|csproj|sln|slnx|slnf|props|targets|fs|sql|go|rs|py|java|kt)$|(^|/)appsettings[^/]*\.json$"),
+    ("frontend", r"\.([cm]?[jt]sx?|html|s?css|less|vue|svelte)$|(^|/)(package\.json|angular\.json|project\.json|nx\.json)$"),
+    ("docs", r"\.(md|adoc|rst|txt)$"),
+    ("infra", r"\.(nix|tf|tfvars|hcl|sh|bash|ps1)$|(^|/)(Dockerfile[^/]*|Containerfile|flake\.lock|devenv\.\w+)$"
+              r"|(^|/)(infrastructure|deploy|k8s|helm|charts|rendered|ops|machines|modules|inventory|cluster)/"
+              r"|azure-pipelines[^/]*\.ya?ml$|\.github/"),
+]
+
+
+def git(repo, *args, check=True):
+    p = subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True, errors="replace")
+    if check and p.returncode:
+        sys.exit(f"git {' '.join(args)}: {p.stderr.strip()}")
+    return p.stdout
+
+
+def first(patterns, path):
+    return any(re.search(p, path) for p in patterns)
+
+
+def layer_of(path):
+    for layer, pattern in LAYER_BY_PATH:
+        if re.search(pattern, path):
+            return layer
+    return "other"
+
+
+def attrs(repo, head, paths):
+    """`hitch-test` / `linguist-generated` per path, as the head commit (None: the worktree) sets them."""
+    if not paths:
+        return {}
+    source = ["--source", head] if head else []
+    p = subprocess.run(["git", "-C", str(repo), "check-attr", *source, "--stdin", "-z",
+                        "hitch-test", "linguist-generated"],
+                       input="\0".join(paths) + "\0", capture_output=True, text=True)
+    out, f = {}, p.stdout.split("\0")
+    for i in range(0, len(f) - 2, 3):
+        if f[i + 2] in ("set", "true"):
+            out.setdefault(f[i], set()).add(f[i + 1])
+    return out
+
+
+# ---------------------------------------------------------------- diff
+
+def parse(diff):
+    files, f, h = [], None, None
+    for line in diff.split("\n"):
+        line = line.removesuffix("\r")
+        if line.startswith("diff --git "):
+            m = re.match(r'diff --git "?a/(.*?)"? "?b/(.*)"?$', line)
+            f = {"path": m.group(2), "old_path": m.group(1), "status": "M", "hunks": []}
+            files.append(f)
+            h = None
+        elif f is None:
+            continue
+        elif h is None and line.startswith(("new file", "deleted file", "rename from", "similarity", "Binary files")):
+            if line.startswith("new file"):
+                f["status"] = "A"
+            elif line.startswith("deleted file"):
+                f["status"] = "D"
+            elif line.startswith("rename from"):
+                f["status"] = "R"
+            elif line.startswith("Binary files"):
+                f["binary"] = True
+        elif line.startswith("@@"):
+            m = re.match(r"@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@ ?(.*)", line)
+            h = {"old_start": int(m[1]), "old_lines": int(m[2] or 1), "new_start": int(m[3]),
+                 "new_lines": int(m[4] or 1), "header": m[5].strip(), "lines": []}
+            f["hunks"].append(h)
+        elif h is not None and line[:1] in (" ", "+", "-", "\\"):
+            h["lines"].append(line)
+    return files
+
+
+def diff_files(repo, base, head):
+    """Hunks of base...head; head None: the worktree, uncommitted and untracked files included."""
+    opts = ["--no-color", "--no-ext-diff", f"-U{CONTEXT}", "--diff-algorithm=histogram"]
+    if head:
+        raw = git(repo, "diff", *opts, "--find-renames", f"{base}...{head}")
+    else:
+        raw = git(repo, "diff", *opts, "--find-renames", "--merge-base", base)
+        new = [p for p in git(repo, "ls-files", "--others", "--exclude-standard", "-z").split("\0") if p]
+        for path in new[:UNTRACKED]:
+            raw += git(repo, "diff", *opts, "--no-index", "--", "/dev/null", path, check=False)
+    files = parse(raw)
+    attr = attrs(repo, head, [f["path"] for f in files])
+    seen, hunks = {}, []
+    for f in files:
+        path, a = f["path"], attr.get(f["path"], set())
+        if "hitch-test" in a or first(TEST, path):
+            kind = "test"
+        elif "linguist-generated" in a or first(GENERATED, path):
+            kind = "generated"
+        elif f.get("binary"):
+            kind = "binary"
+        else:
+            kind = None
+        units = f["hunks"] or [{"old_start": 0, "old_lines": 0, "new_start": 0, "new_lines": 0, "header": "",
+                                "lines": [], "whole": "binary" if f.get("binary") else "rename"}]
+        for u in units:
+            key = hashlib.sha1((path + "\n" + "\n".join(u["lines"]) + u.get("whole", "")).encode()).hexdigest()[:7]
+            seen[key] = seen.get(key, 0) + 1
+            hid = key if seen[key] == 1 else f"{key}-{seen[key]}"
+            hk, why = kind, None
+            if hk is None and u.get("whole") == "rename":
+                hk, why = "mechanical", "renamed, unchanged"
+            hunks.append({"id": hid, "path": path, "old_path": f["old_path"], "status": f["status"],
+                          "layer": layer_of(path), "kind": hk, "why": why,
+                          **{k: u[k] for k in ("old_start", "old_lines", "new_start", "new_lines", "header", "lines")},
+                          "added": sum(l.startswith("+") for l in u["lines"]),
+                          "removed": sum(l.startswith("-") for l in u["lines"])})
+    mechanical(hunks)
+    return hunks
+
+
+def mechanical(hunks):
+    """Whitespace-only hunks, and code moved unchanged: one other hunk holds all of its lines."""
+    def changed(h, sign):
+        return [l[1:].strip() for l in h["lines"] if l.startswith(sign) and l[1:].strip()]
+    sides = {h["id"]: (set(changed(h, "+")), set(changed(h, "-"))) for h in hunks}
+
+    def counterpart(lines, side, own):
+        return any(lines <= s[side] for hid, s in sides.items() if hid != own)
+    for h in hunks:
+        if h["kind"]:
+            continue
+        add, rem = changed(h, "+"), changed(h, "-")
+        if add and add == rem:
+            h["kind"], h["why"] = "mechanical", "whitespace only"
+            continue
+        add_l, rem_l = {l for l in add if len(l) > 3}, {l for l in rem if len(l) > 3}
+        if len(add_l) + len(rem_l) < 3 or (add_l and rem_l):
+            continue
+        if counterpart(add_l, 1, h["id"]) if add_l else counterpart(rem_l, 0, h["id"]):
+            h["kind"], h["why"] = "mechanical", "moved"
+
+
+def resolve(repo, ref):
+    return git(repo, "rev-parse", "--verify", f"{ref}^{{commit}}").strip()
+
+
+def toplevel(repo):
+    return Path(git(repo, "rev-parse", "--show-toplevel").strip())
+
+
+def repo_name(repo):
+    common = Path(git(repo, "rev-parse", "--path-format=absolute", "--git-common-dir").strip())
+    return (common.parent if common.name == ".git" else common).name.removesuffix(".git")
+
+
+def map_path(repo, head="HEAD"):
+    ref = head if head != "HEAD" else git(repo, "rev-parse", "--abbrev-ref", "HEAD").strip()
+    if ref == "HEAD":
+        ref = resolve(repo, "HEAD")[:12]
+    ref = re.sub(r"^(refs/)?(remotes/)?origin/|^refs/heads/", "", ref)
+    return STATE / repo_name(repo) / (re.sub(r"[^\w.-]+", "_", ref) + ".json")
+
+
+# ---------------------------------------------------------------- map
+
+AUTO = {"test": "Tests", "generated": "Generated", "mechanical": "Mechanical", "binary": "Binary"}
+
+
+def block_key(block):
+    return hashlib.sha1(" ".join(sorted(block["hunks"])).encode()).hexdigest()[:10]
+
+
+def assemble(spec, hunks, problems):
+    by_id = {h["id"]: h for h in hunks}
+    owner, blocks = {}, []
+    for b in spec.get("blocks", []):
+        if not b.get("id") or not b.get("title"):
+            problems.append(f"block without id or title: {json.dumps(b)[:80]}")
+            continue
+        b = {"logic": "", "after": [], **b, "hunks": list(b.get("hunks", []))}
+        b.pop("layer", None)
+        for hid in b["hunks"]:
+            if hid not in by_id:
+                problems.append(f"{b['id']}: no hunk {hid} in the diff")
+            elif hid in owner:
+                problems.append(f"hunk {hid} in {owner[hid]} and {b['id']}")
+            else:
+                owner[hid] = b["id"]
+                if by_id[hid]["kind"] == "test":
+                    problems.append(f"{b['id']}: hunk {hid} is a test ({by_id[hid]['path']}): tests stay out")
+        blocks.append(b)
+    ids = {b["id"] for b in blocks}
+    for b in blocks:
+        check_flow(b, problems)
+        for a in b["after"]:
+            if a not in ids:
+                problems.append(f"{b['id']}: after {a}, no such block")
+    loose = [h["id"] for h in hunks if h["id"] not in owner and not h["kind"]]
+    if loose:
+        blocks.insert(0, {"id": "NEW", "title": "Not in any block", "logic": "", "after": [],
+                          "hunks": loose, "unassigned": True})
+        problems.append(f"{len(loose)} hunk(s) in no block: {' '.join(loose)}")
+    for b in blocks:
+        b["key"] = block_key(b)
+    return blocks
+
+
+CHANGES = ("new", "changed", "gone")
+KINDS = ("out", "stop")
+
+
+def steps(flow):
+    """Every step of a flow, branches included, in reading order."""
+    for st in flow:
+        yield st
+        for br in st.get("when", []):
+            yield from steps(br.get("then", []))
+
+
+def check_flow(b, problems):
+    flow = b.get("flow", [])
+    ids = [st["id"] for st in steps(flow) if st.get("id")]
+    for st in steps(flow):
+        what = f"{b['id']} step {(st.get('do') or st.get('to') or '?')!r}"
+        if not st.get("do") and not st.get("to"):
+            problems.append(f"{what}: neither do nor to")
+        if st.get("change") not in (None, *CHANGES):
+            problems.append(f"{what}: change {st['change']!r}, not one of {', '.join(CHANGES)}")
+        if st.get("kind") not in (None, *KINDS):
+            problems.append(f"{what}: kind {st['kind']!r}, not one of {', '.join(KINDS)}")
+        if st.get("to") and st["to"] not in ids:
+            problems.append(f"{what}: to {st['to']}, no step with that id")
+        for br in st.get("when", []):
+            if not br.get("if"):
+                problems.append(f"{what}: a branch without if")
+    if len(ids) != len(set(ids)):
+        problems.append(f"{b['id']}: step ids repeat")
+
+
+def anchors(m, problems):
+    """Every focus point names a block, and it and every flow step a line that exists in the
+    head version."""
+    ids = {b["id"] for b in m["blocks"]}
+    pins = []
+    for f in m.get("focus", []):
+        if f.get("block") not in ids:
+            problems.append(f"focus {f.get('title')!r}: no block {f.get('block')}")
+        pins.append((f"focus {f.get('title')!r}", f.get("at")))
+    for b in m["blocks"]:
+        pins += [(f"{b['id']} step {st.get('do')!r}", st["at"]) for st in steps(b.get("flow", []))
+                 if st.get("at") and st.get("change") != "gone"]
+    texts = {}
+    for what, pin in pins:
+        at = re.match(r"(.+):(\d+)$", pin or "")
+        if not at:
+            problems.append(f"{what}: at {pin!r} is not path:line")
+            continue
+        if at[1] not in texts:
+            if m.get("live"):
+                src = Path(m.get("worktree") or m["repo"]) / at[1]
+                texts[at[1]] = src.read_text(errors="replace") if src.is_file() else ""
+            else:
+                texts[at[1]] = git(m["repo"], "show", f"{m['head_sha']}:{at[1]}", check=False)
+        text = texts[at[1]]
+        if not text:
+            problems.append(f"{what}: {at[1]} not in {m['head_sha'][:7]}")
+        elif int(at[2]) > text.count("\n") + 1:
+            problems.append(f"{what}: {at[1]} has no line {at[2]}")
+
+
+def order(blocks):
+    """Reading order: `after` first, else as given; unassigned on top."""
+    done, out, by = set(), [], {b["id"]: b for b in blocks}
+
+    def visit(b, stack=()):
+        if b["id"] in done or b["id"] in stack:
+            return
+        for a in b.get("after", []):
+            if a in by:
+                visit(by[a], stack + (b["id"],))
+        done.add(b["id"])
+        out.append(b)
+    for b in blocks:
+        visit(b)
+    return out
+
+
+def build(spec, problems, live=False, hunks=None):
+    """live: head is the worktree (HEAD plus what isn't committed)."""
+    repo = toplevel(spec["repo"])
+    head = "HEAD" if live else spec["head"]
+    base_sha = git(repo, "merge-base", spec["base"], head).strip()
+    head_sha = resolve(repo, head)
+    if hunks is None:
+        hunks = diff_files(repo, spec["base"], None if live else head)
+    m = {k: v for k, v in spec.items() if k not in ("blocks",)}
+    m.update(repo=str(repo), base_sha=base_sha, head_sha=head_sha, live=live,
+             built=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), hunks=hunks)
+    m["blocks"] = order(assemble(spec, hunks, problems))
+    anchors(m, problems)
+    return m
+
+
+def regroup(old, hunks):
+    """The spec of an old map over new hunks: blocks keep the hunks that still exist."""
+    spec = {k: v for k, v in old.items() if k not in ("hunks", "base_sha", "head_sha", "built", "live")}
+    ids = {h["id"] for h in hunks}
+    spec["blocks"] = [{**b, "hunks": [i for i in b["hunks"] if i in ids]}
+                      for b in old["blocks"] if not b.get("unassigned")]
+    spec["blocks"] = [b for b in spec["blocks"] if b["hunks"]]
+    spec["focus"] = [f for f in old.get("focus", []) if any(b["id"] == f["block"] for b in spec["blocks"])]
+    return spec
+
+
+def by_file(hunks):
+    """Blocks without an agent: one per file, in layer order."""
+    files = {}
+    for h in hunks:
+        if not h["kind"]:
+            files.setdefault(h["path"], []).append(h)
+    paths = sorted(files, key=lambda p: (LAYERS.index(files[p][0]["layer"]), p))
+    return [{"id": f"B{i}", "title": p, "hunks": [h["id"] for h in files[p]]}
+            for i, p in enumerate(paths, 1)]
+
+
+def default_base(repo):
+    head = git(repo, "symbolic-ref", "-q", "--short", "refs/remotes/origin/HEAD", check=False).strip()
+    for ref in (head, "origin/main", "origin/master", "main", "master"):
+        if ref and git(repo, "rev-parse", "-q", "--verify", f"{ref}^{{commit}}", check=False).strip():
+            return ref
+    return "HEAD"
+
+
+def cmd_live(arg):
+    """The map of the branch checked out in <arg> (a dir, or a live map) over its worktree."""
+    if arg.endswith(".json"):
+        mp, old = Path(arg), load(arg)
+        if not old.get("live"):
+            print(mp)
+            return 0
+        repo = toplevel(old.get("worktree") or old["repo"])
+    else:
+        repo = toplevel(arg)
+        mp = map_path(repo)
+        old = load(mp) if mp.exists() else None
+    problems = []
+    if old and not old.get("auto"):
+        hunks = diff_files(repo, old["base"], None)
+        spec = regroup(old, hunks)
+        # code no block holds yet: one unassigned block per file, on top
+        held = {i for b in spec["blocks"] for i in b["hunks"]}
+        new = by_file([h for h in hunks if h["id"] not in held])
+        spec["blocks"] = [{**b, "id": "N" + b["id"][1:], "unassigned": True} for b in new] + spec["blocks"]
+    else:
+        base = old["base"] if old else default_base(repo)
+        hunks = diff_files(repo, base, None)
+        branch = git(repo, "rev-parse", "--abbrev-ref", "HEAD").strip()
+        spec = {"repo": str(repo), "worktree": str(repo), "base": base, "head": "HEAD", "auto": True,
+                "title": f"{branch} vs {base}, by file (no hitch-focus map)", "blocks": by_file(hunks)}
+    save(build(spec, problems, live=True, hunks=hunks), mp)
+    print(mp)
+    return report(problems)
+
+
+def load(path):
+    return json.loads(Path(path).read_text())
+
+
+def reviewed_path(mp):
+    return Path(mp).with_suffix(".reviewed")
+
+
+def reviewed(mp):
+    p = reviewed_path(mp)
+    return set(p.read_text().split()) if p.exists() else set()
+
+
+def save(m, mp):
+    mp.parent.mkdir(parents=True, exist_ok=True)
+    mp.write_text(json.dumps(m, indent=1))
+
+
+def report(problems):
+    for p in problems:
+        print(f"✗ {p}", file=sys.stderr)
+    return 1 if problems else 0
+
+
+# ---------------------------------------------------------------- text
+
+def kind_label(h):
+    return h["kind"] + (f" ({h['why']})" if h.get("why") else "") if h["kind"] else "-"
+
+
+def cmd_hunks(repo, base, head):
+    out, last = [], None
+    for h in diff_files(toplevel(repo), base, head):
+        if h["path"] != last:
+            out.append(f"\n=== {h['path']}" + (f" (from {h['old_path']})" if h["status"] == "R" else "")
+                       + f" [{h['status']} {h['layer']}]")
+            last = h["path"]
+        out.append(f"### {h['id']} {kind_label(h)}")
+        if h["kind"] or not h["lines"]:
+            out.append(f"    (+{h['added']} -{h['removed']}, body omitted)")
+            continue
+        out.append(f"@@ -{h['old_start']},{h['old_lines']} +{h['new_start']},{h['new_lines']} @@ {h['header']}".rstrip())
+        out.extend(h["lines"])
+    print("\n".join(out).lstrip("\n"))
+
+
+def stats(m):
+    hunks = {h["id"]: h for h in m["hunks"]}
+    tests = sorted({h["path"] for h in m["hunks"] if h["kind"] == "test"})
+    skim = [h for h in m["hunks"] if h["kind"] and h["kind"] != "test"]
+    read = [hunks[i] for b in m["blocks"] for i in b["hunks"] if i in hunks]
+    return {
+        "blocks": len([b for b in m["blocks"] if not b.get("unassigned")]),
+        "read_lines": sum(h["added"] + h["removed"] for h in read),
+        "read_files": len({h["path"] for h in read}),
+        "skim": skim, "skim_files": len({h["path"] for h in skim}),
+        "tests": tests,
+    }
+
+
+def block_size(m, b):
+    hunks = {h["id"]: h for h in m["hunks"]}
+    hs = [hunks[i] for i in b["hunks"] if i in hunks]
+    return sum(h["added"] for h in hs), sum(h["removed"] for h in hs)
+
+
+def layer_lines(m, b):
+    """The projects a slice runs through: changed lines per layer, in layer order."""
+    hunks, lines = {h["id"]: h for h in m["hunks"]}, {}
+    for i in b["hunks"]:
+        if i in hunks:
+            h = hunks[i]
+            lines[h["layer"]] = lines.get(h["layer"], 0) + h["added"] + h["removed"]
+    return [(l, lines[l]) for l in LAYERS if l in lines]
+
+
+def cmd_outline(mp):
+    m, done = load(mp), reviewed(mp)
+    focus = {}
+    for f in m.get("focus", []):
+        focus[f["block"]] = focus.get(f["block"], 0) + 1
+    for b in m["blocks"]:
+        add, rem = block_size(m, b)
+        mark = "󰄬" if b["key"] in done else ("!" if b.get("unassigned") else "·")
+        star = f" {focus[b['id']]}" if b["id"] in focus else ""
+        layers = " ".join(l for l, _ in layer_lines(m, b))
+        print(f"{b['id']} {mark} {b['title']}{star}  +{add} -{rem}  {layers}")
+
+
+def block_text(m, b, done):
+    hunks = {h["id"]: h for h in m["hunks"]}
+    blocks = m["blocks"]
+    pos = next(i for i, x in enumerate(blocks) if x["id"] == b["id"])
+    add, rem = block_size(m, b)
+    layers = ", ".join(f"{l} {n}" for l, n in layer_lines(m, b))
+    out = [f"# {b['id']} {b['title']}   {pos + 1}/{len(blocks)}  +{add} -{rem}  · {layers}"
+           + ("  󰄬 viewed" if b["key"] in done else "")]
+    if b.get("logic"):
+        out += [f"# {l}" for l in wrap(b["logic"], 96)]
+    if b.get("after"):
+        out.append(f"# after: {', '.join(b['after'])}")
+    for f in m.get("focus", []):
+        if f.get("block") == b["id"]:
+            out.append(f"#  {f['title']} · {f['at']}")
+            for k, label in (("chosen", "chosen"), ("instead", "instead"), ("tradeoff", "trade-off"),
+                             ("look", "look at")):
+                if f.get(k):
+                    out += [f"#   {label}: {l}" if i == 0 else f"#     {l}" for i, l in enumerate(wrap(f[k], 88))]
+            if f.get("door"):
+                out.append(f"#   {f['door']}")
+    out.append("# gd/Enter: open in the code · ]b [b: next/prev slice · <Space>v: viewed · <Space>m: the flow")
+    last = None
+    for hid in b["hunks"]:
+        h = hunks.get(hid)
+        if not h:
+            continue
+        if h["path"] != last:
+            out += ["", f"diff --git a/{h['old_path']} b/{h['path']}",
+                    f"--- {'/dev/null' if h['status'] == 'A' else 'a/' + h['old_path']}",
+                    f"+++ {'/dev/null' if h['status'] == 'D' else 'b/' + h['path']}"]
+            last = h["path"]
+        if h["lines"]:
+            out.append(f"@@ -{h['old_start']},{h['old_lines']} +{h['new_start']},{h['new_lines']} @@ {h['header']}".rstrip())
+            out += h["lines"]
+        else:
+            out.append(f"# {kind_label(h)}")
+    return "\n".join(out) + "\n"
+
+
+def wrap(text, width):
+    words, lines, cur = text.split(), [], ""
+    for w in words:
+        if cur and len(cur) + 1 + len(w) > width:
+            lines.append(cur)
+            cur = w
+        else:
+            cur = f"{cur} {w}".strip()
+    return lines + ([cur] if cur else [])
+
+
+def cmd_block(mp, bid):
+    m = load(mp)
+    b = next((x for x in m["blocks"] if x["id"] == bid), None)
+    if not b:
+        sys.exit(f"no block {bid}")
+    out = Path(mp).with_suffix("") / f"{bid}.diff"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(block_text(m, b, reviewed(mp)))
+    print(out)
+
+
+def cmd_file(mp, path):
+    """The worktree's file while it is at the map's head (always for a live map), else the
+    head version in a cache."""
+    m = load(mp)
+    wt = Path(m.get("worktree") or m["repo"])
+    if m.get("live") or wt.is_dir() and git(wt, "rev-parse", "HEAD", check=False).strip() == m["head_sha"]:
+        print(wt / path)
+        return
+    out = Path(mp).with_suffix("") / "src" / m["head_sha"][:12] / path
+    if not out.exists():
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(git(m["repo"], "show", f"{m['head_sha']}:{path}"))
+    print(out)
+
+
+def cmd_mark(mp, bid):
+    m = load(mp)
+    b = next((x for x in m["blocks"] if x["id"] == bid), None)
+    if not b:
+        sys.exit(f"no block {bid}")
+    done = reviewed(mp)
+    done ^= {b["key"]}
+    reviewed_path(mp).write_text("\n".join(sorted(done)) + "\n")
+    print("viewed" if b["key"] in done else "open")
+
+
+def cmd_list(repo=None):
+    maps = (STATE / repo_name(toplevel(repo))).glob("*.json") if repo else STATE.glob("*/*.json")
+    for p in sorted(maps, key=lambda p: -p.stat().st_mtime):
+        try:
+            m = load(p)
+        except (OSError, ValueError):
+            continue
+        pr = f"#{m['pr']} " if m.get("pr") else ""
+        print(f"{p}\t{pr}{m.get('title') or p.stem}")
+
+
+# ---------------------------------------------------------------- flow
+
+GUTTER = {"new": "+", "changed": "~", "gone": "-"}
+
+
+def glyph(st, back=False):
+    """A jump loops (↻) when its target comes earlier; a step leaving the process or ending
+    the path shows that even when it decides too."""
+    if st.get("to") and not st.get("do"):
+        return "↻" if back else "→"
+    if st.get("kind") in ("out", "stop"):
+        return {"out": "⇢", "stop": "■"}[st["kind"]]
+    return "◇" if st.get("when") else "○"
+
+
+def flow_rows(flow, stars, first="", rest="", names=None):
+    """A flow as tree rows: {lead, glyph, text, at, change, star}. A check's branches hang
+    under it with their condition; a branch without stop or to falls through to the next step."""
+    if names is None:
+        order = {id(st): n for n, st in enumerate(steps(flow))}
+        names = {st["id"]: (st.get("do", st["id"]), order[id(st)]) for st in steps(flow) if st.get("id")}
+        names["#order"] = order
+    out = []
+    for i, st in enumerate(flow):
+        target, at_n = names.get(st.get("to"), (st.get("to"), 1 << 30))
+        back = at_n <= names["#order"][id(st)]
+        text = st.get("do") or target
+        if st.get("to") and st.get("do"):
+            text += f"  {'↻' if back else '→'} {target}"
+        out.append({"lead": first if i == 0 else rest, "glyph": glyph(st, back), "text": text, "at": st.get("at"),
+                    "change": st.get("change"), "star": stars.get(st.get("at"))})
+        whens = st.get("when", [])
+        w = max((len(br.get("if", "")) for br in whens), default=0)
+        for j, br in enumerate(whens):
+            last = j == len(whens) - 1
+            head = rest + ("└ " if last else "├ ") + br.get("if", "").ljust(w) + " "
+            cont = rest + ("  " if last else "│ ") + " " * (w + 1)
+            if br.get("then"):
+                out += flow_rows(br["then"], stars, head, cont, names)
+            else:
+                out.append({"lead": head, "glyph": "", "text": "on", "at": None, "change": st.get("change"), "star": None})
+    return out
+
+
+def slice_rows(m, b, stars):
+    """A slice's flow; without one (no hitch-focus yet, or code no slice holds): its logic,
+    else its files, each pinned to its first changed line."""
+    if b.get("flow"):
+        return flow_rows(b["flow"], stars)
+    if b.get("logic"):
+        return [{"lead": "", "glyph": "", "text": b["logic"], "at": None, "change": None, "star": None}]
+    hunks, files = {h["id"]: h for h in m["hunks"]}, {}
+    for i in b["hunks"]:
+        if i in hunks:
+            files.setdefault(hunks[i]["path"], []).append(hunks[i])
+    return [{"lead": "", "glyph": "○", "text": f"{path}  +{sum(h['added'] for h in hs)} −{sum(h['removed'] for h in hs)}",
+             "at": f"{path}:{max(hs[0]['new_start'], 1)}", "star": None,
+             "change": {"A": "new", "D": "gone"}.get(hs[0]["status"], "changed")} for path, hs in files.items()]
+
+
+def focus_stars(m):
+    """Focus points numbered in map order, by block and by the step line they pin."""
+    stars, by_block = {}, {}
+    for n, f in enumerate(m.get("focus", []), 1):
+        stars.setdefault(f.get("at"), n)
+        by_block.setdefault(f.get("block"), []).append((n, f))
+    return stars, by_block
+
+
+def slice_meta(m, b):
+    add, rem = block_size(m, b)
+    hunks = {h["id"]: h for h in m["hunks"]}
+    files = len({hunks[i]["path"] for i in b["hunks"] if i in hunks})
+    return f"+{add} −{rem} · {files} file{'s' * (files != 1)}"
+
+
+def cmd_flow(mp):
+    """The map as one buffer of flows (vis): <key>/map.flow, plus map.at with the slice and
+    the pinned path:line of every buffer line."""
+    m, done = load(mp), reviewed(mp)
+    stars, by_block = focus_stars(m)
+    s = stats(m)
+    title = (f"#{m['pr']} " if m.get("pr") else "") + (m.get("title") or Path(mp).stem)
+    lines = [(f"# {title}", "", "")]
+    lines += [(f"# {l}", "", "") for l in wrap(m.get("intent", ""), 96)]
+    n_sliced = len([b for b in m["blocks"] if b.get("flow") or b.get("logic")])
+    top = [(f"{n_sliced} slices, " if n_sliced else "") + f"~{s['read_lines']} lines in {s['read_files']} files"]
+    if s["tests"]:
+        top.append(f"tests hidden: {len(s['tests'])} files")
+    if s["skim"]:
+        top.append(f"skim: {s['skim_files']} files")
+    top.append(f"{m['base_sha'][:7]}..{m['head_sha'][:7]}" + (" + worktree" if m.get("live") else ""))
+    lines += [("# " + " · ".join(top), "", ""),
+              ("# gd: code · <Space>d: diff · ]b [b: slices · <Space>v: viewed · <Space>m: refresh", "", "")]
+    bare = [b for b in m["blocks"] if not b.get("flow") and not b.get("logic")]
+    if bare:
+        head = "changes by file: /hitch-focus slices them" if m.get("auto") else "not in a slice yet"
+        lines += [("", "", ""), (f"━━ {head}", "", "")]
+        for b in bare:
+            for r in slice_rows(m, b, stars):
+                lines.append((f"{GUTTER.get(r['change'], ' ')}   ○ {r['text']}" + ("  \U000f012c" if b["key"] in done else ""),
+                              b["id"], r["at"] or ""))
+    for n, b in enumerate([b for b in m["blocks"] if b not in bare], 1):
+        mark = "  \U000f012c" if b["key"] in done else ("  ! not in a slice yet" if b.get("unassigned") else "")
+        lines += [("", "", ""), (f"━━ {n} {b['title']}   {slice_meta(m, b)}{mark}", b["id"], "")]
+        for r in slice_rows(m, b, stars):
+            star = f"  \uf005{r['star']}" if r["star"] else ""
+            gl = f"{r['glyph']} " if r["glyph"] else ""
+            text = [r["text"]] if b.get("flow") else wrap(r["text"], 92)
+            for i, t in enumerate(text):
+                lines.append((f"{GUTTER.get(r['change'], ' ') if i == 0 else ' '}   {r['lead']}{gl if i == 0 else ''}{t}"
+                              f"{star if i == len(text) - 1 else ''}".rstrip(), b["id"], r["at"] or ""))
+        for k, f in by_block.get(b["id"], []):
+            lines.append((f"    {k} {f['title']}" + (f" · {f['door']}" if f.get("door") else ""), b["id"], f.get("at", "")))
+    if m.get("effects"):
+        lines += [("", "", ""), ("━━ effects", "", "")]
+        for f in m["effects"]:
+            for i, l in enumerate(wrap(f"{f['title']}: {f.get('summary', '')}", 92)):
+                lines.append((f"    {'⇢' if i == 0 else ' '} {l}", "", ""))
+    out = Path(mp).with_suffix("") / "map.flow"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text("\n".join(l for l, _, _ in lines) + "\n")
+    out.with_suffix(".at").write_text("\n".join(f"{b}\t{a}" for _, b, a in lines) + "\n")
+    print(out)
+
+
+# ---------------------------------------------------------------- html
+
+CSS = """
+:root{--mu:var(--muted-foreground);--line:color-mix(in srgb,var(--border) 80%,transparent);
+--add:var(--success);--chg:var(--warning);--del:var(--destructive);--mono:var(--font-mono,ui-monospace,monospace)}
+body{margin:0;font-size:13.5px;line-height:1.5}
+a{color:inherit;text-decoration:none}
+a:hover{color:var(--primary);text-decoration:underline;text-underline-offset:3px}
+.top{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.top p{margin:0;color:var(--mu)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:11.5px var(--mono);color:var(--mu);background:var(--secondary);border-radius:999px;padding:1px 9px}
+.chip a{color:var(--primary)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--mu)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.card.done{opacity:.5}
+.card.loose{border-style:dashed}
+.hd{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
+.hd .n{flex:none;align-self:center;width:22px;height:22px;border-radius:50%;background:var(--secondary);
+  color:var(--mu);font:600 11.5px/22px var(--mono);text-align:center}
+.hd h2{font-size:14.5px;font-weight:600;margin:0}
+.hd .meta{margin-left:auto;white-space:nowrap}
+.meta{font:11.5px var(--mono);color:var(--mu)}
+ol.fl{list-style:none;margin:0;padding:0;position:relative}
+ol.fl::before{content:"";position:absolute;left:6px;top:12px;bottom:12px;border-left:1.5px solid var(--line)}
+.s{position:relative;padding:2px 0 2px 24px}
+.mk{position:absolute;left:0;top:6px;width:13px;height:13px;display:grid;place-items:center}
+.mk::after{content:"";width:9px;height:9px;box-sizing:border-box;border:2px solid currentColor;border-radius:50%;background:var(--card)}
+.dec>.mk::after{border-radius:2px;transform:rotate(45deg);width:9px;height:9px}
+.stop>.mk::after{border-radius:2px;background:currentColor}
+.out>.mk::after{content:"⇢";border:0;width:auto;height:auto;font-size:13px;line-height:1;background:var(--card)}
+.jump{color:var(--mu);font-size:12.5px}
+.jump>.mk::after{width:5px;height:5px;border:0;background:var(--line)}
+.jump i{font-style:normal;color:var(--foreground)}
+.ctx{color:var(--mu)} .ctx>.mk{color:var(--mu)}
+.new>.mk{color:var(--add)} .changed>.mk{color:var(--chg)} .gone>.mk{color:var(--del)}
+.gone>.tx{color:var(--del);text-decoration:line-through}
+.tag{font:600 10px var(--mono);letter-spacing:.04em;text-transform:uppercase;border-radius:4px;padding:0 5px;margin-left:8px;vertical-align:1px}
+.changed>.tag{color:var(--chg);background:color-mix(in srgb,var(--chg) 14%,transparent)}
+.gone>.tag{color:var(--del);background:color-mix(in srgb,var(--del) 14%,transparent)}
+.brs{display:grid;grid-template-columns:max-content 1fr;gap:4px 10px;margin:4px 0 4px -18px}
+.br{display:contents}
+.if{justify-self:start;align-self:start;margin-top:4px;font:11.5px var(--mono);color:var(--foreground);
+  background:var(--secondary);border-radius:4px;padding:0 7px;white-space:nowrap}
+.br>ol.fl{border-left:1.5px dashed var(--line);padding-left:8px}
+.br>ol.fl::before{display:none}
+.star{display:inline-block;font:600 11px var(--mono);color:var(--chg);background:color-mix(in srgb,var(--chg) 14%,transparent);
+  border-radius:999px;padding:0 7px;margin-left:8px;vertical-align:1px}
+.focus{margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px}
+.focus summary{cursor:pointer;list-style:none;display:flex;align-items:baseline;gap:8px}
+.focus summary::-webkit-details-marker{display:none}
+.focus summary .star{margin:0}
+.focus summary .meta{margin-left:auto;white-space:nowrap}
+.focus dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 14px;margin:10px 0 6px;padding:12px 14px;
+  background:var(--secondary);border-radius:calc(var(--radius) - 2px);font-size:13px}
+.focus dt{font:600 10.5px/1.9 var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--mu)}
+.focus dd{margin:0}
+.runs h3{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:0 0 8px}
+.runs .ef{margin-bottom:10px}
+.runs .ef b{display:block;font-weight:600}
+.runs .ef span{color:var(--mu)}
+details{margin-top:4px}
+summary{cursor:pointer}
+.runs summary,.more summary{color:var(--mu);font:11.5px var(--mono)}
+.more{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+pre{font:11.5px/1.5 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere;background:var(--code-background,var(--secondary));
+  border-radius:calc(var(--radius) - 2px);padding:10px 12px;margin:6px 0 0;max-height:320px;overflow:auto}
+"""
+
+
+def e(s):
+    return html.escape(str(s or ""))
+
+
+def a(href, inner, title=""):
+    """A link out of T3's chat frame."""
+    t = f' title="{e(title)}"' if title else ""
+    return f'<a href="{e(href)}" target="_blank" rel="noopener"{t}>{inner}</a>'
+
+
+def pr_link(m, at):
+    """T3's PR panel opens at the line only in this form."""
+    pin = re.match(r"(.+):(\d+)$", at or "")
+    if not (m.get("url") and pin):
+        return None
+    return f'{m["url"]}#diff-{hashlib.sha256(pin[1].encode()).hexdigest()}R{pin[2]}'
+
+
+TAG = {"changed": "changed", "gone": "removed"}  # new: the green marker says it, most steps are
+
+
+def step_html(m, text, at, change, cls, star, extra=""):
+    """One node on the rail: marker, text (linked to its line), tag, focus star."""
+    link = pr_link(m, at)
+    tx = a(link, e(text), at) if link else f'<span title="{e(at)}">{e(text)}</span>'
+    tag = f'<span class="tag">{TAG[change]}</span>' if change in TAG else ""
+    st = f'<span class="star">★{star}</span>' if star else ""
+    return (f'<li class="s {change or "ctx"} {cls}"><span class="mk"></span><span class="tx">{tx}</span>'
+            f'{tag}{st}{extra}</li>')
+
+
+def flow_html(m, flow, stars, names=None):
+    """A flow as nodes on a rail; a decision's branches as lanes under it, each with its
+    condition, falling through to the next step unless they stop or jump."""
+    if names is None:
+        order = {id(st): n for n, st in enumerate(steps(flow))}
+        names = {st["id"]: (st.get("do", st["id"]), order[id(st)]) for st in steps(flow) if st.get("id")}
+        names["#order"] = order
+    out = []
+    for st in flow:
+        target, at_n = names.get(st.get("to"), (st.get("to"), 1 << 30))
+        back = at_n <= names["#order"][id(st)]
+        if st.get("to") and not st.get("do"):
+            g = "↻" if back else "→"
+            out.append(f'<li class="s jump"><span class="mk"></span><span class="tx">{g} '
+                       f'{"back to" if back else "on to"} <i>{e(target)}</i></span></li>')
+            continue
+        kind = st.get("kind") or ("dec" if st.get("when") else "")
+        text = st.get("do", "")
+        if st.get("to"):
+            text += f"  {'↻ back to' if back else '→ on to'} {target}"
+        lanes = ""
+        if st.get("when"):
+            lanes = '<div class="brs">' + "".join(
+                f'<div class="br"><span class="if">{e(br.get("if"))}</span>'
+                + (f'<ol class="fl">{flow_html(m, br["then"], stars, names)}</ol>' if br.get("then") else "<span></span>")
+                + "</div>" for br in st["when"]) + "</div>"
+        out.append(step_html(m, text, st.get("at"), st.get("change"), kind, stars.get(st.get("at")), lanes))
+    return "".join(out)
+
+
+def bare_html(m, b, stars):
+    """No flow: the logic line, else one node per file."""
+    if b.get("logic"):
+        return f'<ol class="fl">{step_html(m, b["logic"], None, None, "", None)}</ol>'
+    return '<ol class="fl">' + "".join(step_html(m, r["text"], r["at"], r["change"], "", None)
+                                       for r in slice_rows(m, b, stars)) + "</ol>"
+
+
+def cmd_html(mp):
+    m, done = load(mp), reviewed(mp)
+    s = stats(m)
+    stars, by_block = focus_stars(m)
+    bare = [b for b in m["blocks"] if not b.get("flow") and not b.get("logic")]
+    sliced = [b for b in m["blocks"] if b not in bare]
+    num = {b["id"]: i + 1 for i, b in enumerate(sliced)}
+
+    title = (f"#{m['pr']} " if m.get("pr") else "") + (m.get("title") or Path(mp).stem)
+    chips = [a(m["url"], f"#{m['pr']}") if m.get("url") and m.get("pr") else "",
+             e(f"{len(sliced)} slices") if sliced else "",
+             e(f'~{s["read_lines"]} lines · {s["read_files"]} files'),
+             e(f'tests hidden: {len(s["tests"])} files') if s["tests"] else "",
+             e(f'{m["base_sha"][:7]}..{m["head_sha"][:7]}' + (" + worktree" if m.get("live") else ""))]
+    legend = ('<div class="legend"><span><b style="color:var(--add)">●</b>new</span><span><b style="color:var(--chg)">●</b>changed</span>'
+              '<span><b style="color:var(--mu)">●</b>unchanged</span><span>◆ decision</span><span>⇢ leaves the process</span>'
+              '<span>■ ends</span><span>↻ loops back</span></div>')
+    out = [f"<title>{e(title)}</title><style>{CSS}</style>", '<div class="top">',
+           f'<p>{e(m.get("intent"))}</p>' if m.get("intent") else "",
+           '<div class="chips">' + "".join(f'<span class="chip">{c}</span>' for c in chips if c) + "</div>", legend, "</div>"]
+
+    if bare:
+        label = "changes by file: /hitch-focus slices them" if m.get("auto") else "not in a slice yet"
+        out.append(f'<section class="card loose"><div class="hd"><h2>{label}</h2></div>'
+                   + "".join(bare_html(m, b, stars) for b in bare) + "</section>")
+    for b in sliced:
+        cls = " ".join(["card"] + [c for c, on in (("done", b["key"] in done), ("loose", b.get("unassigned"))) if on])
+        flow = f'<ol class="fl">{flow_html(m, b["flow"], stars)}</ol>' if b.get("flow") else bare_html(m, b, stars)
+        out.append(f'<section class="{cls}" id="{e(b["id"])}"><div class="hd"><span class="n">{num[b["id"]]}</span>'
+                   f'<h2>{e(b["title"])}</h2><span class="meta">{e(slice_meta(m, b))}'
+                   f'{" · not in a slice yet" if b.get("unassigned") else ""}{" · ✓ viewed" if b["key"] in done else ""}</span></div>{flow}')
+        focus = by_block.get(b["id"], [])
+        if focus:
+            out.append('<div class="focus">')
+            for n, f in focus:
+                rows = "".join(f"<dt>{label}</dt><dd>{e(f[k])}</dd>" for k, label in
+                               (("chosen", "chosen"), ("instead", "instead"), ("tradeoff", "trade-off"),
+                                ("look", "look at")) if f.get(k))
+                link = pr_link(m, f.get("at"))
+                name = e(f.get("at", "").rpartition("/")[2])
+                at = a(link, name) if link else name
+                door = f' · {e(f["door"])}' if f.get("door") else ""
+                out.append(f'<details><summary><span class="star">★{n}</span><span>{e(f["title"])}</span>'
+                           f'<span class="meta">{at}{door}</span></summary><dl>{rows}</dl></details>')
+            out.append("</div>")
+        out.append("</section>")
+
+    rest = []
+    for f in m.get("effects", []):
+        raw = ""
+        if f.get("file") and Path(f["file"]).is_file():
+            text = Path(f["file"]).read_text(errors="replace").splitlines()
+            more = [f"… {len(text) - 400} more lines"] if len(text) > 400 else []
+            raw = (f'<details><summary>{e(Path(f["file"]).name)}</summary><pre>'
+                   + "\n".join(e(t) for t in text[:400] + more) + "</pre></details>")
+        rest.append(f'<div class="ef"><b>{e(f["title"])}</b><span>{e(f.get("summary"))}</span>{raw}</div>')
+    more = []
+    if s["skim"]:
+        groups = {}
+        for h in s["skim"]:
+            g = groups.setdefault((h["path"], kind_label(h)), [0, 0])
+            g[0], g[1] = g[0] + h["added"], g[1] + h["removed"]
+        rows = "".join(f'<div class="meta">{e(p)} · {e(k)} +{a_} −{r}</div>'
+                       for (p, k), (a_, r) in sorted(groups.items(), key=lambda x: (x[0][1], x[0][0])))
+        more.append(f'<details><summary>skim: {s["skim_files"]} files generated, moved or reformatted</summary>{rows}</details>')
+    if m.get("settled"):
+        more.append(f'<details><summary>settled: {len(m["settled"])}</summary>'
+                    + "".join(f"<div>{e(x)}</div>" for x in m["settled"]) + "</details>")
+    if rest or more:
+        out.append('<section class="card runs">' + ("<h3>When it runs</h3>" + "".join(rest) if rest else "")
+                   + (f'<div class="more">{"".join(more)}</div>' if more else "") + "</section>")
+    page = Path(mp).with_suffix(".html")
+    page.write_text("<!doctype html><meta charset=utf-8>" + "\n".join(x for x in out if x))
+    return page
+
+
+# ---------------------------------------------------------------- main
+
+def main(argv):
+    if not argv or argv[0] in ("-h", "--help"):
+        print(__doc__)
+        return 0
+    cmd, args = argv[0], argv[1:]
+    if cmd == "hunks" and len(args) == 3:
+        cmd_hunks(*args)
+    elif cmd == "build" and len(args) == 1:
+        spec, problems = load(args[0]), []
+        for k in ("repo", "base", "head"):
+            if not spec.get(k):
+                sys.exit(f"{args[0]}: no {k}")
+        spec.setdefault("worktree", str(toplevel(spec["repo"])))
+        m = build(spec, problems)
+        mp = map_path(m["repo"], spec["head"])
+        save(m, mp)
+        print(mp)
+        return report(problems)
+    elif cmd == "refresh" and len(args) == 1:
+        old, problems = load(args[0]), []
+        hunks = diff_files(toplevel(old["repo"]), old["base"], old["head"])
+        save(build(regroup(old, hunks), problems, hunks=hunks), Path(args[0]))
+        print(args[0])
+        return report(problems)
+    elif cmd == "live" and len(args) == 1:
+        return cmd_live(args[0])
+    elif cmd == "check" and len(args) == 1:
+        m, problems = load(args[0]), []
+        spec = {k: v for k, v in m.items() if k != "blocks"}
+        spec["blocks"] = [b for b in m["blocks"] if not b.get("unassigned")]
+        build(spec, problems, live=m.get("live", False))
+        if not problems:
+            print("ok")
+        return report(problems)
+    elif cmd == "html" and len(args) == 1:
+        print(cmd_html(args[0]))
+    elif cmd == "flow" and len(args) == 1:
+        cmd_flow(args[0])
+    elif cmd == "outline" and len(args) == 1:
+        cmd_outline(args[0])
+    elif cmd == "block" and len(args) == 2:
+        cmd_block(*args)
+    elif cmd == "file" and len(args) == 2:
+        cmd_file(*args)
+    elif cmd == "mark" and len(args) == 2:
+        cmd_mark(*args)
+    elif cmd == "list" and len(args) <= 1:
+        cmd_list(*args)
+    elif cmd == "path" and 1 <= len(args) <= 2:
+        print(map_path(toplevel(args[0]), *args[1:]))
+    else:
+        print(__doc__, file=sys.stderr)
+        return 2
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

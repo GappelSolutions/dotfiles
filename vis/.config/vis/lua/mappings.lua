@@ -9,6 +9,7 @@ local jumplist = require('config.jumplist')
 local telescope = require('config.telescope')
 local yazi = require('config.yazi')
 local worktree = require('config.worktree')
+local prmap = require('config.prmap')
 
 local n, i, v, cmd = util.n, util.i, util.v, util.cmd
 local function map(modes, lhs, rhs)
@@ -79,6 +80,10 @@ map(n, ' gh', cmd('!LESS=R git -c pager.diff="delta --paging=always" diff -- "$v
 map(n, ' gb', cmd('!LESS=R git -c pager.blame="delta --paging=always" blame -- "$vis_filepath"'))
 map(n, ' gf', cmd('!lazygit -f "$vis_filepath"'))
 map(n, ' o', worktree.pick)
+
+-- PR map (hitch-focus): blocks of this branch's PR, any PR's
+map(n, ' m', prmap.pick)
+map(n, ' M', prmap.pick_map)
 
 -- LSP Mappings
 map(n, ' pe', diagnostics.pick)

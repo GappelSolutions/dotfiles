@@ -46,6 +46,7 @@ The crew is the whole review: no other review agents.
    - `none`: no agents, propose `approve`.
    - `one`: one `hitch-skeptic` in the background. Its findings are the comments.
    - `full`: two `hitch-skeptic` runs in the background, in parallel, neither sees the other, B with the effort override `low` (trial, measured by `hitch-inspector`), each writing to `/tmp/hitch-pr-<pr>/review-<A|B>.md`. Then `hitch-referee` with the same input plus both files.
+   - Alongside, at every tier: the PR map, a `general-purpose` agent in the background, model `opus`, effort `medium` (`Follow ~/.claude/skills/hitch-focus/SKILL.md for PR <pr> with worktree <wt>, base origin/<target>, head origin/<source>, brief <file>.`).
 2. `git -C <wt> update-ref refs/hitch/pr-<pr>/base origin/<target>` and `refs/hitch/pr-<pr>/reviewed HEAD`.
 3. Show:
    ```
@@ -57,6 +58,7 @@ The crew is the whole review: no other review agents.
    **Open** (for you)
    - <question>
    ```
+   Below it the map's report as is; render its cards (the html path in the report: `html_preview` for the height, then `html_render`).
    Proposed vote: `wait-for-author` if any comment is a blocker, `approve-with-suggestions` if only fixes, `approve` if none. Never `reject` unless the user says so.
 
 ## Post (only on the user's OK)
@@ -75,7 +77,7 @@ A comment for the whole PR: POST to the threads endpoint (`hitch-clerk`) with `{
 Run `hitch-pr wait <pr>` in the background. It exits on a push, vote, status or comment change. Then:
 
 - **Replies** in your threads: one line each, plus a proposed answer. Post nothing without the user's OK.
-- **Push**: fetch, move the worktree to the new `origin/<source>`. Review only the new part, by hitch-tower's Reruns rule: `refs/hitch/pr-<pr>/reviewed..HEAD`, after a rebase or a merge of the target only what `git range-diff` marks changed plus conflict resolutions. Your open threads go along: per thread `addressed` (path:line shows it) or `not` (why); at tier `none` you check them yourself in that diff. Move both refs. Propose: `fixed` for addressed threads, for the rest a one-line reply (why it still holds, or why the author's reply doesn't), new comments only for new code, and the new vote.
+- **Push**: fetch, move the worktree to the new `origin/<source>`, `~/.claude/skills/hitch-focus/hitch-map refresh <map>` and `html <map>`, its cards rendered the same way (new hunks show as unassigned). Review only the new part, by hitch-tower's Reruns rule: `refs/hitch/pr-<pr>/reviewed..HEAD`, after a rebase or a merge of the target only what `git range-diff` marks changed plus conflict resolutions. Your open threads go along: per thread `addressed` (path:line shows it) or `not` (why); at tier `none` you check them yourself in that diff. Move both refs. Propose: `fixed` for addressed threads, for the rest a one-line reply (why it still holds, or why the author's reply doesn't), new comments only for new code, and the new vote.
 - **Completed or abandoned**, or the user says stop: `git -C <clone> worktree remove <wt>`, `git -C <clone> update-ref -d` both `refs/hitch/pr-<pr>/*`, and report. Otherwise restart the wait.
 - A user message cuts the wait short: check the PR right away.
 
