@@ -27,11 +27,13 @@
 
 <in.json>, written by the hitch-focus agent:
   {repo, base, head, pr?, url?, title?, intent,
-   blocks: [{id, title, flow: [step], logic?, hunks: [hunk ids, in reading order], after: [block ids]}],
+   order?: why this reading order,
+   blocks: [{id, title, name?, what?, takes?: [name], gives?: [name], flow: [step], logic?,
+             hunks: [hunk ids, in reading order], after: [block ids]}],
    focus: [{block, title, at: "path:line", chosen, instead, tradeoff, look, door}],
    effects: [{title, layer, summary, file?}], settled: [text]}
-step: {do, at: "path:line", change?: new|changed|gone, kind?: out|stop, id?,
-   when?: [{if, then: [step]}], to?: step id}  (hitch-focus SKILL.md: Flow)
+step: {do, detail?, who?, at: "path:line", change?: new|changed|gone, was?, kind?: out|stop,
+   id?, when?: [{if, then: [step]}], to?: step id}  (hitch-focus SKILL.md: Flow)
 Hunk ids hash the hunk's path and lines, not its position: they survive rebases.
 Patterns a repo needs beyond the defaults: the git attributes `hitch-test` and
 `linguist-generated` (.gitattributes).
@@ -274,6 +276,7 @@ def assemble(spec, hunks, problems):
 
 CHANGES = ("new", "changed", "gone")
 KINDS = ("out", "stop")
+WORDS = {"do": 5, "detail": 8, "was": 8, "who": 2}  # SKILL.md asks for less; this is the hard stop
 
 
 def steps(flow):
@@ -297,11 +300,21 @@ def check_flow(b, problems):
             problems.append(f"{what}: kind {st['kind']!r}, not one of {', '.join(KINDS)}")
         if st.get("to") and st["to"] not in ids:
             problems.append(f"{what}: to {st['to']}, no step with that id")
+        if st.get("was") and st.get("change") != "changed":
+            problems.append(f"{what}: was on a step that isn't changed")
+        for k, n in WORDS.items():
+            if len(str(st.get(k) or "").split()) > n:
+                problems.append(f"{what}: {k} over {n} words, the code has the rest")
         for br in st.get("when", []):
             if not br.get("if"):
                 problems.append(f"{what}: a branch without if")
+            elif len(br["if"].split()) > 3:
+                problems.append(f"{what}: if {br['if']!r} over 3 words")
     if len(ids) != len(set(ids)):
         problems.append(f"{b['id']}: step ids repeat")
+    for k in ("takes", "gives"):
+        if not isinstance(b.get(k, []), list):
+            problems.append(f"{b['id']}: {k} is not a list")
 
 
 def anchors(m, problems):
@@ -619,62 +632,154 @@ def cmd_list(repo=None):
 
 # ---------------------------------------------------------------- flow
 
-GUTTER = {"new": "+", "changed": "~", "gone": "-"}
+STATUS = {"new": "+", "changed": "~", "gone": "-"}
 
 
-def glyph(st, back=False):
-    """A jump loops (↻) when its target comes earlier; a step leaving the process or ending
-    the path shows that even when it decides too."""
-    if st.get("to") and not st.get("do"):
-        return "↻" if back else "→"
+def glyph(st):
+    """A step leaving the process or ending the path shows that even when it decides too."""
     if st.get("kind") in ("out", "stop"):
-        return {"out": "⇢", "stop": "■"}[st["kind"]]
+        return {"out": "↗", "stop": "■"}[st["kind"]]
     return "◇" if st.get("when") else "○"
 
 
-def flow_rows(flow, stars, first="", rest="", names=None):
-    """A flow as tree rows: {lead, glyph, text, at, change, star}. A check's branches hang
-    under it with their condition; a branch without stop or to falls through to the next step."""
-    if names is None:
-        order = {id(st): n for n, st in enumerate(steps(flow))}
-        names = {st["id"]: (st.get("do", st["id"]), order[id(st)]) for st in steps(flow) if st.get("id")}
-        names["#order"] = order
-    out = []
-    for i, st in enumerate(flow):
-        target, at_n = names.get(st.get("to"), (st.get("to"), 1 << 30))
-        back = at_n <= names["#order"][id(st)]
-        text = st.get("do") or target
-        if st.get("to") and st.get("do"):
-            text += f"  {'↻' if back else '→'} {target}"
-        out.append({"lead": first if i == 0 else rest, "glyph": glyph(st, back), "text": text, "at": st.get("at"),
-                    "change": st.get("change"), "star": stars.get(st.get("at"))})
-        whens = st.get("when", [])
-        w = max((len(br.get("if", "")) for br in whens), default=0)
-        for j, br in enumerate(whens):
-            last = j == len(whens) - 1
-            head = rest + ("└ " if last else "├ ") + br.get("if", "").ljust(w) + " "
-            cont = rest + ("  " if last else "│ ") + " " * (w + 1)
-            if br.get("then"):
-                out += flow_rows(br["then"], stars, head, cont, names)
-            else:
-                out.append({"lead": head, "glyph": "", "text": "on", "at": None, "change": st.get("change"), "star": None})
-    return out
+def row(**kw):
+    return {"n": None, "change": None, "glyph": "", "text": "", "detail": None, "who": None, "at": None,
+            "star": None, "was": None, "fwd": [], "back": [], "branches": [], "kind": "step", **kw}
 
 
-def slice_rows(m, b, stars):
-    """A slice's flow; without one (no hitch-focus yet, or code no slice holds): its logic,
-    else its files, each pinned to its first changed line."""
-    if b.get("flow"):
-        return flow_rows(b["flow"], stars)
+def layout(flow, stars):
+    """A flow as rows, for the cards and the vis buffer alike: every step numbered in reading
+    order, a jump folded into the step before it (→ n forward, a loop line back), the actor only
+    where it changes, a decision's branches as {cond, rows} under it."""
+    order, num = {}, {}
+    for i, st in enumerate(steps(flow)):
+        order[id(st)] = i
+        if st.get("do"):
+            num[id(st)] = len(num) + 1
+    ids = {st["id"]: st for st in steps(flow) if st.get("id")}
+    actor = [None]
+
+    def jump(st, r):
+        t = ids.get(st["to"])
+        n = num.get(id(t), st["to"]) if t else st["to"]
+        (r["back"] if t and order[id(t)] <= order[id(st)] else r["fwd"]).append(n)
+
+    def rows(seq, change):
+        out = []
+        for st in seq:
+            if st.get("to") and not st.get("do"):
+                if not out or out[-1]["branches"]:
+                    out.append(row(kind="jump", change=change))
+                jump(st, out[-1])
+                continue
+            who = st.get("who") if st.get("who") and st["who"] != actor[0] else None
+            actor[0] = st.get("who") or actor[0]
+            r = row(n=num[id(st)], change=st.get("change"), glyph=glyph(st), text=st["do"], detail=st.get("detail"),
+                    who=who, at=st.get("at"), star=stars.get(st.get("at")), was=st.get("was"))
+            if st.get("to"):
+                jump(st, r)
+            r["branches"] = [{"cond": br.get("if", ""), "rows": rows(br.get("then", []), st.get("change"))
+                              or [row(kind="jump", change=st.get("change"), text="on")]} for br in st.get("when", [])]
+            out.append(r)
+        return out
+
+    return rows(flow, None)
+
+
+def bare_rows(m, b):
+    """No flow (no hitch-focus yet, or code no slice holds): the logic line, else one row per
+    file, pinned to its first changed line."""
     if b.get("logic"):
-        return [{"lead": "", "glyph": "", "text": b["logic"], "at": None, "change": None, "star": None}]
+        return [row(text=b["logic"])]
     hunks, files = {h["id"]: h for h in m["hunks"]}, {}
     for i in b["hunks"]:
         if i in hunks:
             files.setdefault(hunks[i]["path"], []).append(hunks[i])
-    return [{"lead": "", "glyph": "○", "text": f"{path}  +{sum(h['added'] for h in hs)} −{sum(h['removed'] for h in hs)}",
-             "at": f"{path}:{max(hs[0]['new_start'], 1)}", "star": None,
-             "change": {"A": "new", "D": "gone"}.get(hs[0]["status"], "changed")} for path, hs in files.items()]
+    return [row(glyph="○", text=path, detail=f"+{sum(h['added'] for h in hs)} −{sum(h['removed'] for h in hs)}",
+                at=f"{path}:{max(hs[0]['new_start'], 1)}", change={"A": "new", "D": "gone"}.get(hs[0]["status"], "changed"))
+            for path, hs in files.items()]
+
+
+def slice_layout(m, b, stars):
+    return layout(b["flow"], stars) if b.get("flow") else bare_rows(m, b)
+
+
+def flat(rows, pad=""):
+    """Rows in reading order as (row, lead): lead is what goes before the glyph, a branch's
+    condition on its first row, its later rows aligned under that row's glyph; a was row under
+    the step it replaces."""
+    for r in rows:
+        yield r, pad
+        if r["was"]:
+            yield row(kind="was", text=r["was"]), pad + "  "
+        for br in r["branches"]:
+            for i, x in enumerate(flat(br["rows"], pad + "  " + " " * (len(br["cond"]) + 1))):
+                yield (x[0], pad + "  " + br["cond"] + " ") if i == 0 else x
+
+
+def lanes(rows):
+    """One lane per loop target, spanning it to its last source: the longest leftmost, a lane
+    reused where spans don't overlap. {target: lane}, {target: (first, last)}, lane count."""
+    pos = {r["n"]: i for i, r in enumerate(rows) if r["n"]}
+    spans = {}
+    for i, r in enumerate(rows):
+        for t in r["back"]:
+            if t in pos:
+                lo, hi = spans.get(t, (pos[t], pos[t]))
+                spans[t] = (min(lo, i), max(hi, i))
+    used, lane = [], {}
+    for t, (lo, hi) in sorted(spans.items(), key=lambda x: x[1][0] - x[1][1]):
+        k = next((k for k, u in enumerate(used) if all(hi < a or lo > b for a, b in u)), len(used))
+        used[k:k + 1] = [(used[k] if k < len(used) else []) + [(lo, hi)]]
+        lane[t] = k
+    return lane, spans, len(used)
+
+
+def gutter(rows):
+    """The loop lines as box drawing left of the step numbers: ┌─▸ at the target, ├ └ at each
+    step that loops back to it."""
+    lane, spans, count = lanes(rows)
+    if not count:
+        return [""] * len(rows)
+    w = 2 * count + 1
+    g = [[" "] * w for _ in rows]
+    for t, k in lane.items():
+        for i in range(spans[t][0] + 1, spans[t][1]):
+            g[i][2 * k] = "│"
+
+    def across(i, c, first, end):
+        g[i][c] = first
+        for x in range(c + 1, w - 1):
+            g[i][x] = "┼" if g[i][x] == "│" else "─"
+        g[i][w - 1] = end
+
+    for t, k in lane.items():
+        across(spans[t][0], 2 * k, "┌", "▸")
+        for i, r in enumerate(rows):
+            if t in r["back"]:
+                across(i, 2 * k, "└" if i == spans[t][1] else "├", "─")
+    return ["".join(x) + " " for x in g]
+
+
+def chips(r):
+    out = [f"{r['star']}"] if r["star"] else []
+    out += [f"→ {n}" for n in r["fwd"]]
+    return out + ([f"↻ {n}" for n in r["back"]] if r["kind"] == "jump" else [])
+
+
+def slice_text(rows):
+    """A slice's flow as buffer lines with the row each comes from: gutter, step number,
+    +/~/- status, the step, greyed detail, chips, the actor right-aligned where it changes."""
+    fl = list(flat(rows))
+    gut = gutter([r for r, _ in fl])
+    body = []
+    for (r, lead), g in zip(fl, gut):
+        st = "-" if r["kind"] == "was" else STATUS.get(r["change"], " ")
+        t = lead + (f"{r['glyph']} " if r["glyph"] else "") + r["text"] + (f" · {r['detail']}" if r["detail"] else "")
+        c = chips(r)
+        body.append((r, f"{g}{r['n'] or '':>2} {st} " + (f"{t}  {' '.join(c)}" if r["text"] and c else t + " ".join(c))))
+    col = min(max((len(l) for _, l in body), default=0) + 3, 88)
+    return [(f"{l.ljust(col - 3)}   {r['who']}" if r["who"] else l.rstrip(), r) for r, l in body]
 
 
 def focus_stars(m):
@@ -693,6 +798,31 @@ def slice_meta(m, b):
     return f"+{add} −{rem} · {files} file{'s' * (files != 1)}"
 
 
+def ends(b):
+    """What a slice hands on (gives) and where its paths end (stop steps)."""
+    return ([f"↗ {g}" for g in b.get("gives", [])]
+            + [f"■ {st['do']}" for st in steps(b.get("flow", [])) if st.get("kind") == "stop" and st.get("do")])
+
+
+def overview(sliced):
+    """Per slice in reading order: the earlier slices it takes from ({slice: names}), what it takes
+    from outside the PR, and what it gives that no slice takes."""
+    given, taken = {}, {t for b in sliced for t in b.get("takes", [])}
+    for k, b in enumerate(sliced, 1):
+        for g in b.get("gives", []):
+            given.setdefault(g, []).append(k)
+    out = []
+    for k, b in enumerate(sliced, 1):
+        frm = {}
+        for t in b.get("takes", []):
+            for j in given.get(t, []):
+                if j != k:
+                    frm.setdefault(j, []).append(t)
+        out.append((k, b, dict(sorted(frm.items())), [t for t in b.get("takes", []) if t not in given],
+                    [g for g in b.get("gives", []) if g not in taken]))
+    return out
+
+
 def cmd_flow(mp):
     """The map as one buffer of flows (vis): <key>/map.flow, plus map.at with the slice and
     the pinned path:line of every buffer line."""
@@ -702,40 +832,46 @@ def cmd_flow(mp):
     title = (f"#{m['pr']} " if m.get("pr") else "") + (m.get("title") or Path(mp).stem)
     lines = [(f"# {title}", "", "")]
     lines += [(f"# {l}", "", "") for l in wrap(m.get("intent", ""), 96)]
-    n_sliced = len([b for b in m["blocks"] if b.get("flow") or b.get("logic")])
-    top = [(f"{n_sliced} slices, " if n_sliced else "") + f"~{s['read_lines']} lines in {s['read_files']} files"]
+    bare = [b for b in m["blocks"] if not b.get("flow") and not b.get("logic")]
+    sliced = [b for b in m["blocks"] if b not in bare]
+    top = [(f"{len(sliced)} slices, " if sliced else "") + f"~{s['read_lines']} lines in {s['read_files']} files"]
     if s["tests"]:
         top.append(f"tests hidden: {len(s['tests'])} files")
     if s["skim"]:
         top.append(f"skim: {s['skim_files']} files")
     top.append(f"{m['base_sha'][:7]}..{m['head_sha'][:7]}" + (" + worktree" if m.get("live") else ""))
-    lines += [("# " + " · ".join(top), "", ""),
+    lines.append(("# " + " · ".join(top), "", ""))
+    if len(sliced) > 1:
+        w = max(len(b.get("name") or b["title"]) for b in sliced)
+        lines.append(("#", "", ""))
+        for k, b, frm, ext, out in overview(sliced):
+            st = " ".join(f"{n}" for n, _ in by_block.get(b["id"], []))
+            src = " ".join([str(j) for j in frm] + ext)
+            lines.append((f"# {k} {(b.get('name') or b['title']).ljust(w)}  {st:<8} {'← ' + src if src else '':<16}"
+                          f" {'↗ ' + ' '.join(out) if out else ''}".rstrip(), b["id"], ""))
+        lines += [(f"# {l}", "", "") for l in wrap(m.get("order", ""), 96)]
+    lines += [("# + new  ~ changed  - removed or was · ○ step ◇ decision ↗ leaves ■ ends · ┌─▸ loops back"
+               " · → n skips to n", "", ""),
               ("# gd: code · <Space>d: diff · ]b [b: slices · <Space>v: viewed · <Space>m: refresh", "", "")]
-    bare = [b for b in m["blocks"] if not b.get("flow") and not b.get("logic")]
     if bare:
         head = "changes by file: /hitch-focus slices them" if m.get("auto") else "not in a slice yet"
         lines += [("", "", ""), (f"━━ {head}", "", "")]
         for b in bare:
-            for r in slice_rows(m, b, stars):
-                lines.append((f"{GUTTER.get(r['change'], ' ')}   ○ {r['text']}" + ("  \U000f012c" if b["key"] in done else ""),
-                              b["id"], r["at"] or ""))
-    for n, b in enumerate([b for b in m["blocks"] if b not in bare], 1):
+            lines += [(l, b["id"], r["at"] or "") for l, r in slice_text(bare_rows(m, b))]
+    for n, b in enumerate(sliced, 1):
         mark = "  \U000f012c" if b["key"] in done else ("  ! not in a slice yet" if b.get("unassigned") else "")
         lines += [("", "", ""), (f"━━ {n} {b['title']}   {slice_meta(m, b)}{mark}", b["id"], "")]
-        for r in slice_rows(m, b, stars):
-            star = f"  \uf005{r['star']}" if r["star"] else ""
-            gl = f"{r['glyph']} " if r["glyph"] else ""
-            text = [r["text"]] if b.get("flow") else wrap(r["text"], 92)
-            for i, t in enumerate(text):
-                lines.append((f"{GUTTER.get(r['change'], ' ') if i == 0 else ' '}   {r['lead']}{gl if i == 0 else ''}{t}"
-                              f"{star if i == len(text) - 1 else ''}".rstrip(), b["id"], r["at"] or ""))
+        lines += [(l, b["id"], "") for l in wrap(b.get("what", ""), 92)]
+        if ends(b):
+            lines.append(("  ".join(ends(b)), b["id"], ""))
+        lines += [(l, b["id"], r["at"] or "") for l, r in slice_text(slice_layout(m, b, stars))]
         for k, f in by_block.get(b["id"], []):
             lines.append((f"    {k} {f['title']}" + (f" · {f['door']}" if f.get("door") else ""), b["id"], f.get("at", "")))
     if m.get("effects"):
         lines += [("", "", ""), ("━━ effects", "", "")]
         for f in m["effects"]:
             for i, l in enumerate(wrap(f"{f['title']}: {f.get('summary', '')}", 92)):
-                lines.append((f"    {'⇢' if i == 0 else ' '} {l}", "", ""))
+                lines.append((f"    {'↗' if i == 0 else ' '} {l}", "", ""))
     out = Path(mp).with_suffix("") / "map.flow"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("\n".join(l for l, _, _ in lines) + "\n")
@@ -746,52 +882,57 @@ def cmd_flow(mp):
 # ---------------------------------------------------------------- html
 
 CSS = """
-:root{--mu:var(--muted-foreground);--line:color-mix(in srgb,var(--border) 80%,transparent);
---add:var(--success);--chg:var(--warning);--del:var(--destructive);--mono:var(--font-mono,ui-monospace,monospace)}
+:root{--mu:var(--muted-foreground);--add:var(--success);--chg:var(--warning);--del:var(--destructive);
+--mono:var(--font-mono,ui-monospace,monospace)}
 body{margin:0;font-size:13.5px;line-height:1.5}
 a{color:inherit;text-decoration:none}
 a:hover{color:var(--primary);text-decoration:underline;text-underline-offset:3px}
-.top{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
-.top p{margin:0;color:var(--mu)}
+.top{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.top p{margin:0}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{font:11.5px var(--mono);color:var(--mu);background:var(--secondary);border-radius:999px;padding:1px 9px}
 .chip a{color:var(--primary)}
-.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--mu)}
-.legend span{display:inline-flex;align-items:center;gap:6px}
+.lbl{font:600 10.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin-top:6px}
+.ov{display:grid;grid-template-columns:max-content max-content max-content 1fr;gap:3px 14px;align-items:center;font-size:13px}
+.ov>span{white-space:nowrap}
+.ov .k{display:inline-flex;align-items:center;gap:8px}
+.ov b,.hd .n{flex:none;width:20px;height:20px;border-radius:50%;background:var(--secondary);color:var(--mu);
+  font:600 11px/20px var(--mono);text-align:center}
+.ov .risk b,.hd .n.risk{background:color-mix(in srgb,var(--chg) 20%,transparent);color:var(--chg)}
+.io{font:11.5px var(--mono);color:var(--mu)}
+.why{color:var(--mu);font-size:12.5px}
+.legend{display:flex;flex-wrap:wrap;gap:2px 16px;font-size:12px;color:var(--mu)}
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
 .card.done{opacity:.5}
 .card.loose{border-style:dashed}
-.hd{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
-.hd .n{flex:none;align-self:center;width:22px;height:22px;border-radius:50%;background:var(--secondary);
-  color:var(--mu);font:600 11.5px/22px var(--mono);text-align:center}
+.hd{display:flex;align-items:center;gap:10px}
 .hd h2{font-size:14.5px;font-weight:600;margin:0}
 .hd .meta{margin-left:auto;white-space:nowrap}
 .meta{font:11.5px var(--mono);color:var(--mu)}
-ol.fl{list-style:none;margin:0;padding:0;position:relative}
-ol.fl::before{content:"";position:absolute;left:6px;top:12px;bottom:12px;border-left:1.5px solid var(--line)}
-.s{position:relative;padding:2px 0 2px 24px}
-.mk{position:absolute;left:0;top:6px;width:13px;height:13px;display:grid;place-items:center}
-.mk::after{content:"";width:9px;height:9px;box-sizing:border-box;border:2px solid currentColor;border-radius:50%;background:var(--card)}
-.dec>.mk::after{border-radius:2px;transform:rotate(45deg);width:9px;height:9px}
-.stop>.mk::after{border-radius:2px;background:currentColor}
-.out>.mk::after{content:"⇢";border:0;width:auto;height:auto;font-size:13px;line-height:1;background:var(--card)}
-.jump{color:var(--mu);font-size:12.5px}
-.jump>.mk::after{width:5px;height:5px;border:0;background:var(--line)}
-.jump i{font-style:normal;color:var(--foreground)}
-.ctx{color:var(--mu)} .ctx>.mk{color:var(--mu)}
-.new>.mk{color:var(--add)} .changed>.mk{color:var(--chg)} .gone>.mk{color:var(--del)}
+.what{margin:6px 0 0 30px;color:var(--mu)}
+.ends{margin:8px 0 0 30px;display:flex;gap:6px;flex-wrap:wrap}
+.pill{font:11.5px var(--mono);background:var(--secondary);border-radius:4px;padding:0 7px}
+.flow{position:relative;margin-top:14px;padding-left:calc(var(--gw) + 42px)}
+.r{display:flex;align-items:baseline;gap:8px;line-height:22px}
+.no{position:absolute;left:var(--gw);width:18px;text-align:right;font:11px/22px var(--mono);color:var(--mu)}
+.st{position:absolute;left:calc(var(--gw) + 24px);width:10px;text-align:center;font:600 12px/22px var(--mono)}
+.st.new,.new>.mk{color:var(--add)} .st.changed,.changed>.mk{color:var(--chg)} .st.gone,.gone>.mk{color:var(--del)}
+.mk{flex:none;width:14px;text-align:center;color:var(--mu)}
+.tx{flex:1;min-width:0}
+.ctx>.tx,.jump>.tx{color:var(--mu)}
 .gone>.tx{color:var(--del);text-decoration:line-through}
-.tag{font:600 10px var(--mono);letter-spacing:.04em;text-transform:uppercase;border-radius:4px;padding:0 5px;margin-left:8px;vertical-align:1px}
-.changed>.tag{color:var(--chg);background:color-mix(in srgb,var(--chg) 14%,transparent)}
-.gone>.tag{color:var(--del);background:color-mix(in srgb,var(--del) 14%,transparent)}
-.brs{display:grid;grid-template-columns:max-content 1fr;gap:4px 10px;margin:4px 0 4px -18px}
-.br{display:contents}
-.if{justify-self:start;align-self:start;margin-top:4px;font:11.5px var(--mono);color:var(--foreground);
-  background:var(--secondary);border-radius:4px;padding:0 7px;white-space:nowrap}
-.br>ol.fl{border-left:1.5px dashed var(--line);padding-left:8px}
-.br>ol.fl::before{display:none}
-.star{display:inline-block;font:600 11px var(--mono);color:var(--chg);background:color-mix(in srgb,var(--chg) 14%,transparent);
-  border-radius:999px;padding:0 7px;margin-left:8px;vertical-align:1px}
+.was>.tx{color:var(--mu);text-decoration:line-through;font-size:12.5px}
+.dt{color:var(--mu);font-size:12.5px;margin-left:8px}
+.go{font:11.5px var(--mono);color:var(--mu);margin-left:8px}
+.jump .go:first-child{margin-left:0}
+.who{flex:none;font:11px var(--mono);color:var(--mu);padding-left:12px}
+.br{display:flex;align-items:baseline;gap:8px;margin-left:22px}
+.if{flex:none;font:11.5px/18px var(--mono);background:var(--secondary);border-radius:4px;padding:0 6px;white-space:nowrap}
+.rs{flex:1;min-width:0}
+.star{display:inline-block;font:600 11px/18px var(--mono);color:var(--chg);background:color-mix(in srgb,var(--chg) 14%,transparent);
+  border-radius:999px;padding:0 7px;margin-left:8px}
+svg.edges{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+svg.edges path{fill:none;stroke:var(--mu);stroke-width:1.3;opacity:.8}
 .focus{margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px}
 .focus summary{cursor:pointer;list-style:none;display:flex;align-items:baseline;gap:8px}
 .focus summary::-webkit-details-marker{display:none}
@@ -813,6 +954,26 @@ pre{font:11.5px/1.5 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere;back
   border-radius:calc(var(--radius) - 2px);padding:10px 12px;margin:6px 0 0;max-height:320px;overflow:auto}
 """
 
+# the loop lines: per lane, from each step that loops back up to its target, arrow at the target
+JS = """
+for (const f of document.querySelectorAll('.flow[data-lanes]')) {
+  const box = f.getBoundingClientRect(), w = parseFloat(getComputedStyle(f).getPropertyValue('--gw')) - 4;
+  const y = el => el.getBoundingClientRect().top - box.top + 11;
+  const ns = 'http://www.w3.org/2000/svg', svg = document.createElementNS(ns, 'svg');
+  const path = d => { const p = document.createElementNS(ns, 'path'); p.setAttribute('d', d); svg.appendChild(p); };
+  svg.setAttribute('class', 'edges'); svg.setAttribute('width', w + 4); svg.setAttribute('height', box.height);
+  for (const t of f.querySelectorAll('[data-lane]')) {
+    const x = 3 + +t.dataset.lane * 8, ty = y(t);
+    path(`M${w - 5} ${ty - 3.5} L${w} ${ty} L${w - 5} ${ty + 3.5}`);
+    for (const s of f.querySelectorAll(`[data-back~="${t.dataset.n}"]`)) {
+      const sy = y(s);
+      path(`M${w} ${sy} H${x + 4} Q${x} ${sy} ${x} ${sy - 4} V${ty + 4} Q${x} ${ty} ${x + 4} ${ty} H${w}`);
+    }
+  }
+  f.appendChild(svg);
+}
+"""
+
 
 def e(s):
     return html.escape(str(s or ""))
@@ -832,55 +993,50 @@ def pr_link(m, at):
     return f'{m["url"]}#diff-{hashlib.sha256(pin[1].encode()).hexdigest()}R{pin[2]}'
 
 
-TAG = {"changed": "changed", "gone": "removed"}  # new: the green marker says it, most steps are
+SIGN = {"new": "+", "changed": "~", "gone": "−"}
 
 
-def step_html(m, text, at, change, cls, star, extra=""):
-    """One node on the rail: marker, text (linked to its line), tag, focus star."""
-    link = pr_link(m, at)
-    tx = a(link, e(text), at) if link else f'<span title="{e(at)}">{e(text)}</span>'
-    tag = f'<span class="tag">{TAG[change]}</span>' if change in TAG else ""
-    st = f'<span class="star">★{star}</span>' if star else ""
-    return (f'<li class="s {change or "ctx"} {cls}"><span class="mk"></span><span class="tx">{tx}</span>'
-            f'{tag}{st}{extra}</li>')
+def row_html(m, r, lane):
+    """One row: number and status in the left columns, glyph, the step linked to its line,
+    detail, chips, the actor right; a was row struck through under a changed step."""
+    attrs = ""
+    if r["n"]:
+        attrs += f' data-n="{r["n"]}"' + (f' data-lane="{lane[r["n"]]}"' if r["n"] in lane else "")
+    if [t for t in r["back"] if t in lane]:
+        attrs += f' data-back="{" ".join(str(t) for t in r["back"])}"'
+    link = pr_link(m, r["at"])
+    text = a(link, e(r["text"]), r["at"]) if link else f'<span title="{e(r["at"])}">{e(r["text"])}</span>'
+    ch = "".join(f'<span class="go" title="skips to step {n}">→ {n}</span>' for n in r["fwd"])
+    if r["kind"] == "jump":
+        ch += "".join(f'<span class="go" title="loops back to step {n}">↻ {n}</span>' for n in r["back"])
+    out = (f'<div class="r {r["change"] or "ctx"} {r["kind"]}"{attrs}>'
+           + (f'<span class="no">{r["n"]}</span>' if r["n"] else "")
+           + (f'<span class="st {r["change"]}">{SIGN[r["change"]]}</span>' if r["change"] in SIGN and r["kind"] != "jump" else "")
+           + (f'<span class="mk">{r["glyph"]}</span>' if r["glyph"] else "")
+           + f'<span class="tx">{text if r["text"] else ""}'
+           + (f'<span class="dt">{e(r["detail"])}</span>' if r["detail"] else "")
+           + (f'<span class="star">★{r["star"]}</span>' if r["star"] else "") + ch + "</span>"
+           + (f'<span class="who">{e(r["who"])}</span>' if r["who"] else "") + "</div>")
+    if r["was"]:
+        out += (f'<div class="r was"><span class="st gone">−</span><span class="mk"></span>'
+                f'<span class="tx" title="before">{e(r["was"])}</span></div>')
+    return out
 
 
-def flow_html(m, flow, stars, names=None):
-    """A flow as nodes on a rail; a decision's branches as lanes under it, each with its
-    condition, falling through to the next step unless they stop or jump."""
-    if names is None:
-        order = {id(st): n for n, st in enumerate(steps(flow))}
-        names = {st["id"]: (st.get("do", st["id"]), order[id(st)]) for st in steps(flow) if st.get("id")}
-        names["#order"] = order
+def rows_html(m, rows, lane):
     out = []
-    for st in flow:
-        target, at_n = names.get(st.get("to"), (st.get("to"), 1 << 30))
-        back = at_n <= names["#order"][id(st)]
-        if st.get("to") and not st.get("do"):
-            g = "↻" if back else "→"
-            out.append(f'<li class="s jump"><span class="mk"></span><span class="tx">{g} '
-                       f'{"back to" if back else "on to"} <i>{e(target)}</i></span></li>')
-            continue
-        kind = st.get("kind") or ("dec" if st.get("when") else "")
-        text = st.get("do", "")
-        if st.get("to"):
-            text += f"  {'↻ back to' if back else '→ on to'} {target}"
-        lanes = ""
-        if st.get("when"):
-            lanes = '<div class="brs">' + "".join(
-                f'<div class="br"><span class="if">{e(br.get("if"))}</span>'
-                + (f'<ol class="fl">{flow_html(m, br["then"], stars, names)}</ol>' if br.get("then") else "<span></span>")
-                + "</div>" for br in st["when"]) + "</div>"
-        out.append(step_html(m, text, st.get("at"), st.get("change"), kind, stars.get(st.get("at")), lanes))
+    for r in rows:
+        out.append(row_html(m, r, lane))
+        out += [f'<div class="br"><span class="if">{e(br["cond"])}</span><div class="rs">{rows_html(m, br["rows"], lane)}</div></div>'
+                for br in r["branches"]]
     return "".join(out)
 
 
-def bare_html(m, b, stars):
-    """No flow: the logic line, else one node per file."""
-    if b.get("logic"):
-        return f'<ol class="fl">{step_html(m, b["logic"], None, None, "", None)}</ol>'
-    return '<ol class="fl">' + "".join(step_html(m, r["text"], r["at"], r["change"], "", None)
-                                       for r in slice_rows(m, b, stars)) + "</ol>"
+def flow_html(m, rows):
+    lane, _, count = lanes([r for r, _ in flat(rows)])
+    gw = f"{count * 8 + 10}px" if count else "0px"
+    return (f'<div class="flow" style="--gw:{gw}"{f" data-lanes={count}" if count else ""}>'
+            + rows_html(m, rows, lane) + "</div>")
 
 
 def cmd_html(mp):
@@ -897,24 +1053,40 @@ def cmd_html(mp):
              e(f'~{s["read_lines"]} lines · {s["read_files"]} files'),
              e(f'tests hidden: {len(s["tests"])} files') if s["tests"] else "",
              e(f'{m["base_sha"][:7]}..{m["head_sha"][:7]}' + (" + worktree" if m.get("live") else ""))]
-    legend = ('<div class="legend"><span><b style="color:var(--add)">●</b>new</span><span><b style="color:var(--chg)">●</b>changed</span>'
-              '<span><b style="color:var(--mu)">●</b>unchanged</span><span>◆ decision</span><span>⇢ leaves the process</span>'
-              '<span>■ ends</span><span>↻ loops back</span></div>')
     out = [f"<title>{e(title)}</title><style>{CSS}</style>", '<div class="top">',
            f'<p>{e(m.get("intent"))}</p>' if m.get("intent") else "",
-           '<div class="chips">' + "".join(f'<span class="chip">{c}</span>' for c in chips if c) + "</div>", legend, "</div>"]
+           '<div class="chips">' + "".join(f'<span class="chip">{c}</span>' for c in chips if c) + "</div>"]
+    if len(sliced) > 1:
+        out.append('<div class="lbl">Reading order · what each slice takes and hands on</div><div class="ov">')
+        for k, b, frm, ext, gone in overview(sliced):
+            st = by_block.get(b["id"], [])
+            src = [f'<span title="{e(", ".join(v))}">{j}</span>' for j, v in frm.items()] + [e(t) for t in ext]
+            out.append(f'<span class="k{" risk" if st else ""}"><b>{k}</b>{e(b.get("name") or b["title"])}</span>'
+                       f'<span>{"".join(f"<span class=star>★{n}</span>" for n, _ in st)}</span>'
+                       f'<span class="io">{"← " + " ".join(src) if src else ""}</span>'
+                       f'<span class="io">{"↗ " + e(" · ".join(gone)) if gone else ""}</span>')
+        out.append("</div>")
+        if m.get("order"):
+            out.append(f'<div class="why">{e(m["order"])}</div>')
+    out += ['<div class="legend"><span>+ new · ~ changed · − removed, struck: what it did before</span>'
+            '<span>○ step · ◇ decision · ↗ leaves the process · ■ ends</span>'
+            '<span>line on the left: loops back · → n: skips to step n · right: where it runs</span></div>', "</div>"]
 
     if bare:
         label = "changes by file: /hitch-focus slices them" if m.get("auto") else "not in a slice yet"
         out.append(f'<section class="card loose"><div class="hd"><h2>{label}</h2></div>'
-                   + "".join(bare_html(m, b, stars) for b in bare) + "</section>")
+                   + "".join(flow_html(m, bare_rows(m, b)) for b in bare) + "</section>")
     for b in sliced:
         cls = " ".join(["card"] + [c for c, on in (("done", b["key"] in done), ("loose", b.get("unassigned"))) if on])
-        flow = f'<ol class="fl">{flow_html(m, b["flow"], stars)}</ol>' if b.get("flow") else bare_html(m, b, stars)
-        out.append(f'<section class="{cls}" id="{e(b["id"])}"><div class="hd"><span class="n">{num[b["id"]]}</span>'
-                   f'<h2>{e(b["title"])}</h2><span class="meta">{e(slice_meta(m, b))}'
-                   f'{" · not in a slice yet" if b.get("unassigned") else ""}{" · ✓ viewed" if b["key"] in done else ""}</span></div>{flow}')
         focus = by_block.get(b["id"], [])
+        out.append(f'<section class="{cls}" id="{e(b["id"])}"><div class="hd"><span class="n{" risk" if focus else ""}">{num[b["id"]]}</span>'
+                   f'<h2>{e(b["title"])}</h2><span class="meta">{e(slice_meta(m, b))}'
+                   f'{" · not in a slice yet" if b.get("unassigned") else ""}{" · ✓ viewed" if b["key"] in done else ""}</span></div>')
+        if b.get("what"):
+            out.append(f'<div class="what">{e(b["what"])}</div>')
+        if ends(b):
+            out.append('<div class="ends">' + "".join(f'<span class="pill">{e(x)}</span>' for x in ends(b)) + "</div>")
+        out.append(flow_html(m, slice_layout(m, b, stars)))
         if focus:
             out.append('<div class="focus">')
             for n, f in focus:
@@ -954,6 +1126,7 @@ def cmd_html(mp):
     if rest or more:
         out.append('<section class="card runs">' + ("<h3>When it runs</h3>" + "".join(rest) if rest else "")
                    + (f'<div class="more">{"".join(more)}</div>' if more else "") + "</section>")
+    out.append(f"<script>{JS}</script>")
     page = Path(mp).with_suffix(".html")
     page.write_text("<!doctype html><meta charset=utf-8>" + "\n".join(x for x in out if x))
     return page

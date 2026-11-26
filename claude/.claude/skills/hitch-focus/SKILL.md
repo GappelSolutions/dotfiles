@@ -23,33 +23,39 @@ Then the code around each hunk, as far as the logic needs. `calldiff diff <base>
 ## Blocks: slices
 
 Every `-` hunk lands in exactly one block. A block is a vertical slice: one behavior end to end, through every project it touches. Its contract, config keys, code, deploy template and docs go together, never split by project, layer or file (the script tags each block with the projects it runs through).
-- `title`: ≤8 words, the behavior ("Retry by pause, then DLT"), not the parts ("Kafka contract", "Templates").
+- `title`: ≤8 words, the behavior ("Retry by pause, then DLT"), not the parts ("Kafka contract", "Templates"). `name`: 1-3 words of it for the overview ("consumer loop").
+- `what`: one plain sentence, what is different when it runs ("New loop: a failed record pauses its partition and is retried, then dead-lettered."). Reviewers misread less with it.
+- `takes`, `gives`: what the slice hands on, short contract names (topic `dlms.plain`, config key `MESSAGING_BROKER`, route, table). A slice that gives what another takes is drawn as a chain in the overview; `gives` also shows on the card.
 - `flow`: the slice's logic as steps (below). It is what the user reads; the code is one key away.
 - `logic`: only when a flow can't say it (a pure contract or config change): one line, inputs, rule, effect.
 - `hunks`: in reading order: the contract or config key, the rule, its wiring, then deploy.
 - A part several slices share goes with the first that needs it. It becomes its own slice only when it is a behavior on its own (a library API with several callers).
-- `after`: the slices it builds on. Reading order follows it, then the order given.
+- `after`: the slices it builds on. Reading order follows it, then the order given: among slices free to go either way, the riskiest (most focus points, one-way doors) first, since attention drops with every slice. The map's `order`: one sentence why this order.
 - Size: ~250 changed lines at most; split a bigger one along the behavior's steps (send path, failure path), never along projects. Wiring along an existing pattern is one slice, however many files.
 
 ## Flow: the slice as a state machine
 
 What the code does when it runs, drawn the way the author would on a whiteboard: steps, decisions, exits, loops. Not the code's structure: no classes, methods, files or syntax. Names only where they are the contract (topic, queue, config key, route, table).
-- step: `{"do": "<≤8 words, verb first>", "at": "path:line", "change": "new|changed|gone"}`. `at` is the head line that acts (the call, the produce, the throw), not its catch or declaration; none for `gone`. It may lie outside the diff.
+- step: `{"do": "<≤4 words, verb first>", "at": "path:line", "change": "new|changed|gone"}`. `at` is the head line that acts (the call, the produce, the throw), not its catch or declaration; none for `gone`. It may lie outside the diff.
+- `detail`: ≤6 words the step needs to be judged (a limit, a window: "5 s-5 min"), shown greyed after `do`. Everything else is the code's.
+- `who`: where it runs, one word (service, worker, handler, Kafka, DB); shown where it changes, so a hop between services is visible. Set it on every step whose actor differs from the step before.
+- `was`: on a `changed` step, the old behavior in ≤6 words, shown struck through under it.
 - `change` is about behavior, not code: code moved or wrapped that does what it did is context (no `change`), and nothing is `gone` unless the behavior is. Context only where it connects changed steps (where the flow enters, where it hands off).
-- decision: a step with `"when": [{"if": "<≤3 words>", "then": [steps]}]`. A branch falls through to the next step unless it ends in `"kind": "stop"` or a `to`. Config that switches behavior is a decision ("broker?"), never one step per file; a switch acting in several places is repeated where it acts, each pinned there.
+- decision: a step with `"when": [{"if": "<≤2 words>", "then": [steps]}]`. A branch falls through to the next step unless it ends in `"kind": "stop"` or a `to`. Config that switches behavior is a decision ("broker?"), never one step per file; a switch acting in several places is repeated where it acts, each pinned there.
 - `"kind": "out"`: leaves the process (topic, queue, DB, HTTP). `"kind": "stop"`: ends the path (error, drop, exit). Either can carry `when` too (a produce and its ack).
-- jump: `{"to": "<id>"}`, with `"id"` on the target step: back is a loop (↻), forward a skip (→).
+- jump: `{"to": "<id>"}`, with `"id"` on the target step: back is a loop, drawn as a line from the step before it to the target; forward a skip, `→ <n>` (steps are numbered).
 - 3-12 `do` steps per slice. More: the slice is two behaviors, split it.
 - A focus point's `at` is the `at` of the step it questions: the step shows its ★.
 
 ```json
 "flow": [
-  {"do": "receive push frame", "at": "src/Listener/Handler.cs:40"},
+  {"do": "receive push frame", "who": "listener", "at": "src/Listener/Handler.cs:40"},
+  {"do": "key by LDN", "change": "changed", "was": "key by serial", "at": "…"},
   {"do": "broker?", "at": "src/Listener/Program.cs:44", "change": "new", "when": [
-    {"if": "rabbitmq", "then": [{"do": "publish to queue push.plain", "kind": "out", "at": "…"}]},
+    {"if": "rabbitmq", "then": [{"do": "publish push.plain", "kind": "out", "at": "…"}]},
     {"if": "kafka", "then": [
-      {"id": "send", "do": "produce to dlms.plain, key LDN", "kind": "out", "change": "new", "at": "…"},
-      {"do": "ack?", "change": "new", "at": "…", "when": [
+      {"id": "send", "do": "produce dlms.plain", "detail": "idempotent, acks=all", "who": "Kafka", "kind": "out", "change": "new", "at": "…"},
+      {"do": "acked?", "detail": "within 30 s", "change": "new", "at": "…", "when": [
         {"if": "timeout", "then": [{"to": "send"}]},
         {"if": "fatal", "then": [{"do": "stop the pod", "kind": "stop", "change": "new", "at": "…"}]}]}]}]}
 ]
@@ -86,12 +92,12 @@ What the change does when built or run, where it's cheap to get. Each is a line 
 
 ## Write the map
 
-`/tmp/hitch-focus/<repo>-<head>/in.json`, then `hitch-map build <it>` until it exits 0. It checks every `-` hunk sits in one block, no test is in one, the flows' shape, and every step's and focus point's `at` exists.
+`/tmp/hitch-focus/<repo>-<head>/in.json`, then `hitch-map build <it>` until it exits 0. It checks every `-` hunk sits in one block, no test is in one, the flows' shape and word limits, and every step's and focus point's `at` exists.
 
 ```json
 {"repo": "<path>", "base": "<base>", "head": "<head>", "pr": 123, "url": "<pr url>", "title": "<pr title>",
- "intent": "<what the PR is for, from the Task/Story, one line>",
- "blocks": [{"id": "B1", "title": "", "flow": [], "hunks": ["<id>"], "after": []}],
+ "intent": "<what the PR is for, from the Task/Story, one line>", "order": "<why this reading order, one sentence>",
+ "blocks": [{"id": "B1", "title": "", "name": "", "what": "", "takes": [], "gives": [], "flow": [], "hunks": ["<id>"], "after": []}],
  "focus": [{"block": "B1", "title": "<the choice, ≤8 words>", "at": "path:line", "chosen": "", "instead": "",
             "tradeoff": "<cost of each, one line>", "look": "<the scenario that shows whether it's right>", "door": "one-way"}],
  "effects": [{"title": "", "layer": "contract", "summary": "", "file": "<raw output>"}],
