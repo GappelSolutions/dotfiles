@@ -50,4 +50,6 @@ in
   "vaultwarden-master-password.age".publicKeys = [ masterKey ];
   # GDM UI login `cga` (Christian Gappel), same password on the dev-cluster namespaces cga, cga2-cga5 and ersys
   "gdm-ui-cga-password.age".publicKeys = [ masterKey ];
+  # hitch-agents login body {"user", "password"} (agents.hitch.ensor.test), used by the hitch-share skill
+  "hitch-agents-login.age".publicKeys = [ masterKey ];
 }

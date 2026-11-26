@@ -61,9 +61,9 @@ What the code does when it runs, drawn the way the author would on a whiteboard:
 ]
 ```
 
-## Points of variance
+## Points of variance (judgment calls)
 
-A point qualifies only if all hold:
+The cards and vis show them as ★n judgment calls. A point qualifies only if all hold:
 - **A real choice**: a concrete alternative exists that a competent reviewer could prefer (not a bug, not style; bugs are the skeptic's).
 - **It matters**: getting it wrong costs throughput, data, ordering, operability, a contract, or a later rewrite.
 - **Not settled upstream**: the Story's Design doesn't already decide it. When the code goes beyond or against a Design decision, that is a point, and the D line is cited.

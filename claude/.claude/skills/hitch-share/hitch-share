@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+# hitch-share <file.html | dir> [name]: publish a static page on play.hitch.ensor.test, print its link.
+set -euo pipefail
+
+agents=https://agents.hitch.ensor.test
+secrets=${HITCH_SECRETS_DIR:-$HOME/dev/misc/dotfiles/nix/secrets}
+identity=${HITCH_AGE_IDENTITY:-$HOME/.age/master.key}
+# The VM serves a self-signed certificate for both host names; a new one breaks this pin on purpose.
+pin=${HITCH_PIN:-sha256//G1EnYx24aI9CC00A9LK3rpKGhChOo9PbGSeaahDDzRU=}
+
+usage() { echo "usage: hitch-share <file.html | dir with index.html> [name]" >&2; exit 2; }
+[[ $# -ge 1 && $# -le 2 ]] || usage
+source=$1
+[[ -e $source ]] || { echo "hitch-share: $source does not exist" >&2; exit 1; }
+
+if [[ -d $source ]]; then
+  [[ -f $source/index.html ]] || { echo "hitch-share: $source has no index.html" >&2; exit 1; }
+  default_name=$(basename "$(realpath "$source")")
+else
+  default_name=$(basename "${source%.*}")
+fi
+name=${2:-$(printf '%s' "$default_name" | tr -c 'A-Za-z0-9._-' '-' | sed 's/^[^A-Za-z0-9]*//' | cut -c1-64)}
+[[ $name =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$ ]] || { echo "hitch-share: '$name' is not a site name" >&2; exit 1; }
+
+scratch=$(mktemp -d)
+trap 'rm -rf "$scratch"' EXIT
+chmod 700 "$scratch"
+jar=$scratch/cookies
+
+api() { curl -sS --pinnedpubkey "$pin" -k -b "$jar" -w '\n%{http_code}' "$@"; }
+check() {
+  local out=$1 what=$2 code
+  code=${out##*$'\n'}
+  if [[ $code != 2* ]]; then echo "hitch-share: $what failed ($code): ${out%$'\n'*}" >&2; exit 1; fi
+  printf '%s' "${out%$'\n'*}"
+}
+
+[[ -f $secrets/hitch-agents-login.age ]] || { echo "hitch-share: $secrets/hitch-agents-login.age is missing (see SKILL.md, Credentials)" >&2; exit 1; }
+
+# The secret is the login body itself, {"user": …, "password": …}, so it never reaches a command line.
+login=$( (cd "$secrets" && agenix -i "$identity" -d hitch-agents-login.age) \
+  | curl -sS --pinnedpubkey "$pin" -k -c "$jar" -o /dev/null -w '%{http_code}' \
+      -H 'Content-Type: application/json' --data-binary @- "$agents/api/login")
+[[ $login == 204 ]] || { echo "hitch-share: login failed ($login)" >&2; exit 1; }
+
+site=/workspace/sites/$name
+uri() { jq -rn --arg v "$1" '$v|@uri'; }
+
+declare -A local_files=()
+if [[ -d $source ]]; then
+  while IFS= read -r -d '' file; do
+    rel=${file#"$source"/}
+    local_files[$site/$rel]=$file
+  done < <(find "$source" -type f -not -path '*/.*' -print0)
+else
+  local_files[$site/index.html]=$source
+fi
+
+listing=$(check "$(api "$agents/api/company/files")" "listing the workspace")
+while IFS= read -r stale; do
+  [[ -n $stale && -z ${local_files[$stale]+x} ]] || continue
+  check "$(api -X DELETE "$agents/api/company/files/raw?path=$(uri "$stale")")" "removing $stale" >/dev/null
+done < <(jq -r --arg dir "$site/" '.files[] | select(.kind == "f" and (.path | startswith($dir))) | .path' <<<"$listing")
+
+for target in "${!local_files[@]}"; do
+  check "$(api -X PUT --data-binary @"${local_files[$target]}" "$agents/api/company/files/raw?path=$(uri "$target")")" "uploading $target" >/dev/null
+done
+
+published=$(check "$(api -X POST "$agents/api/company/sites/$name/publish")" "publishing $name")
+jq -r '"\(.url)\nexpires \(.expires / 1000 | todate)"' <<<"$published"
