@@ -177,8 +177,11 @@ az boards work-item relation add --id <B> --relation-type predecessor --target-i
 Conventions come from the repo's last completed PRs, never from its PR template:
 
 ```bash
-az repos pr list --status completed --top 5 --query '[].[title, completionOptions.mergeStrategy, completionOptions.deleteSourceBranch]' -o tsv
+az repos pr list --status completed --top 20 --query "[?!contains(createdBy.displayName, 'Build Service')] | [:5].[title, completionOptions.deleteSourceBranch]" -o tsv
 ```
+
+Bot PRs (Renovate, `Build Service`) are left out: they follow their own conventions.
+- Merge strategy: always a merge commit (`--squash false`, `noFastForward`), never squash, whatever the recent PRs show.
 
 - Title: their pattern, with the Task's ID and title (e.g. `#<task-id>: <task title>`).
 - Description: the same short overview on every PR, whatever the repo's PRs do. Plain Markdown for a colleague, readable like the tickets. No template checklist, no checks, no agent scaffolding:
@@ -218,7 +221,7 @@ curl -s -u ":$AZURE_DEVOPS_EXT_PAT" -H 'Content-Type: application/octet-stream' 
   "$(az repos pr show --id <pr> --query repository.url -o tsv)/pullRequests/<pr>/attachments/<task-id>.png?api-version=7.1" | jq -r .url   # screenshot
 az repos pr update --id <pr> --description "$(cat pr.md)"             # keep it true after every push
 az repos pr update --id <pr> --draft false                            # publish
-az repos pr update --id <pr> --status completed --squash <bool> --delete-source-branch <bool> --transition-work-items false   # as their PRs do
+az repos pr update --id <pr> --status completed --squash false --delete-source-branch <bool> --transition-work-items false   # merge commit, never squash
 ```
 
 Threads, via REST. The base is the PR's own repository URL: its repo may sit in another project.
